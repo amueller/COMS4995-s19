@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Clustering and Mixture Models</title>
+    <meta charset="utf-8">
+        <style>
+       @import url(https://fonts.googleapis.com/css?family=Garamond);
+       @import url(https://fonts.googleapis.com/css?family=Muli:400,700,400italic);
+       @import url(https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
+     </style>
+     <link rel="stylesheet" href="../style.css">
+  </head>
+  <body>
+    <textarea id="source">
+
+class: center, middle
+
+### W4995 Applied Machine Learning
+
+# Clustering and Mixture Models
+
+03/26/18
+
+Andreas C. Müller
+
+???
+Today we're gonna talk about clustering and mixture models, mostly clustering algorithms.
+Next time we'll talk about evaluation of clustering.
+
+VB GMM: explain better? better example? or leave out?
+
+FIXME: order of slides weird, in particular K-Means (also agglomerative and others lol)
+FIXME: linkage explanation diagram
+FIXME: cluster sized in particularly good for dbscan debugging
+---
+
+class: center, middle
+
+# Clustering
+
+???
+
+
+The ideas is that you start out with a bunch of data points, and the assumption is that they fall into groups or clusters, and the goal is to discover these underlying groups.
+---
+.center[
+![:scale 70%](images/cluster_intro_1.png)
+]
+
+???
+For example you want to find that these points belong to the same groups, and these, and these.
+---
+.center[
+![:scale 70%](images/cluster_intro_2.png)
+]
+
+???
+
+---
+.center[
+![:scale 70%](images/cluster_intro_3.png)
+]
+
+???
+The cluster algorithms have many parameters, and one of the most common ones is the number of clusters.
+In this dataset I drew here, it's quite obvious that there are three groups,
+and if it's this obvious there is usually a way to figure out how many groups
+there are. But for many algorithms, you need to specify the number of groups in
+advance.
+
+---
+
+.center[
+![:scale 70%](images/cluster_intro_4.png)
+]
+
+???
+Group into 4 clusters
+
+
+If you misspecify the number of groups you'd get something like this. We're not
+gonna talk about how to tune these parameters today, but in general you either
+need to have some prior knowledge about the data, or you need to inspect the
+results manually to see if the parameters are good.  We're gonna talk more
+about this next time.
+
+Often, you don't know the number of clusters, or if there are even clusters in
+the data. Very rarely is the case as clear as in this example.  Still there
+might be a reasonable grouping, so there is no "right" amount of clusters, but
+you might still get something out of the clustering.
+---
+class: spacious
+# Clustering
+
+- Partition data into groups (clusters)
+- Points within a cluster should be “similar”.
+- Points in different cluster should be “different”.
+
+???
+
+
+So you want to partition the data, so that each data point belongs to exactly one of the groups.
+And you want to define groups such that points in the same cluster are similar, and points in different clusters are different.
+And the different algorithms define how they measure similarity in different ways.
+
+What we're really interested in is the partitioning of the data, though the way
+it's implemented in the scikit-learn API is that you predict an integer for
+each data point, so the clusters are numbered 0.. n_clusters -1. So we'd label
+these points with 0, these with one, and so on. But you should keep in mind
+that the number themselves have no meaning, renumbering the clusters
+corresponds to the same clustering.  We're really only interested in which
+points have the same labels and which points have different labels.
+
+
+- Number of clusters might be pre-specified.
+- Notations of “similar” and “different” depend on
+algorithm or user specified metrics.
+- Identify groups by assigning “cluster labels” to
+each data point.
+FIXME!
+---
+
+# Goals of Clustering
+
+- Data Exploration
+  - Are there coherent groups ?
+  - How many groups are there ?
+
+--
+
+- Data Partitioning
+  - Divide data by group before further processing
+
+--
+
+- Unsupervised feature extraction
+  - Derive features from clusters or cluster distances
+
+???
+So why would we want to use a clustering algorithm? The main usage that I've
+come across is exporation of the data and understanding the structure of the
+data. Are there similar groups within the data? What are these? How many are
+there?  You can also use clustering to summarize or compress the data by
+representing each group by a single prototype, say the center.
+You can also use clustering if you want to divide your data, for example if you
+want to know different parts of the dataset behave fundamentally differently,
+so you could for example cluster a dataset, and then apply, say, a linear
+model, to each cluster. That would create a more powerfull model than just
+learning a linear model on the whole dataset.
+
+
+Another use is unsupervised feature extraction. You can also use clustering to derive a different representation of the data.
+
+An often cited application of clustering is customer segmentation, though I'd say data exploration or feature extraction are more common.
+---
+
+class: center, middle
+
+# Clustering Algorithms
+
+???
+So now let's start discussing some of the standard algorithms.
+---
+
+class: center, middle
+
+# K-Means
+
+???
+One of the most basic and most well-known ones is kmeans.
+Here k stands for the number of clusters you're trying to find.
+---
+
+# K-Means Algorithm
+
+.wide-left-column[
+.center[
+![:scale 100%](images/kmeans.png)
+]
+]
+
+.narrow-right-column[
+.smaller[
+- Pick number of clusters k.
+- Pick k random points as
+“cluster center”
+- While cluster centers change:
+  1. Assign each data point to it’s closest cluster center
+  2. Recompute cluster centers as the mean of the assigned points.
+]
+]
+
+???
+The algorithm proceeds like this: you pick the number of clusters k,
+then you randomly pick k data points from the data, and declare those as cluster centers.
+Then, you label each data point according to which cluster center it is closest to.
+Finally, you recompute the cluster centers as the means of the clusters, and you iterate.
+The algorithm always converges, which is when the assignment of the points to the clusters doesn't change any more.
+Often you might want to not wait until full convergence, but just stop if the cluster centers don't move much between iterations.
+
+So you can see the green cluster center moving towards the red here until it has captured all the points in this group.
+Questions?
+Who has seen this before?
+---
+class: spacious
+# Objective function for K-Means
+<br \>
+<br \>
+`$$\Large \min_{\mathbf{c}_j \in \mathbf{R}^p, j=1,..,k} \sum_i ||\mathbf{x}_i - \mathbf{c}_{x_i}||^2 $$`
+$\mathbf{c}_{x_i}$ is the cluster center $c_j$ closest to $x_i$
+???
+- Finds a local minimum of minimizing squared distances (exact solution is
+NP hard):
+- New data points can be assigned cluster membership based on existing clusters.
+
+Here is what this algorithms actually optimizes, the objective function.
+It's the sum of the distances of the cluster centers to all the points in the clusters.
+So the clusters centers are c_j and we want to find cluster centers such that the sum of the distance of each point to its closest cluster center is minimized.
+This is an NP hard problem, so we can't really hope to solve it exactly, but we can run the k-means algorithm that we just discussed, and it will provide us with some local minimum of this objective.
+There's a couple of nice things about this algorith;
+It's very easy to write down and understand. Each cluster is represented by a center, which makes things simple, and you can reassign any new point you observe to a cluster by just computing the distances to all the cluster centers.
+So in this case, if we build a model on some data that we collected, we can easily apply this clustering to new data points. That's not the case for all clustering algorithms.
+---
+
+# K-Means API
+
+
+.narrow-right-column[
+.center[
+![:scale 100%](images/kmeans_api.png)
+]
+]
+
+.wide-left-column[
+.smaller[
+```python
+X, y = make_blobs(centers=4, random_state=1)
+
+km = KMeans(n_clusters=5, random_state=0)
+km.fit(X)
+print(km.cluster_centers_.shape)
+print(km.labels_.shape)
+# predict is the same as labels_ on training data
+# but can be applied to new data
+print(km.predict(X).shape)
+plt.scatter(X[:, 0], X[:, 1], c=km.labels_)
+plt.gca().set_aspect("equal")
+```
+(5, 2) </br>
+(100,) </br>
+(100,)
+]
+]
+
+???
+
+---
+
+# Restriction of Cluster Shapes
+.left-column[
+![:scale 85%](images/cluster_shapes_1.png)
+]
+.right-column[
+![:scale 100%](images/cluster_shapes_2.png)
+]
+.reset-column[
+Clusters are Voronoi-diagrams of centers
+]
+
+???
+
+- Clusters are always convex in space
+
+
+---
+
+# Limitations of K-Means
+
+.center[
+![:scale 60%](images/kmeans_limitations_1.png)
+]
+
+- Cluster boundaries equidistant to centers
+
+???
+
+
+---
+
+# Limitations of K-Means
+
+.center[
+![:scale 60%](images/kmeans_limitations_2.png)
+]
+
+ - Can’t model covariances well
+
+???
+
+---
+# Limitations of K-Means
+
+.center[
+![:scale 60%](images/kmeans_limitations_3.png)
+]
+
+- Only simple cluster shapes
+
+???
+
+---
+class: spacious
+
+# Computational Properties
+
+- Naive implementation (Lloyd's):
+  - n_cluster * n_samples distance calculations per iteration
+
+--
+
+- Fast exact algorithms:
+  - Elkan's, Ying-Yang
+
+--
+
+- Approximate algorithms:
+  - minibatch K-Means
+
+???
+
+---
+
+# Initialization
+
+- Random centers fast.
+- K-means++ (default):
+Greedily add “furthest way” point
+- By default K-means in sklearn does 10 random
+restarts with different initializations.
+- K-means++ initialization may take much longer than clustering.
+
+???
+FIXME slide for kmeans++, computational cost of kmeans++
+- Consider using random, in particular for
+MiniBatchKMeans
+---
+
+# Feature Extraction using K-Means
+
+- Cluster membership → categorical feature
+- Cluster distanced → continuous feature
+- Examples:
+  - Partitioning low-dimensional space (similar to using basis functions)
+  - Extracting features from high-dimensional spaces, for image patches, see
+  http://ai.stanford.edu/~acoates/papers/coatesleeng_aistats_2011.pdf
+
+???
+
+---
+
+class: center, middle
+
+# Agglomerative Clustering
+
+???
+
+---
+
+# Agglomerative Clustering
+
+- Start with all points in their own cluster.
+- Greedily merge the two most similar clusters.
+
+.center[
+![:scale 80%](images/agglomerative_clustering.png)
+]
+
+???
+- Creates a hierarchical clustering from with cluster
+sizes from n_samples to single cluster.
+
+---
+class: spacious
+
+# Dendograms
+
+.left-column[
+![:scale 100%](images/dendograms_1.png)
+]
+
+.left-column[
+![:scale 80%](images/dendograms_2.png)
+]
+
+???
+Done with scipy!
+FIXME dendrogram code!
+---
+
+# Merging (Linkage) Criteria
+
+- Complete Linkage
+  - Smallest maximum distance
+- Average Linkage
+  - Smallest average distance between all pairs in the clusters
+- Single Linkage
+  - Smallest minimum distance
+- Ward (default in sklearn)
+  - Smallest increase in within-cluster variance
+  - Leads to more equally sized clusters.
+
+???
+single linkage = cutting longest edge in minimum spanning tree.
+---
+# Linkage Criteria
+
+.center[
+![:scale 100%](images/merging_criteria.png)
+]
+
+```
+average : [82  9  7  1  1]
+complete : [50 24 14 11  1]
+ward : [31 30 20 10  9]
+```
+
+???
+FIXME single linkage!
+---
+class: spacious
+# Pros and Cons
+
+- Can restrict to input “topology”  graph.
+--
+
+- Fast with sparse connectivity, otherwise O(log(n) n
+** 2 )
+
+--
+
+- Some linkage criteria an lead to very imbalanced cluster sizes
+
+--
+
+- Hierarchical clustering gives more holistic view than single clustering.
+
+???
+common graph: neighborhood in input space, neighborhood in image
+hierachy / dendrogram can help picking number of clusters.
+---
+class: center, middle
+
+# DBSCAN
+
+???
+
+---
+
+# Algorithm
+.left-column[
+![:scale 100%](images/DBSCAN-Illustration.svg)
+]
+.right-column[
+- eps: neighborhood radius
+- min_samples: 4
+<br /><br />
+
+- A: Core
+- B, C: not core
+- N: noise
+
+]
+???
+- Clusters are formed by “core samples”
+- Sample is “core sample” if more than min_samples is
+within epsilon - “dense region”
+- Start with a core sample
+- Recursively walk neighbors that are core-samples and
+add to cluster.
+- Also add samples within epsilon that are not core
+samples (but don’t recurse)
+- If can’t reach any more points, pick another core
+sample, start new cluster.
+- If newly picked point has not enough neighbors, label outlier
+- Outliers can later be relabeled to belong to a cluster.
+]
+---
+
+# Illustration
+
+.center[
+![:scale 70%](images/dbscan_illustration.png)
+]
+
+???
+FIXME add epsilon circles to points?
+---
+![:scale 100%](images/dbscan_animation.gif)
+
+by David Sheehan <a href="https://dashee87.github.io/data%20science/general/Clustering-with-Scikit-with-GIFs/">dashee87.github.io</a>
+---
+# Pros and Cons
+
+- Can learn arbitrary cluster shapes
+- Can detect outliers
+- Needs two parameters to adjust
+
+.center[
+![:scale 50%](images/dbscan_pro_con.png)
+]
+
+???
+eps is related to number of clusters, so not much worse than kmeans or agglomerative
+---
+class: center, middle
+
+# (Gaussian) Mixture Models
+
+???
+
+---
+
+# Mixture Models
+
+- Generative model: find p(X).
+
+` $$ p(\mathbf{x}) = \sum_{j=1}^k \pi_k p_k(\mathbf{x} | \theta) $$ `
+
+???
+- Assume form of data generating process
+- Mixture model assumption:
+  - Data is mixture of small number of known distributions.
+  - Each mixture component distribution can be learned "simply"
+  - Each point comes from one particular component
+- We learn the component parameters and weights of
+components
+
+---
+
+# Gaussian Mixture Models
+
+`$$ p(\mathbf{x}) = \sum_{j=1}^k \pi_k \mathcal{N}(\mathbf{x}, \mu_k, \Sigma_k) $$`
+
+`$$ k \sim \text{Mult}(\pi), x \sim \mathcal{N}(\mathbf{x}, \mu_k, \Sigma_k)$$`
+???
+- Each component is created by a Gaussian distribution.
+- There is a multinomial distribution over the components
+- non-convex, depends on initialization
+
+FIXME algorithm deserves a bit more explanation?
+
+--
+
+- Non-convex optimization.
+- Initialized with K-means, random restarts.
+- Optimization (EM algorithm):
+    - Soft-assign points to components.
+    - Compute mean and variance of components.
+    - Iterate
+
+
+---
+
+`$$ p(\mathbf{x}) = \sum_{j=1}^k \pi_k \mathcal{N}(\mathbf{x}, \mu_k, \Sigma_k) $$`
+
+.center[
+![:scale 40%](images/gmm1.png)
+]
+
+.center[
+![:scale 40%](images/gmm2.png)
+]
+
+???
+
+---
+class: spacious
+# Why Mixture Models?
+<br />
+<br />
+
+- Clustering (components are clusters)
+
+- Parametric density model
+
+???
+- Create parametric density model.
+- Allows for testing how “likely” a new point is.
+- Clustering (each components is one cluster).
+- Feature Extraction
+
+
+---
+
+# Examples
+
+.wide-left-column[
+.smaller[
+```python
+from sklearn.mixture import GaussianMixture
+gmm = GaussianMixture(n_components=3)
+gmm.fit(X)
+print(gmm.means_)
+print(gmm.covariances_)
+```
+```
+[[-2.286 -4.674]
+ [-0.377  6.947]
+ [ 8.685  5.206]]
+[[[  6.651   2.066]
+  [  2.066  13.759]]
+ [[  5.467  -3.341]
+  [ -3.341   4.666]]
+ [[  1.481  -1.1  ]
+  [ -1.1     4.191]]]
+```
+]
+]
+
+
+.narrow-right-column[
+.center[
+![:scale 80%](images/mm_examples_1.png)
+]]
+--
+.narrow-right-column[
+.center[
+![:scale 80%](images/mm_examples_2.png)
+]
+]
+
+???
+---
+
+# Probability Estimates
+
+.left-column[
+.smaller[
+```python
+gmm.predict_proba(X)
+```
+```
+array([[ 1.   ,  0.   ,  0.   ],
+       [ 0.   ,  0.   ,  1.   ],
+       ...,
+       [ 1.   ,  0.   ,  0.   ],
+       [ 0.001,  0.999,  0.   ]])
+```
+.center[
+![:scale 60%](images/prob_est1.png)
+]
+]
+]
+
+.right-column[
+.smaller[
+```python
+# log probability under the model
+print(gmm.score(X))
+print(gmm.score_samples(X).shape)
+```
+```
+-5.508
+(500,)
+```
+
+.center[
+![:scale 60%](images/prob_est2.png)
+]
+]
+]
+
+???
+
+---
+# Covariance restrictions
+
+![:scale 100%](images/covariance_types.png)
+???
+In high dimensions or with few samples, fitting the whole
+(n_features ** 2) covariance matrix can be unstable.
+We can restric it to be spherical, diagonal, tied or full.
+---
+class:center
+# GMM vs KMeans
+
+![:scale 47%](images/gmm_vs_kmeans_1.png)<br />
+![:scale 47%](images/gmm_vs_kmeans_2.png)
+
+
+???
+GMM can be more unstable, is more expensive to compute.
+
+---
+
+# Bayesian Infinite Mixtures
+
+- Bayesian treatment:
+  - Add priors on mixture coefficients and Gaussians.
+  - Can “unselect” components if they don’t contribute.
+  - Possibly more robust
+- Infinite Mixtures:
+  - Replace Dirichlet Prior over mixture coefficients by Dirichlet Process.
+  - “automatically” finds number of components (based on parameter of
+the prior).
+- Both implemented in BayesianGaussianMixture
+- Use variational inference (as opposed to gibbs sampling)
+- In practice: need to specify upper limit of components
+
+???
+
+---
+
+.center[
+![:scale 100%](images/bim_1.png)
+]
+
+???
+---
+class: some-space
+# Summary
+
+- KMeans<br/>Classic, simple. Only convex cluster shapes, determined by cluster centers.
+--
+
+- Agglomerative<br/>Can take input topology into account, can produce hierarchy.
+--
+
+- DBSCAN<br/>Arbitrary cluster shapes, can detect outliers.
+--
+
+- Gaussian Mixture Models<br/>Can model covariance, soft clustering, can be hard to fit.
+
+???
+KMeans requires initialization, as do GMMs.
+---
+
+.center[
+![:scale 95%](images/bim_2.png)
+.smaller[
+http://scikit-learn.org/dev/auto_examples/cluster/plot_cluster_comparison.html]
+]
+
+???
+---
+class: middle
+# Questions ?
+
+
+    </textarea>
+    <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+    <script>
+    // Config Remark
+    remark.macros['scale'] = function (percentage) {
+        var url = this;
+        return '<img src="' + url + '" style="width: ' + percentage + '" />';
+    };
+    config_remark = {
+        highlightStyle: 'magula',
+        highlightSpans: true,
+        highlightLines: true,
+        ratio: "16:9"
+    };
+      var slideshow = remark.create(config_remark);
+    // Configure MathJax
+    MathJax.Hub.Config({
+    tex2jax: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'] /* removed 'code' entry*/
+    }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for(i = 0; i < all.length; i += 1) {
+            all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+    });
+    </script>
+  </body>
+</html>

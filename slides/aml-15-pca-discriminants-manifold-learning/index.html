@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Dimensionality Reduction</title>
+    <meta charset="utf-8">
+        <style>
+       @import url(https://fonts.googleapis.com/css?family=Garamond);
+       @import url(https://fonts.googleapis.com/css?family=Muli:400,700,400italic);
+       @import url(https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
+     </style>
+     <link rel="stylesheet" href="../style.css">
+  </head>
+  <body>
+    <textarea id="source">
+
+class: center, middle
+
+### W4995 Applied Machine Learning
+
+# Dimensionality Reduction
+
+## PCA, Discriminants, Manifold Learning
+
+03/19/18
+
+Andreas C. Müller
+
+???
+FIXME: switch LDA and T-SNE
+animations for T-SNE?
+---
+class: centre,middle
+# Principal Component Analysis
+???
+---
+.center[
+![:scale 70%](images/pca-intuition.png)
+]
+
+???
+---
+# PCA objective(s)
+`$$\large\min_{X', \text{rank}(X') = r}\|X-X'\|$$`
+.center[
+![:scale 45%](images/pca-intuition.png)
+]
+???
+Restricted rank reconstruction
+---
+class:split-40
+# PCA objective(s)
+.left-column[
+`$$\large\max\limits_{u_1 \in R^p, \| u_1 \| = 1} \text{var}(Xu_1)$$`
+`$$\large\max\limits_{u_1 \in R^p, \| u_1 \| = 1} u_1^T \text{cov} (X) u_1$$`
+]
+.smaller.right-column[
+.center[
+![:scale 90%](images/pca-intuition.png)
+]
+]
+???
+Find directions of maximum variance.
+(Find projection (onto one vector) that maximizes the variance observed in the data.)
+
+Subtract projection onto u1, iterate to find more components. 
+Only well-defined up to sign / direction of arrow!
+---
+# PCA Computation
+- Center X (subtract mean).
+- In practice: Also scale to unit variance. 
+- Compute singular value decomposition:
+![:scale 100%](images/pca-computation.png)
+???
+---
+class: center
+# Whitening
+![:scale 100%](images/whitening.png)
+???
+Same as using PCA without whitening, then doing StandardScaler.
+---
+class: split-40
+# PCA for Visualization
+.tiny-code.left-column[```python
+from sklearn.decomposition import PCA
+print(cancer.data.shape)
+pca = PCA(n_components=2)
+X_pca = pca.fit_transform(cancer.data)
+print(X_pca.shape)
+plt.scatter(X_pca[:, 0], X_pca[:, 1], c=cancer.target)
+plt.xlabel("first principal component")
+plt.ylabel("second principal component")
+components = pca.components_
+plt.imshow(components.T)
+plt.yticks(range(len(cancer.feature_names)), cancer.feature_names)
+plt.colorbar()
+```
+![:scale 80%](images/pca-for-visualization-cancer-data.png)
+]
+.right-column[
+![:scale 90%](images/pca-for-visualization-components-color-bar.png)]
+???
+---
+class:spacious
+# Scaling!
+.tiny-code[```python
+pca_scaled = make_pipeline(StandardScaler(), PCA(n_components=2))
+X_pca_scaled = pca_scaled.fit_transform(cancer.data)
+plt.scatter(X_pca_scaled[:, 0], X_pca_scaled[:, 1], c=cancer.target, alpha=.9)
+plt.xlabel("first principal component")
+plt.ylabel("second principal component")
+```]
+.center[![:scale 45%](images/scaled-pca-for-visualization-cancer-data.png)]
+???
+Imagine one feature with very large scale. Without scaling, it’s guaranteed to be the first principal component!
+---
+class:split-40
+# Inspecting components
+.tiny-code[```python
+components = pca_scaled.named_steps['pca'].components_
+plt.imshow(components.T)
+plt.yticks(range(len(cancer.feature_names)), cancer.feature_names)
+plt.colorbar()
+```]
+.smaller.left-column[
+![:scale 70%](images/inspecting-pca-scaled-components.png)
+]
+
+.right-column[
+![:scale 100%](images/inspecting-pca-scaled-components-2.png)]
+
+???
+Direction (sign) of component is meaningless!
+---
+# PCA for regularization
+.tiny-code[
+```python
+from sklearn.linear_model import LogisticRegression
+X_train, X_test, y_train, y_test = train_test_split(cancer.data, cancer.target, stratify=cancer.target, random_state=0)
+lr = LogisticRegression(C=10000).fit(X_train, y_train)
+print(lr.score(X_train, y_train))
+print(lr.score(X_test, y_test))
+```
+```
+0.993
+0.944
+```
+```python
+pca_lr = make_pipeline(StandardScaler(), PCA(n_components=2), LogisticRegression(C=10000))
+pca_lr.fit(X_train, y_train)
+print(pca_lr.score(X_train, y_train))
+print(pca_lr.score(X_test, y_test))
+```
+```
+0.961
+0.923
+```
+]
+???
+---
+# Variance covered
+.center[
+![:scale 55%](images/variance-covered.png)
+]
+.tiny-code[```python
+pca_lr = make_pipeline(StandardScaler(), PCA(n_components=6), LogisticRegression(C=10000))
+pca_lr.fit(X_train, y_train)
+print(pca_lr.score(X_train, y_train))
+print(pca_lr.score(X_test, y_test))
+```
+```
+0.981
+0.958
+```]
+
+???
+Could obviously also do cross-validation + grid-search
+---
+class:split-40
+# Interpreting coefficients
+.tiny-code[```python
+pca = pca_lr.named_steps['pca']
+lr = pca_lr.named_steps['logisticregression']
+coef_pca = pca.inverse_transform(lr.coef_)```]
+.center[Comparing PCA + Logreg vs plain Logreg:]
+<br /> 
+.left-column[
+![:scale 100%](images/PCA+logreg.png)
+]
+.right-column[
+![:scale 100%](images/logreg+noPCA.png)
+]
+???
+Rotating coefficients back into input space. Makes sense because model is linear! Otherwise more tricky.
+---
+class:split-40
+# PCA is Unsupervised!
+.left-column[
+![:scale 100%](images/pca-is-unsupervised-1.png)
+]
+--
+.right-column[
+![:scale 100%](images/pca-is-unsupervised-2.png)
+]
+???
+Dropping the first two principal components will result in random model!
+All information is in the smallest principal component!
+
+---
+# PCA for feature extraction
+.center[
+![:scale 85%](images/pca-for-feature-extraction.png)
+]
+???
+---
+# 1-NN and Eigenfaces
+.tiny-code[
+```python
+from sklearn.neighbors import KNeighborsClassifier
+# split the data into training and test sets
+X_train, X_test, y_train, y_test = train_test_split(
+    X_people, y_people, stratify=y_people, random_state=0)
+print(X_train.shape)
+# build a KNeighborsClassifier using one neighbor
+knn = KNeighborsClassifier(n_neighbors=1)
+knn.fit(X_train, y_train)
+knn.score(X_test, y_test)
+```
+```
+(1547, 5655)
+0.23
+```
+]
+--
+.tiny-code[
+```python
+pca = PCA(n_components=100, whiten=True, random_state=0).fit(X_train)
+X_train_pca = pca.transform(X_train)
+X_test_pca = pca.transform(X_test)
+X_train_pca.shape
+```
+```
+(1547, 100)
+```
+```python
+knn = KNeighborsClassifier(n_neighbors=1)
+knn.fit(X_train_pca, y_train)
+knn.score(X_test_pca, y_test))
+```
+```
+0.31
+```
+]
+???
+---
+
+# Reconstruction
+.center[
+![:scale 70%](images/reconstruction.png)
+]
+???
+---
+class:split-40
+# PCA for outlier detection
+.tiny-code[```python
+pca = PCA(n_components=100).fit(X_train)
+reconstruction_errors = np.sum((X_test - pca.inverse_transform(pca.transform(X_test))) ** 2, axis=1)
+```
+]
+.left-column[
+![:scale 90%](images/best-reconstructions.png)
+<br />
+Best reconstructions
+]
+.right-column[
+![:scale 90%](images/worst-reconstructions.png)
+<br />
+Worst reconstructions
+]
+???
+---
+class: centre,middle
+# Manifold Learning
+???
+---
+![:scale 90%](images/manifold-learning-structure.png)
+???
+Learn underlying “manifold” structure, use for dimensionality reduction.
+# FIXME white padding on image?!
+---
+# Pros and Cons
+- For visualization only
+- Axes don’t correspond to anything in the input space.
+- Often can’t transform new data. 
+- Pretty pictures!
+???
+---
+# Algorithms in sklearn
+- KernelPCA – does PCA, but with kernels! 
+<br /> Eigenvalues of kernel-matrix
+- Spectral embedding (Laplacian Eigenmaps) 
+<br />Uses eigenvalues of graph laplacian
+- Locally Linear Embedding
+- Isomap “kernel PCA on manifold”
+- t-SNE (t-distributed stochastic neighbor embedding)
+???
+---
+# t-SNE
+
+`$$p_{j\mid i} = \frac{\exp(-\lVert\mathbf{x}_i - \mathbf{x}_j\rVert^2 / 2\sigma_i^2)}{\sum_{k \neq i} \exp(-\lVert\mathbf{x}_i - \mathbf{x}_k\rVert^2 / 2\sigma_i^2)}$$`
+--
+
+`$$p_{ij} = \frac{p_{j\mid i} + p_{i\mid j}}{2N}$$`
+
+--
+
+`$$q_{ij} = \frac{(1 + \lVert \mathbf{y}_i - \mathbf{y}_j\rVert^2)^{-1}}{\sum_{k \neq i} (1 + \lVert \mathbf{y}_i - \mathbf{y}_k\rVert^2)^{-1}}$$`
+
+--
+
+`$$KL(P||Q) = \sum_{i \neq j} p_{ij} \log \frac{p_{ij}}{q_{ij}}$$`
+
+???
+
+- Starts with a random embedding
+- Iteratively updates points to make “close” points close.
+- Global distances are less important, neighborhood counts.
+- Good for getting coarse view of topology.
+- Can be good for  nding interesting data point
+- t distribution heavy-tailed so no overcrowding.
+- (low perplexity: only close neighbors)
+---
+class:center
+![:scale 63%](images/tsne-embeddings-digits.png)
+???
+---
+class:split-40
+.smaller[```python
+from sklearn.manifold import TSNE
+from sklearn.datasets import load_digits
+digits = load_digits()
+X = digits.data / 16.
+X_tsne = TSNE().fit_transform(X)
+X_pca = PCA(n_components=2).fit_transform(X)
+```]
+.left-column[![:scale 95%](images/pca-digits.png)]
+--
+.right-column[![:scale 95%](images/tsne-digits.png)]
+???
+---
+class:split-40
+# Tuning t-SNE perplexity
+.left-column[
+![:scale 70%](images/tsne-tuning-2.png)
+![:scale 70%](images/tsne-tuning-5.png)]
+.right-column[
+![:scale 70%](images/tsne-tuning-30.png)
+![:scale 70%](images/tsne-tuning-300.png)]
+???
+- Important parameter: perplexity
+- Intuitively: bandwidth of neighbors to consider 
+- (low perplexity: only close neighbors)
+- smaller datasets try lower perplexity
+- authors say 30 always works well.
+
+---
+class:spacious
+![:scale 25%](images/tsne-moons.png) ![:scale 55%](images/tsne-perplexity.png)
+???
+---
+class: center, middle, spacious
+# Play around online
+
+http://distill.pub/2016/misread-tsne/
+???
+interactive javascript un
+---
+class: middle
+# Discriminant Analysis
+???
+---
+class: spacious
+# Linear Discriminant Analysis aka Fisher Discriminant
+
+`$$    P(y=k | X) = \frac{P(X | y=k) P(y=k)}{P(X)} = \frac{P(X | y=k) P(y = k)}{ \sum_{l} P(X | y=l) \cdot P(y=l)}$$`
+???
+- Generative model: assumes each class has Gaussian distribution
+- Covariances are the same for all classes.
+- Very fast: only compute means and invert covariance matrix (works well if n_features << n_samples)
+- Leads to linear decision boundary.
+- Imagine: transform space by covariance matrix, then nearest centroid.
+- No parameters to tune!
+- Don’t confuse with Latent Dirichlet Allocation (LDA)
+
+--
+
+`$$ p(X | y=k) = \frac{1}{(2\pi)^n |\Sigma|^{1/2}}\exp\left(-\frac{1}{2} (X-\mu_k)^t \Sigma^{-1} (X-\mu_k)\right) $$`
+
+--
+
+`$$    \log\left(\frac{P(y=k|X)}{P(y=l | X)}\right) = 0 \Leftrightarrow (\mu_k-\mu_l)\Sigma^{-1} X = \frac{1}{2} (\mu_k^t \Sigma^{-1} \mu_k - \mu_l^t \Sigma^{-1} \mu_l) $$`
+
+
+---
+class: spacious
+# Quadratic Discriminant Analysis
+.padding-top[
+`$$ p(X | y=k) = \frac{1}{(2\pi)^n |\Sigma_k|^{1/2}}\exp\left(-\frac{1}{2} (X-\mu_k)^t \Sigma_k^{-1} (X-\mu_k)\right) $$`
+]
+???
+- Each class is Gaussian, but separate covariance matrices!
+- More flexible (quadratic decision boundary), but less robust: have less points per covariance matrix.
+- Can’t think of it as transformation of the space.
+???
+---
+class:center
+![:scale 55%](images/linear-vs-quadratic-discriminant-analysis.png)
+???
+---
+# Discriminants and PCA
+- Both fit Gaussian model
+- PCA for the whole data
+- LDA multiple Gaussians with shared covariance
+- Can use LDA to transform space!
+- At most as many components as there are classes (needs between class variance)
+???
+---
+class:center
+# PCA vs Linear Discriminants
+![:scale 100%](images/pca-lda.png)
+???
+---
+class:center
+# Data where PCA failed
+![:scale 100%](images/pca-fail.png)
+???
+---
+# Summary
+- PCA good for visualization, exploring correlations
+- PCA can sometimes help with classification as regularization or for feature extraction.
+- Manifold learning makes nice pictures.
+- LDA is a supervised alternative to PCA.
+???
+LDA also  also yields a rotation of the input spacA
+---
+class: center, middle
+
+# Questions ?
+
+    </textarea>
+    <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+    <script>
+    // Config Remark
+    remark.macros['scale'] = function (percentage) {
+        var url = this;
+        return '<img src="' + url + '" style="width: ' + percentage + '" />';
+    };
+    config_remark = {
+        highlightStyle: 'magula',
+        highlightSpans: true,
+        highlightLines: true,
+        ratio: "16:9"
+    };
+      var slideshow = remark.create(config_remark);
+    // Configure MathJax
+    MathJax.Hub.Config({
+    tex2jax: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'] /* removed 'code' entry*/
+    }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for(i = 0; i < all.length; i += 1) {
+            all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+    });
+    </script>
+  </body>
+</html>

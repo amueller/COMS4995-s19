@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Cluster Evaluation</title>
+    <meta charset="utf-8">
+        <style>
+       @import url(https://fonts.googleapis.com/css?family=Garamond);
+       @import url(https://fonts.googleapis.com/css?family=Muli:400,700,400italic);
+       @import url(https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
+     </style>
+     <link rel="stylesheet" href="../style.css">
+  </head>
+  <body>
+    <textarea id="source">
+
+class: center, middle
+
+### W4995 Applied Machine Learning
+
+# Evaluating Clustering
+
+03/28/18
+
+Andreas C. Müller
+???
+Last time we talked about clustering, and an obvious question is:
+Which algorithm do we use, and how do we set the parameters?
+That's a bit more of an art than a science, unfortunately.
+But I want to give you some tools to do better than just guessing.
+
+FIXME illustration of clustering picking up on different concepts?
+FIXME talk about http://datamining.rutgers.edu/publication/internalmeasures.pdf
+FIXME Calinski-Harabaz
+FIXME S_Dbw? https://pdfs.semanticscholar.org/dc44/df745fbf5794066557e52074d127b31248b2.pdf
+FIXME checkout https://www.coursera.org/learn/cluster-analysis/lecture/baJNC/6-5-external-measure-2-entropy-based-measures
+---
+class: center, middle
+
+# Evaluation Measures
+???
+The fist thing I want to talk about is evaluation measures.
+There's basically two types:
+Supervised, where you have a ground-truth clustering,
+and unsupervised, where you don't.
+Let's start with the supervised methods.
+---
+class: spacious
+#Supervised evaluation
+
+- Compare clustering against "Ground Truth".
+
+- Unclear what the assumptions are.
+
+- Impossible to do in practice.
+
+???
+- Usually classification datasets.
+
+- Often used for papers on clustering algorithms.
+
+- Compare partitions, not labels!
+
+Here you assume that
+you are provided some "true" cluster labels that you want to compare against.
+What people often do is just use a classification dataset, and basically
+treat it as an unsupervised clustering problem.
+This is particularly done by researchers in clustering that want to show
+that their algorithm performs better than some other algorithm.
+Doing this, you are measuring how well a completely unsupervised algorithm
+can identify the classes in the dataset as clusters.
+The problem here is that it's very unclear what kind of assumptions about
+the clusters you are making with this labeling of the data.
+There might be many valid ways to cluster a dataset, and it's unclear
+why the class labels should somehow correspond to the "best" clustering,
+or in what sense this clustering is "best".
+It's very unlikely that there's a coherent definition of cluster so that
+the classes correspond to clusters for any particular dataset - unless
+the classes are really well separated.
+
+The final downside is that this is actually impossible in practice, and
+therefore basically completely useless. Why would you use a clustering
+algorithm if you have ground truth? You'd always be better using a classification
+algorithm. Even if you have very little labeled data, using this in some way
+is probably still much better than trying to run a completely unsupervised
+clustering algorithm.
+So basically if you're running a supervised evaluation method, why are you
+doing clustering at all?
+This makes sense to do if you're studying clustering algorithms, but not
+really in any practical application.
+I still want to talk you through how these methods work.
+
+One thing to keep in mind for all the cluster evaluation metrics is that
+they compare partitions, not labellings. While clustering outcomes in 
+scikit-learn (and other libraries) are always given as integers, you
+don't want to compare the actual integers, as you do in supervised learning.
+You want to compare the partitions given by the cluster labels.
+
+---
+class:spacious
+# Thinking in Partitions
+
+- Partition: set expressed as a union of disjoint sets.
+
+- Y=[0, 0, 0,  1, 1, 1] → C={{0, 1, 2}, {3, 4, 5}}
+
+- Y=[0, 1, 0, 1, 2, 2] → C={{0, 2}, {1, 3}, {4, 5}}
+
+- Partition given by [1, 0, 1, 0] and [0, 1, 0, 1] are the same!
+
+???
+Here's a small example.
+Partitioning the data means expressing it as a union of disjoint sets.
+So a partitioning is a sett of sets.
+In this example, the labelling 0,0,0,1,1,1 means that the first three
+data points are in the same cluster, and the remaining datapoints are in
+a different cluster. And I wrote that down as a partition here,
+using the sample indices.
+Here's another example of 0,1,0,1,2,2, which means the zeroth and 2nd example
+are in one set, and the first and third sample are in a different set, and the
+fourth and fifth are in a different one again.
+
+So the labels really have no semantics, and the partitions given by 0,1,0,1
+and 1,0,1,0 are the same, so if you compare these two clusterings,
+they should be regarded as exactly the same clustering.
+---
+# Contingency Matrix
+For clusterings `$X_i$` and `$Y_j$`, `$n_{ij}=|X_i \cap Y_j|$`
+
+`$$
+\begin{array}{c|cccc|c}
+    {{} \atop X}\!\diagdown\!^Y &
+    Y_1&
+    Y_2&
+    \ldots&
+    Y_s&
+    \text{Sums}
+    \\
+    \hline
+    X_1&
+    n_{11}&
+    n_{12}&
+    \ldots&
+    n_{1s}&
+    a_1
+    \\
+    X_2&
+    n_{21}&
+    n_{22}&
+    \ldots&
+    n_{2s}&
+    a_2
+    \\
+    \vdots&
+    \vdots&
+    \vdots&
+    \ddots&
+    \vdots&
+    \vdots
+    \\
+    X_r&
+    n_{r1}&
+    n_{r2}&
+    \ldots&
+    n_{rs}&
+    a_r
+    \\
+    \hline
+    \text{Sums}&
+    b_1&
+    b_2&
+    \ldots&
+    b_s&
+    \end{array}$$`
+    
+
+
+???
+The most basic way to compare two different clustering results, say yours
+and the ground truth, or two different algorithms, is the contingency matrix.
+You might know contingency matrices from statistics, where they are used
+to relate discrete probability distributions.
+The Contingency matrix is quite similar to a confusion matrix, in that it
+counts how often a datapoint was given label i in one clustering and label j
+in the other clustering.
+So rows correspond to one clustering, and columns correspond to the other.
+However, because labels don't mean anything,
+the diagonal has no meaning, and both of these contingency matrices here
+mean that the two clusterings produce the same partition, i.e. they are identical.
+
+Also, contingency matrices do not need to be square. If you run clustering
+on a dataset, you don't usually know the number of clusters so you want
+to compare different clusterings with different numbers of clusters.
+FIXME needs example
+
+Now that we have this basic representation of cluster overlap, we can
+define derived metrics 
+---
+# Contingency Matrix
+- Both of these mean identical partitions:
+
+.center[
+![:scale 20%](images/contingency_matrix_1.png) ![:scale 20%](images/contingency_matrix_2.png)
+]
+---
+# Mutual Information
+
+`$$\Large MI(U,V)=\sum\limits_{i=1}^{|U|}\sum\limits_{j=1}^{|V|}P(i,j)\log\frac{P(i,j)}{P(i)P'(j)}$$`
+
+`$$\Large =\sum\limits_{i=1}^{|U|}\sum\limits_{j=1}^{|V|}\frac{|U_i \cap V_j|}{N}
+\log\frac{N|U_i \cap V_j|}{|U_i||V_j|}$$`
+
+
+???
+- Between 0 and 1 but not normalized or adjusted. If V is subpartition of U still = 1
+
+A very common metric is mutual information. which is the mutual information
+of the discrete distributions given by the partitions (or the contingency table).
+
+FIXME unify notation (second equation only?)
+FIXME define P(i), P(i, j)
+Mutual information is a standard information theoretic measure for relating
+two distributions, providing a measure of how interdependent they are.
+There we just create distributions corresponding to the partitions and compare those.
+
+We can rewrite this uing the contingency matrix, the probability P(i, j) is
+just the the entry n_ij divided by the number of samples, and P(i) and P(j) are the
+row and column sums divided by the number of samples.
+
+Mutual information is also always between zero and one, with one being
+perfect information. However, if one partition is a sub-partitioning of
+the other partition, the mutual information is still one.
+
+---
+#NMI and AMI
+
+`$$ NMI(U,V) = \frac{MI(U,V)}{\sqrt{H(U)H(V)}}$$`
+
+`$$ AMI = \frac{MI - E[MI]}{\max(H(U),H(V))-E[MI]} $$`
+
+???
+Similar to the rand index, the mutual information depends on the number
+of samples and size of the clusters, and it's common to adjust it for chance,
+to give it a more universal scale.
+Two common normalizations are the normalized mutual information NMI, which divides the mutual information
+by the squareroot of the products of the entropy of the marginal distributions,
+and the adjusted mutual information AMI, which has an adjustment for chance.
+FIXME definition of entropy?
+
+Both use the entropy to penalize overpartitioning, but only AMI is adjusted for chance,
+so zero on expecation.
+These two usually behave pretty similarly. There is other variants of NMI,
+for example dividing by the maximum, as I did here for AMI.
+
+
+- Penalizes overpartitioning (via entropy)
+- Adjusts for chance – any two random partitions have
+expected AMI of 0
+FIXME definition of entropy?
+FIXME use max both times?
+FIXME explain expectation better!
+---
+# Rand Index
+
+- Computed of partitions U, V over the same elements (say {0, …, n-1})
+
+`$$ R(U, V) = \frac{r+s}{\binom{n}{2}}  $$`
+
+- $r$ :  Number of pairs of points in the same set in U and in V
+
+- $s$ : Number of pairs of points in the different sets in U and in V
+
+- $\binom{n}{2}$ : Number of possible pairs
+
+- Between 0 and 1
+???
+One of the most useful one is the Rand Index.
+For two partitions C1 and C2, it computes the number of pairs points that are in
+the same set in C1 and in the same set in C2, called "a" here, and the number of pairs of
+points that are in different sets in both C1 and C2, called "b" here.
+This is divided by n choose 2, so the number of all possible pairs of points.
+This is always between zero and one, though the actual possible minimum and
+maximum depend on the number of clusters and the number of points.
+
+Let's do an example. We're comparing the labeling 0011 and the labelling 1100.
+They are the same, so hopefully the rand index is going to be 1.
+First, I write these as partitions here. Then I check which pairs of points
+are in the same set in both partitions. The pair 0,1 is in the same set
+in both partitions, so we count that. The pair 2,3 is also in the same set
+in both partitions, so we count that as well. No other pairs are in the same
+set in either partition, so we're done counting for "a".
+Now we count the pairs of points that are in different sets. Zero and 2 are in
+different sets in partition one, and also in different sets in partition 2.
+Same for zero and 3, and 1 and 2, and 1 and 3. So that's four pairs in total.
+So the nummerator is 2 + 4 = 6. The denominator is 4 choose 2, which is also six,
+so the rand index is 1, as expected.
+
+For a second example, let's look at these two partitions, 0,1,0,1 and 1,2,0,0.
+Here there's no pair of points that is in the same set in both of them.
+There are three pairs of points that are in different sets in both of them,
+(1,2), (2,3) and (0,3). So the rand index is 3/6, so 1/2.
+
+Alright, so the rand index is about matching pairs of points, which is slightly
+tricky to do in your head, but not that complicated really.
+---
+# Rand Index Example
+
+`$$R([0,0,1,1],[1,1,0,0]) = R\left(\{\{0,1\},\{2,3\}\},\{\{0,1\},\{2,3\}\} \right)$$`
+`$$ = \frac{2+4}{6} = 1 $$`
+
+`$$R([0,1,0,1],[0,0,1,2]) = R(\{\{0,2\},\{1,3\}\},\{\{0,1\},\{2\},\{3\}\})$$`
+`$$ = \frac{0+3}{6} = \frac{1}{2} $$`
+
+???
+---
+# Adjusted Rand Index (ARI)
+
+`$$ AdjustedIndex = \frac{\text{Index}-\text{ExpectedIndex}}{\text{MaxIndex}-\text{ExpectedIndex}}$$`
+
+`$$ARI = \frac{\sum_{ij}\binom{n_{ij}}{2} - \frac{\sum_{i}\binom{a_{i}}{2}\sum_{j}\binom{b_{j}}{2}}{\binom{n}{2}}}
+{\frac{1}{2}\left(\sum_{i}\binom{a_{i}}{2} + \sum_{j}\binom{b_{j}}{2}\right) -\frac{\sum_{i}\binom{a_{i}}{2} + \sum_{j}\binom{b_{j}}{2}}{\binom{n}{2}}}$$`
+
+
+???
+- Maximum of 1, 0 on expectation (can become negative!)
+[Don’t learn the formula]
+
+Because the range of the rand index depends on the data, in practice people prefer
+to use the adjusted rand index, which is adjusted for chance. So we take the
+index we just computed, subtract the expected index over this dataset, and divide
+it by the maximum index on this dataset minus the expected index.
+This means the expectation over all cluster assignments is zero, and the maximum
+over cluster assignments is 1. However, it means the adjusted rand index
+can become negative, basically if the partitions are less similar than they
+would be on expectation, or by chance.
+What this works out to is this nice formula here. The n_ij is the entries of
+the continency table we saw before, and the a_i and b_i are the row and columns
+sums of that contingency table.
+I really don't wanna remember that formula, so don't worry, it's not gonna
+be on the test. Just keep in mind that it measures exactly the same thing
+as the rand index, only adjusting for chance.
+You can see all of the normalization terms only depend on the row and column
+sums, so the number of samples in each of the clusters. Only this first part here
+depends on the contingency table.
+The most common use of this is to compare a particular clustering to a ground-truth
+clustering.
+
+---
+# KMeans on digits dataset
+.center[![:scale 70%](images/ari_nmi_ami_digits.png)]
+
+???
+- ARI, AMI and NMI for k-Means on “digits” dataset. ARI and AMI penalize too many clusters.
+
+
+---
+
+class:center,middle
+
+#Unsupervised Evaluation
+
+???
+---
+
+# Silhouette Score
+
+- For each sample:
+`$$ s = \frac{b-a}{\max(a,b)} $$`
+
+- a is the mean distance to samples in same cluster
+
+- b is the mean distance to samples in nearest cluster
+
+- For whole clustering: average over all samples
+
+- Prefers compact clusters (like k-means) 
+???
+---
+
+.center[
+![:scale 60%](images/ari_silhoutte.png)]
+???
+
+---
+.center[
+![:scale 80%](images/number_clusters.png)]
+
+- What's the right number of clusters?
+???
+---
+
+# Silhouette Plots
+
+.center[
+![:scale 70%](images/silhouette_plots.png)
+]
+- Plot sorted silhouette score for each sample in each cluster
+
+- http://scikit-learn.org/stable/auto_examples/cluster/plot_kmeans_silhouette_analysis.html
+
+???
+---
+.center[
+![:scale 60%](images/number_clusters_gaussians.png)
+]
+
+
+
+???
+What’s the right number of clusters?
+Generated as mixture of 10 Gaussians.
+So what?
+---
+.center[
+![:scale 60%](images/more_silhouette_plots.png)
+]
+
+???
+---
+# Digits Dataset
+
+.center[
+![:scale 80%](images/silhouette_digits.png)
+]
+
+???
+
+
+---
+# Cluster Stability
+
+
+
+- Try multiple random samplings / perturbations
+- Measure consistency
+
+- Clustering stability: an overview (U. v. Luxburg)
+https://arxiv.org/abs/1007.1075
+
+???
+- For comparing clustering algorithms / parameters
+(with different number of clusters for example)
+
+- Try multiple random samplings / perturbations
+
+- The configuration that yields the most consistent
+result among perturbations is best.
+---
+
+# Stability Intuition
+
+.center[
+![:scale 80%](images/stability_intuition.png)
+]
+
+???
+---
+.smaller[
+```python
+def cluster_stability(X, est, n_iter=20, random_state=None):
+    labels = []
+    indices = []
+    for i in range(n_iter):
+        # draw bootstrap samples, store indices
+        sample_indices = rng.randint(0, X.shape[0], X.shape[0])
+        indices.append(sample_indices)
+        est = clone(est)
+        if hasattr(est, "random_state"):
+            # randomize estimator if possible
+            est.random_state = rng.randint(1e5)
+        X_bootstrap = X[sample_indices]
+        est.fit(X_bootstrap)
+        # store clustering outcome using original indices
+        relabel = -np.ones(X.shape[0], dtype=np.int)
+        relabel[sample_indices] = est.labels_
+        labels.append(relabel)
+    scores = []
+    for l, i in zip(labels, indices):
+        for k, j in zip(labels, indices):
+            # we also compute the diagonal which is a bit silly
+            in_both = np.intersect1d(i, j)
+            scores.append(adjusted_rand_score(l[in_both], k[in_both]))
+    return np.mean(scores)
+```]
+
+???
+FIXME too complex to show
+---
+
+.center[![:scale 70%](images/cluster_stability.png)]
+- Outcome depends critically on initialization and n_iter.
+- This is kmeans++ with n_iter=10
+
+???
+---
+.center[![:scale 80%](images/cluster_stability_2.png)]
+???
+---
+
+
+
+
+# Digits Dataset
+
+.center[
+![:scale 70%](images/digits_dataset_ncluster_scan.png)
+]
+???
+---
+# Stability on Digits Dataset
+.center[
+![:scale 70%](images/cluster_stability_different_algos.png
+)
+]
+---
+# Adult Dataset
+.center[
+![:scale 70%](images/adult_dataset_ncluster_scan.png)
+]
+???
+---
+# Labeled Faces in the Wild
+.center[![:scale 70%](images/labfaces_ncluster_scan.png)]
+- With PCA, 100 components. Without whitening: no stable clusters!
+
+???
+---
+class:spacious
+#Qualitative Evaluation(aka eyeballing)
+
+- Look at low-dim visualization
+
+- Look at individual points
+
+- Look at cluster centers (if available)
+
+???
+---
+# Digits
+
+.center[
+![:scale 100%](images/digits_eyeball.png)
+]
+???
+---
+# K-Means cluster centers
+
+.center[
+![:scale 70%](images/kmeans_cluster_centers_digits.png)
+]
+
+.smaller[
+```python
+fig, axes = plt.subplots(2, 5, subplot_kw={'xticks': (), 'yticks': ()},
+                        figsize=(10, 5))
+km = KMeans(n_clusters=10).fit(digits.data)
+for ax, center in zip(axes.ravel(), km.cluster_centers_):
+    ax.imshow(center.reshape(8, 8), cmap='gray_r')
+fig.suptitle("K-Means cluster centers")
+```]
+???
+---
+
+# Agglomerative Clusters
+.center[
+![:scale 90%](images/agglomerative_clusters.png)
+]
+???
+- Each column corresponds to one of 10 clusters, “first” 5 samples are shown.
+- Number on top gives clusters size
+---
+# DBSCAN Clusters
+.center[
+![:scale 90%](images/dbscan_clusters.png)
+]
+
+???
+---
+
+#For feature extraction
+
+.smaller[
+```python
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import GridSearchCV
+
+km = KMeans(n_init=1, init="random")
+pipe = make_pipeline(km, LogisticRegression())
+
+param_grid = {'kmeans__n_clusters': [10, 50, 100, 200, 500]}
+grid = GridSearchCV(pipe, param_grid, cv=5, verbose=True)
+grid.fit(X, y_people)
+```]
+
+.center[
+![:scale 40%](images/param_kmeans_nclusters.png)
+]
+
+???
+---
+class: spacious
+# So what is n_clusters?
+
+- As preprocessing
+  
+  – The one that makes the whole pipeline work best.
+  
+  – Larger is often better.
+
+- For exploratory analysis:
+  
+  – The one that tells you the most about the data.
+
+- For most datasets, there is no “correct” number of
+clusters.
+???
+---
+class:center,middle
+
+If you want semantics from clustering,
+you need manual confirmation.
+
+Clustering might not pick up
+on what you thought it would.
+???
+---
+class: middle
+# Questions ?
+
+
+    </textarea>
+    <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+    <script>
+    // Config Remark
+    remark.macros['scale'] = function (percentage) {
+        var url = this;
+        return '<img src="' + url + '" style="width: ' + percentage + '" />';
+    };
+    config_remark = {
+        highlightStyle: 'magula',
+        highlightSpans: true,
+        highlightLines: true,
+        ratio: "16:9"
+    };
+      var slideshow = remark.create(config_remark);
+    // Configure MathJax
+    MathJax.Hub.Config({
+    tex2jax: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'] /* removed 'code' entry*/
+    }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for(i = 0; i < all.length; i += 1) {
+            all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+    });
+    </script>
+  </body>
+</html>

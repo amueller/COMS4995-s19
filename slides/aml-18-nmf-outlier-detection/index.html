@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>NMF & Outlier Detection</title>
+    <meta charset="utf-8">
+        <style>
+       @import url(https://fonts.googleapis.com/css?family=Garamond);
+       @import url(https://fonts.googleapis.com/css?family=Muli:400,700,400italic);
+       @import url(https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
+     </style>
+     <link rel="stylesheet" href="../style.css">
+  </head>
+  <body>
+    <textarea id="source">
+
+class: center, middle
+
+### W4995 Applied Machine Learning
+
+# NMF; Outlier detection
+
+04/02/18
+
+Andreas C. Müller
+???
+FIXME matrix factorization should be approximately equal, not equal
+FIXME list KL divergence loss for NMF
+FIXME related gaussian model and Kernel density to GMM?
+FIXME talk more about all outliers are different in different ways vs classification (add example where outlier is better?)
+---
+class: center, middle
+
+# Non-Negative Matrix Factorization
+???
+---
+#Matrix Factorization
+
+<br>
+
+.center[
+![:scale 90%](images/matrix_factorization.png)
+]
+???
+---
+#Matrix Factorization
+
+<br>
+
+.center[
+![:scale 90%](images/matrix_factorization_2.png)
+]
+
+???
+---
+#PCA
+
+<br>
+
+.center[
+![:scale 80%](images/pca.png)
+]
+???
+---
+class:spacious
+# Other Matrix Factorizations
+    
+- PCA: principal components orthogonal, minimize
+squared loss
+
+- Sparse PCA: components orthogonal and sparse
+
+- ICA: independent components
+
+- Non-negative matrix factorization (NMF):
+latent representation and latent features are nonnegative.
+
+???
+---
+#NMF
+
+<br>
+
+.center[
+![:scale 80%](images/nmf.png)
+]
+
+???
+---
+class: spacious
+
+# Why NMF?
+
+--
+
+- Meaningful signs
+
+--
+
+- Positive weights
+
+--
+
+- No “cancellation” like in PCA
+
+--
+
+- Can learn over-complete representation
+
+???
+- positive weights -> parts / components
+- Can be viewed as “soft clustering”: each point is
+positive linear combination of weights.
+
+- (n_components > n_features) by asking for sparsity (in either W or H)
+
+---
+.center[
+PCA (ordered by projection, not eigenvalue)
+
+![:scale 70%](images/pca_projection.png)
+]
+
+.center[
+NMF (ordered by hidden representation)
+![:scale 70%](images/nmf_hid_rep.png)
+]
+
+???
+---
+# Downsides of NMF
+
+- Can only be applied to non-negative data
+
+--
+
+- Interpretability is hit or miss
+
+--
+
+- Non-convex optimization, requires initialization
+
+--
+
+- Not orthogonal
+
+--
+
+.center[
+![:scale 60%](images/nmf_downsides.png)
+]
+???
+optimization for "projection"
+---
+
+.center[
+NMF with 20 components on MNIST
+
+![:scale 60%](images/nmf_20_mnist.png)
+]
+
+.center[
+NMF with 5 components on MNIST
+
+![:scale 60%](images/nmf_5_mnist.png)
+]
+
+???
+---
+class:spacious
+# Applications of NMF
+
+- Text analysis (next week)
+
+- Signal processing
+
+- Speech and Audio (see <a href="https://librosa.github.io/librosa/generated/librosa.decompose.decompose.html#librosa.decompose.decompose">librosa</a>)
+
+
+- Source separation
+
+- Gene expression analysis
+
+
+???
+---
+class:center,middle
+#Outlier Detection
+
+???
+---
+#Motivation
+.padding-top[
+.left-column[
+![:scale 100%](images/outlier_detection.png)
+]
+
+.right-column[
+![:scale 100%](images/novelty_detection.png)
+]
+]
+???
+
+- Find points that are “different” within the training set (and in the future).
+
+- “Novelty detection” - no outliers in the training set.
+
+- Outliers are not labeled! (otherwise it’s just imbalanced classification)
+
+- Often outlier detection and novelty detection used interchangeably in practice.
+
+---
+class:spacious
+# Applications
+
+- Fraud detection (credit cards, click fraud, ...)
+
+- Network failure detection
+
+- Intrusion detection in networks
+
+- Defect detection (engineering etc…)
+
+- News? Intelligence?
+
+???
+- usual assumption: all outliers are different in a different way.
+- Often people use classification datasets for outlier detection:
+ that's a bit strange. See homework results.
+---
+class:spacious
+# Basic idea
+
+- Model data distribution $p(X)$
+
+--
+
+- Outlier: $p(X) < \varepsilon$
+
+--
+
+- For outlier detection: be robust in modelling $p(X)$
+
+???
+
+- Task is generally ill-defined (unless you know the
+real data distribution).
+- Task is generally ill-defined (unless you know the
+real data distribution).
+---
+#Elliptic Envelope
+
+`$$p(X) = \mathcal{N}(\mu, \Sigma)$$`
+
+.center[
+![:scale 60%](images/elliptic_envelope.png)
+]
+
+???
+Fit robust covariance matrix and mean
+FIXME add slide on Covariance: Minimum Covariance Determination (MinCovDet)
+
+---
+#Elliptic Envelope
+
+- Preprocessing with PCA might help sometimes.
+
+.smaller[
+```python
+from sklearn.covariance import EllipticEnvelope
+ee = EllipticEnvelope(contamination=.1).fit(X)
+pred = ee.predict(X)
+print(pred)
+print(np.mean(pred == -1))
+```]
+
+.smaller[
+```python
+[ 1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1
+  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1
+  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1
+  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1
+ -1  1  1  1 -1 -1  1 -1  1  1 -1  1 -1 -1 -1  1  1 -1 -1 -1 -1  1 -1  1  1]
+0.104
+
+```]
+
+???
+---
+# Failure-case: Non-Gaussian Data
+
+.center[
+![:scale 80%](images/elliptic_envelope_plot.png)
+]
+
+???
+Could do mixtures of gaussians obviously!
+---
+class: center, spacious
+#Kernel Density
+
+
+![:scale 80%](images/kde_vs_histogram.png)
+
+???
+- Non-parametric density model
+
+- Gaussian blob on each data point
+
+- Doesn’t work well in high dimensions
+---
+class:center
+
+# Kernel Bandwidth
+
+![:scale 50%](images/kde_bandwidth.png)
+
+???
+- Need to adjust kernel bandwidth
+
+- Unsupervised model, so how to pick kernel bandwidth?
+- cross-validation can be used to pick the bandwidth, but if there's outliers in the training
+data, could go wrong?
+
+
+---
+
+.smaller[
+```python
+kde = KernelDensity(bandwidth=3)
+kde.fit(X_train_noise)
+pred = kde.score_samples(X_train_noise)
+pred = (pred > np.percentile(pred, 10)).astype(int)
+```]
+
+.center[
+![:scale 70%](images/kernel_density_bw3.png)
+]
+???
+---
+
+# One Class SVM
+
+- Also uses Gaussian kernel to cover data
+
+- Only select support vectors (not all points)
+
+- Specify outlier ratio (contamination) via nu
+
+
+.smaller[
+```python
+from sklearn.svm import OneClassSVM
+scaler = StandardScaler()
+X_train_noise_scaled = scaler.fit_transform(X_train_noise)
+oneclass = OneClassSVM(nu=.1).fit(X_train_noise_scaled)
+pred = oneclass.predict(X_train_noise_scaled)
+```]
+
+???
+
+- Need to adjust kernel bandwidth
+- nu is "training mistakes"
+
+---
+.center[
+![:scale 80%](images/one_class_svm_plot.png)
+]
+
+???
+---
+class:center,middle
+
+#Isolation Forests
+
+???
+---
+#Idea
+
+- Outliers are easy to isolate from the rest
+
+.center[
+![:scale 80%](images/isolation_forests.png)
+]
+
+
+???
+- Measure as Path length!
+
+---
+class:center,middle
+.left-column[
+![:scale 100%](images/isolation_forests.png)
+]
+
+.right-column[
+![:scale 100%](images/avgpathlen_numtrees.png)
+]
+???
+---
+#Normalizing the Path Length
+
+Average path length of unsuccessful search in Binary Search Tree:
+
+`$$ c(n) = 2H(n-1) - \left(\frac{2(n-1)}{n}\right) \text{  (H = Harmonic number)}$$` 
+
+
+
+`$$ s(x,n) = 2^{-\frac{E(h(x))}{c(n)}} \text{   (h = depth in tree)}$$` 
+
+
+- s &lt; 0.5 : definite inlier
+
+- s close to 1: outlier
+
+???
+---
+class:spacious
+# Building the forest
+
+- Subsample dataset for each tree
+
+- Default sample size of 256 works surprisingly well
+
+- Stop growing tree at depth log_2(sample size) – so 8
+
+- No bootstrapping
+
+- More trees are better – default 100
+
+- Need to specify contamination rate
+
+???
+FIXME all the text
+---
+.center[![:scale 90%](images/building_forest_1.png)]
+???
+---
+.center[![:scale 90%](images/building_forest_2.png)]
+???
+---
+class:spacious
+# Other density based-models
+
+- PCA
+
+- GMMs
+
+- Robust PCA (not in sklearn :-()
+
+- Any other probabilistic model - “robust” is better.
+
+???
+robust only needed for outlier detection, not novelty detection.
+---
+.center[
+![:scale 60%](images/other_density_models_1.png)
+]
+
+.center[
+![:scale 60%](images/other_density_models_2.png)
+]
+
+.center[
+![:scale 60%](images/other_density_models_3.png)
+]
+???
+---
+class:spacious
+# Summary
+
+- Isolation Forest works great!
+
+- Density models are great if they are correct.
+
+- Estimating bandwidth can be tricky in the
+unsupervised setting.
+
+- Validation of results often requires manual inspection.
+
+???
+---
+class: middle
+# Questions ?
+
+
+    </textarea>
+    <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+    <script>
+    // Config Remark
+    remark.macros['scale'] = function (percentage) {
+        var url = this;
+        return '<img src="' + url + '" style="width: ' + percentage + '" />';
+    };
+    config_remark = {
+        highlightStyle: 'magula',
+        highlightSpans: true,
+        highlightLines: true,
+        ratio: "16:9"
+    };
+      var slideshow = remark.create(config_remark);
+    // Configure MathJax
+    MathJax.Hub.Config({
+    tex2jax: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'] /* removed 'code' entry*/
+    }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for(i = 0; i < all.length; i += 1) {
+            all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+    });
+    </script>
+  </body>
+</html>

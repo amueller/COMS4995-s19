@@ -1,0 +1,1458 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Matplotlib</title>
+    <meta charset="utf-8">
+    <style>
+        @import url(https://fonts.googleapis.com/css?family=Garamond);
+        @import url(https://fonts.googleapis.com/css?family=Muli:400,700,400italic);
+        @import url(https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
+      </style>
+      <link rel="stylesheet" href="../style.css">
+  </head>
+  <body>
+    <textarea id="source">
+
+class: center, middle
+
+### W4995 Applied Machine Learning
+
+# Testing, Visualization and Matplotlib
+
+01/24/18
+
+Andreas C. Müller
+
+???
+Hi everybody.
+Some quick announcement. I decided to give everybody that wants to audit access to courseworks,
+mostly so that they can follow the announcements and discussions on piazza. If you're auditing
+and you haven't gotten an invite to courseworks yet, please drop me an email.
+Also, for all of you on the waiting list: Spots that open up in the class are constantly
+being filled from the waiting list, which is still over 100 students. Dropping
+by my office without an appointment or writing me emails or hassling our staff
+will not get you in faster, it might do the opposite, though.
+
+Today we'll pick up where we left of Monday, talking about a bit more software engineering,
+and then diving into visualization and matplotlib. Next time we'll finally actually start
+with machine learning.
+
+Again, slides and slide notes for this are online.
+
+---
+class: center, middle
+
+# Unit Tests and integration tests
+
+???
+So last time we talked about how we can guard ourselves against some simple
+issues with our syntax checkers, but that doesn’t find all errors, and it
+doesn’t tell us if our code works. So we now we’ll talk about unit testing and
+integration testing.
+
+Who of you has worked with an automatic testing framework?
+
+What is it for and why would we want it?
+
+---
+class: spacious
+
+# Why test?
+
+- Ensure that code works correctly.
+- Ensure that changes don’t break anything.
+- Ensure that bugs are not reintroduced.
+- Ensure robustness to user errors.
+- Ensure code is reachable.
+
+???
+So yes, we want to make sure that our code is correct. We also want to
+make sure that if we rewrite something, it remains correct. If you have
+good tests, it is much easier to aggressively refactor your code. If
+your tests are passing, everything works!
+Another important kind of test is no-regression tests. You found a bug,
+you fixed it, and now you want to make sure you don’t re-introduce
+it. The easiest way is to write a test that tests for the bug.
+You also want to make sure that your program behaves reasonable, even
+in edge-cases such as invalid input.
+And finally, testing can help you find code that is actually unreachable
+by measuring coverage. If you can’t write a test that will reach
+a particular part of the code, it’s never executed, and you should
+probably think about that.
+
+---
+class: center, middle
+
+# Test-driven development?
+
+???
+I love tests. But there are some people that love tests even more,
+and they practice what’s called test-driven development. Who here has
+heard about that?
+In test driven development, you write the tests before you write the
+code. And there are advantages to that. I don’t usually do that myself.
+However, I do test-driven debugging. If I find a bug, I first write a test
+that fails if the bug is present. I need to do that later anyhow, because
+I need a non-regression test, and it usually makes debugging much easier.
+I often do example driven development, where I write down some simple
+use-cases and then write implementations to fullfil them.
+
+---
+
+# Types of tests
+
+- Unit tests – function does the right thing.
+
+- Integration tests – system / process does the right thing.
+
+- Non-regression tests – bug got removed (and will not be reintroduced).
+
+???
+I usually think of tests in terms of three kinds: unit tests, that test
+the smallest possible unit, usually one function.
+Then, there’s integration tests, that test that the different parts
+of the software actually work together in the right way. That is often
+by testing several application scenarios.
+And finally, there’s non-regression tests, which can be either a unit
+tests, an integration test, or both, but they are added for a specific
+scenario that failed earlier, and you’ll accumulate them as your
+project ages.
+
+---
+
+# How to test?
+
+- py.test – http://doc.pytest.org
+
+- Searches for all test_*.py files, runs all test_* methods.
+
+- Reports nice errors!
+
+- Dig deeper:
+http://pybites.blogspot.com/2011/07/behind-scenes-of-pytests-new-assertion.html
+
+???
+There are several frameworks to help you with unit testing in
+python. There’s the built-in unittest module, there’s the now somewhat
+abandoned nosetests.
+For the course we’ll be using the py.test module, which is also what
+I’d recommend for any new projects.
+What it does is it searches all files starting with `test`, runs them,
+and reports a summary.
+The tests should contain assert statements, and if any of them fail,
+you’ll get an informative error.
+This is actually done with a considerable amount of magic, which you
+can read up on here, if you’re into rewriting the AST.
+
+
+---
+# Example
+
+.smaller[
+
+```python
+# content of test_sample.py
+
+def inc(x):
+    return x + 2
+
+def test_answer():
+    assert inc(3) == 4
+```
+]
+
+![:scale 60%](images/pytest_failure.png)
+
+???
+So here I have a slightly modified version of the example from the pytest
+website. We have a function called inc that’s supposed to increment
+a number. But there’s a bug: it adds two instead of one.
+And we have a test, which is called `test_answer`, that calls the
+inc function with the number three and checks if three is correctly
+incremented.
+If we call py.test on this file, or on the folder of this file, py.test
+will run the `test_answer` function - because it starts with `test_`.
+It tells us it ran one test, and that test failed. We also get a traceback
+showing us the line and what the actual value was. We got 5 instead of 4.
+Depending on how much you know about programming, this error message should
+come as a bit of a surprise to you. The assert only gets a boolean,
+but pytest actually unpacks the `False` and gives us more information.
+
+---
+
+# Example
+
+```python
+# content of test_sample.py
+
+def inc(x):
+    return x + 1
+
+
+def test_answer():
+    assert inc(3) == 4
+```
+
+![:scale 70%](images/pytest_passed.png)
+
+???
+So now we go back and fix our increment function, and run py.test
+again. This time, it tells us the tests passed.
+Does that mean the function is correct?
+No, but we could test more. How? We could do the same with more
+numbers. Tests are usually only necessary, not sufficient
+for correctness.
+
+Usually all test for a project are in a separate file or even a separate
+folder. In this example we had the test and the function to be tested
+in the same file, but that’s not good style.
+The actual implementation should be completely separate from the tests.
+
+
+---
+
+# Test coverage
+.smaller[
+.left-column[
+```python
+# inc.py
+def inc(x):
+    if x < 0:
+        return 0
+    return x + 1
+
+
+def dec(x):
+     return x - 1
+```
+]
+
+.right-column[
+```python
+# test_inc.py
+from inc import inc
+
+def test_inc():
+     assert inc(3) == 4
+```
+]
+]
+
+.reset-column[
+![:scale 70%](images/pytest_coverage1.png)]
+???
+Here’s a more complex example, with inc.py containing two functions
+and test_inc.py containing the same test. I added an if into the inc
+function, and a dec function.
+If we run the test, they still pass. But clearly we’re not testing
+everything. In this example, it’s easy to see that we don’t test the
+if branch and we don’t test the dec function at all. If you project
+is larger and more complex, it’s much harder to figure out whether
+you covered all the edge-cases, though.
+That’s where test coverage tools come in handy.
+
+---
+
+# Test coverage
+.smaller[
+.left-column[
+```python
+# inc.py
+def inc(x):
+    if x < 0:
+        return 0
+    return x + 1
+
+
+def dec(x):
+     return x - 1
+```
+]
+
+.right-column[
+```python
+# test_inc.py
+from inc import inc
+
+def test_inc():
+     assert inc(3) == 4
+```
+]]
+
+.reset-column[
+![:scale 50%](images/pytest_coverage2.png)
+]
+
+???
+So instead of just calling py.test, we specify --cov inc, which means
+we want to test the coverage of the inc module or file.
+Now we get a coverage report that tells us that out of the 6 statements
+in inc.py, two were not covered, resulting in 67% coverage.
+There are several ways to figure out which lines we missed, I like the
+html report the most.
+
+
+---
+
+# HTML report
+
+.larger[
+```bash
+$ py.test --cov inc --cov-report=html
+```
+]
+
+.left-column[![:scale 100%](images/pytest_html_report1.png)]
+.right-column[![:scale 100%](images/pytest_html_report2.png)]
+
+???
+So we specify --cov-report=html, and py.test will create a html report
+for us. We get an overview that contains the same information as before,
+but we’ll also get a detailed view of inc.py, which shows us which
+lines we covered and which lines we missed.
+And now we can clearly see that we never reached the return 0 line in
+inc and we never tested dec.
+
+Whenever your write tests, you should make sure they cover all cases in
+your code, in particular the different algorithmic pieces. Covering all
+error messages is possibly not as important. You should usually aim for
+coverage in the high nineties.
+
+If you look at projects on github, you can often see a badge that
+says “coverage X %”, showing the code coverage. These badges are
+actually automatically generated, and next I want to talk about how
+that’s done.
+
+
+---
+class: center, middle
+
+# Continuous integration (with GitHub)
+
+???
+This is the magic of continuous integration, which I mentioned already last time.
+Continuous integration is a general paradigm in software engineering, of
+automatically running integration tests whenever you change your software.
+I want to talk about it in particular in the context of github, because
+that’s what you’ll likely be using, both here and later in industry
+– at least in a startup. If you go to google or facebook of amazon,
+they all have their own frameworks, but the same principles apply.
+
+They often have even more involved systems, like continuous deployment,
+which actually automattically puts new code into production if it passes
+tests. We're not gonna talk about that here. Continuous deployment gets
+somewhat trickier with machine learning algorithms.
+
+---
+
+# What is Continuous integration?
+
+- Run command on each commit (or each PR).
+- Unit testing and integration testing.
+- Can act as a build-farm (for binaries or documentation).
+- requires clear declaration of dependencies.
+- Build matrix: Can run on many environments.
+- Standard serviced: TravisCI, Jenkins and CircleCI
+
+???
+Ok so what’s continuous integration in more detail?
+It runs some sequence of commands on a cloud machine every time a commit
+is made, either just for a particular branch, or for each pull request.
+Usually the command is just running the test suit, but you can also
+check coverage or style or build binaries or rebuild your documentation.
+This is done on a clean cloud machine, so you need to be very explicit
+about your dependencies, which is good. You can specify a build matrix
+of different systems you want to run, such as linux and os X, different
+versions of Python and different versions of the dependencies, like
+older and newer numpy versions.
+There are some standard services out there that are free for open
+source and educational purposes, travis, jenkins and circle are some of
+them. We’ll use travis for this course.
+
+
+---
+
+# Benefits of CI
+
+- Can run on many systems
+- Can’t forget to run it
+- Contributor doesn’t need to know details
+- Can enforce style
+- Can provide immediate feedback
+- Protects the master branch (if run on PR)
+
+???
+So what’s the benefits of doing this?
+You can run it on many systems, and in parallel. You might not have all
+the operating systems that you want it to run on, and you might not go
+through the hassle of trying out every patch on every machine.
+Because CI is automatic, you can’t forget to run it. There’s
+github integration that will give you a red x or a green check mark,
+and everybody will know whether your commit was ok or not.
+You can make a change to a package without knowing all the requirements
+and even without knowing how to run the tests. The CI will complain if
+you broke something.
+And you get immediate feedback while you’re working, because tests
+are run every time you commit!
+Most projects will only merge pull requests that pass CI, and that means
+the master branch can not break and will always be in working condition,
+which is important.
+
+---
+
+# What does it do?
+
+- Triggered at each commit / push
+- Sets up a virtual machine with your configuration.
+- Pulls the current branch.
+- Runs command. Usually: install, then test.
+- Reports success / Failure to github.
+
+???
+Ok so let’s go through the steps that the CI performs.
+Let’s say you configured travis for one of your branches on github. If
+you push to that branch, travis will be triggered.
+A virtual machine will be set up with the configuration that you
+specified. The machine pulls your current version of the project. If
+it’s a pull request, it might also use the code that would be the result
+of a merge, so it would be your changes applied to the current project.
+Then some commands are run that you can specify. Usually these are
+installing the package, possibly including dependencies, and then running
+the test suite.
+After the test-suite runs, it will report back to github.
+
+---
+# Setting up TravisCI
+
+.smaller[
+- Create account linked to your github account: http://travis-ci.org<br />
+![:scale 60%](images/travis_activate.png)
+- Check out docs at https://docs.travis-ci.com
+
+```yaml
+language: python
+python:
+  - "2.7"
+  - "3.4"
+  - "3.5"
+  - "3.6"
+  - "3.7"
+  - "nightly"
+# command to install dependencies
+install:
+  - pip install -r requirements.txt
+# command to run tests
+script:
+  - pytest # or py.test for Python versions 3.5 and below
+
+```
+]
+
+???
+So in general to set up travis you have to create an account that is
+linked to your github account, and enable travis-ci on the repository
+you want.
+For public repositories and students its free, otherwise you have to
+pay for the service.
+For the homework you'll need to enable this for your repo.
+
+There a docs online at this website, and the only thing you need to do
+is create a .travis.yml file with the configuration.
+Here, we specify the versions of python we want to run, the install
+command, and the final command.
+This will run pip install with a requirements file. You could also run
+python setup.py install,or specify requirements here directly.
+
+
+---
+
+# Using Travis
+
+- Triggered any time you push a change
+- Integrated with Pull requests
+- Try a pull request on your own repository!
+
+???
+Travis is run automatically each time you push a change, so in the
+homework, push a change and then see the status page.
+You can also do a pull request on your own repository, so you can see the
+pull request integration. It’s pretty cool and you should try it out.
+
+---
+class: center, middle
+
+# Documentation
+
+???
+So now, we come to the last bit that is about general software development,
+documentation. We talked earlier about how important it is to write readable
+code.  But no code is perfectly documenting itself. You definitely need to
+write additional documentation.
+Also, many people don’t like digging through code, so some documentation
+that’s more easily accessible is helpful.
+
+I decided to take this off the homework this year, because people were struggling
+a lot with setting up the infrastructure last year. That's a bit
+unfortunate, because it's really cool once you see all the pieces coming together.
+
+---
+
+# Why document?
+
+- Allow people to use the code without reading it.
+- Your code is harder to understand than you think.
+- Input types and output types are unclear in dynamic languages.
+- Often implicit assumptions about input.
+
+???
+So why do we document?
+The most obvious reason is that you want other people to use your code,
+and most people don't want to read the full implementation of a function
+before they can use it. You can document the functionality, interface
+and assumptions, and anyone can use your code, without having to dig
+through all the details.
+Even if someone wants to read the code, documentation makes reading the code
+easier. Others will thank you, including your future self.
+While you should document any function or class in any language, in
+dynamically typed languages in particular, it’s often unclear what the
+assumptions about the input are, and what the type of the output is. So
+these are really crucial to document.
+And if the input is some complex object like a dictionary or a custom
+class, often you make assumptions about the content of this object that
+are not obvious from the code.
+
+---
+# Python documentation standards
+.compact[
+.smaller[
+- PEP 257 for docstrings for class, methods and functions
+```python
+def inc(x):
+    """Add one to a number.
+
+    This function takes as argument a number, and adds one to it.
+    The result is returned.
+    """
+    if x < 0:
+        return 0
+    return x + 1
+```
+- Additional inline documentation
+```python
+    if x < 0:
+        # x is less than zero
+        return 0
+    return x + 1
+```
+]]
+???
+Python has some standards for documentation, described in pep  257.
+Every class, method or function should have a docstring, at the very
+least all public ones.
+These are particularly helpful because they can be easily viewed inside
+a python session or with Jupyter Notebook.
+For docstrings we use triple quotes, with a single line
+Explanation in the first line, then an empty line, then a more detailed
+explanation.
+This docstring is stored in the `__doc__` attribute of the object.
+
+In addition to that, you can use inline documentation when you think it
+might be useful, using the pound.
+
+---
+
+# NumpyDoc format
+
+See
+
+.smaller[https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt]
+
+```python
+"""
+Parameters
+-----------
+x : type
+    Description of parameter x.
+"""
+```
+
+???
+You might have noticed that the python folks like standards. In the
+data science community there’s a stricter standard, which is the
+numpydoc format.
+It’s what you’ll see in numpy, scipy, pandas and scikit-learn for
+example.
+The documentation has several sections for Parameters, return values,
+examples, notes and more.
+The most important parts are the parameters and return values, which
+you should document as you can see here.
+A detailed description of the documentation format is in the doc I linked
+to. You should always document all parameters and all return values.
+This documentation is in restructured text format, which we’ll come
+to in a bit.
+This format is a bit idiosyncratic with a space before the colon, but
+it’s important that you actually stick to this.
+
+---
+
+# NumpyDoc example
+
+.left-column[
+![:scale 95%](images/numpydoc_multinomial_nb.png)
+]
+.right-column[
+![:scale 95%](images/numpydoc_fit.png)
+]
+
+???
+Here you can see two examples from scikit-learn. On the left is the
+docstring for the MultinomialNB class. The class docstring follows
+the class definition, and the parameters are the parameters to the
+init function.
+You can see parameters, attributes, examples, notes and references.
+
+Next to it is the fit method, which just has a one-line description and
+then the parameters and return values.
+You can see that the type descriptions can get pretty specific, giving
+the matrix shapes.
+
+You might ask why we’re using this specific format and why we’re
+using restructured text. And the answer to this is sphinx.
+
+---
+
+# Sphinx and reStructured Text
+
+.left-column[
+![:scale 95%](images/sphinx_svm_rst.png)
+]
+.right-column[
+![:scale 95%](images/sphinx_svm_website.png)
+]
+
+
+???
+So what’s this sphinx? It’s basically a static page generator that
+takes restructured text and produces HTML and pdf output.
+This is how the scikit-learn or numpy or pandas documentation is generated for example. You
+can see the rst code on the left and the generated website on the
+right. Obviously there’s also a theme file that governs the layout.
+RST is similar to markdown but it also allows internal references,
+figures and simple ways to extend the format with custom patterns.
+Sphinx can also automatically generate html and pdf documentation from
+the docstrings itself, using a module called autodoc. That’s how the
+API documentation is generated, and that’s where numpydoc comes in.
+
+---
+class: center, middle
+
+# Autodoc and NumpyDoc
+
+![:scale 50%](images/sphinx_autodoc.png)
+
+???
+Here is the documentation of the DummyClassifier as rendered by Sphinx using
+autodoc. You can see the different sections here.  There’s more sections, and
+also documentation for the methods down below.  Sphinx also adds in links to
+the source code on github if you like.
+
+So now obviously you want to show this to people interested in your
+project, and you don’t want them to install sphinx and build the docs
+before they can read them.
+One option would be to build this locally and then use github pages to
+host the site.
+That’s fine, but also a little cumbersome.
+
+---
+
+class: center, middle
+
+# Principles of Data Visualization
+
+???
+For the rest of today I want to talk about visualization and matplotlib.
+We will not talk about numpy and pandas, even though they are very important
+for doing data science with python. There are two reasons:
+I find it easier to talk about visualization in the abstract, while
+pandas usage is often very case specific. 
+Also, there is not a lot of material out there about matplotlib, unfortunately,
+while there is a lot of great material out there on pandas.
+I highly recommend the book by Wes McKinney on "Python data analysis",
+which is just a pandas handbook. The best guide to all the python libraries
+that we need, including matplotlib, is the "Python Data Science Handbook" that
+I mentioned earlier, and you should really check it out.
+
+In terms of visualization, all the DSI folks in this course are also taking
+the Exploratory data analysis and visualization course, which will go into
+way more detail than we will here - and we'll focus a bit more on the
+python interfaces.
+---
+class: center, padding-top, spacious
+
+# Why?
+???
+So first, I want to ask why we might want to visualize data. And I think
+there are two main reasons.
+The first is for ourselves, to explore the data, make hypothesis and
+find interesting trends.
+The other is to communicate either the whole data, or particular aspects
+or findings about the data. I think both are important, but for the
+matter of this class, I think the exploration is more important.
+In general, you should think about what the point of any visualization is,
+and whether the method you chose is the best for this purpose.
+
+In many of my capstone reports last semester I had people show all kinds of
+charts and graphs and often the description was "here is a bar-plot of 
+quantity X". So what? Why are you showing me this? What's the conclusion?
+Ideally a visualization should answer a question. In exploratory analysis,
+the answer might be "there's nothing interesting here", but you should
+still have some idea what you're looking for.
+
+So I want to briefly talk about some very basics of data visualization. I’ll post
+two great books as references if you’re curious, and I linked to a PhD
+thesis which has a great introduction, and from which I stole some illustrations.
+
+--
+
+# Explore
+# Communicate
+
+---
+class: padding-top, spacious
+
+Above else, show the data.<br />
+Maximize the data-ink ratio.
+.quote_author[E. Tufte]
+
+???
+Here two quotes I want to start with. The first two
+are from Edward Tufte, the godfather of statistical visualization. He
+says “above else, show the data”. So the data should be in focus,
+and not any fancy method you use to show it.
+He also says “Maximize the data-ink ratio”. What he means here is
+that all the ink you’re using (even if it’s virtual ink) should show
+the data, and should vary with the data. You want fewer static elements
+in your graphic, and more elements that are actually important to show
+the data.
+
+The other quote, from William Cleveland is: Tools matter. I think for
+him the tools are more the visualization methods, but I think also the
+software tools matter, which is why I want to talk about them.
+
+--
+
+Tools matter.
+.quote_author[W. S. Cleveland]
+
+---
+class: center, middle
+
+# Visual Channels
+![:scale 60%](images/visual_channels.png)
+
+???
+Before we start with plotting, here’s a quick summary of visual
+channels that I took from the thesis “Systematising glyph design for
+visualization”.
+These are ways in which you can show information.
+There is obviously length, as in bar-charts, angle, curvature, shape as
+in graphs and scatter plots.
+There’s area, which is often useful, but it’s important to say whether
+you’re using area or distance to show information. For circles that’s
+often unclear.
+
+There is 3d volume, which is really something you probably want to avoid. Then there’s
+color. There’s lightness, saturation, transparency and hue, and they
+all work very differently. It’s generally accepted that using hues for
+quantitative changes is not a great idea, and lightness or saturation
+works much better.
+
+Textures are something I also try to avoid, position is clearly one of
+the most important channels, while the rest are not something I use very
+often - though containment and connection can be helpful.
+---
+class: center, middle
+
+# Picking Channels
+.left-column[
+![:scale 50%](images/visual_channels2.png)
+]
+.right-column[
+![:scale 100%](images/visual_channels3.png)
+]
+
+???
+There have been studies of which of these are good ways to relate
+quantities. The winner is position, closely followed by length. These
+are clearly the most accurate ways to depict a value. Then angle, area,
+volume, texture, saturation and finally hue.
+So hue is basically the worst way to encode any quantitative
+information. Unfortunately these studies didn’t include brightness.
+
+It’s also good to be aware of which of these channels have pop-out
+effect, which allows you to find particular items very quickly. Here
+you can see color, orientation, curvature, size, symbol, movement, blur
+and contrast all working well - actually you can’t see the movement,
+but I think you would agree.
+It’s important to know that the number of different values are important
+to how much something pops out, and if you use too many orientations or
+sizes or colors, this effect is lost.
+---
+class: center, middle
+
+# Colormaps
+
+.left-column[
+![:scale 90%](images/sequential_color_maps.png)<br \>
+![:scale 90%](images/qualitative_color_maps.png)
+]
+
+.right-column[
+![:scale 90%](images/diverging_color_maps.png)<br \>
+![:scale 90%](images/misc_color_maps.png)
+]
+
+.reset-column[
+![:scale 50%](images/perceptually_uniform_colormaps.png)
+]
+???
+But let’s talk more about color, in particular color maps.
+Color maps are ways to map quantities from a continuous number to a color,
+and they are used whenever you plot something with color - or even with
+gray scale.
+There are several different types that are important to
+distinguish. Sequential colormaps usually go from one hue or saturation
+to another, while also changing lightness. The have two extremes and
+interpolate between them. That works well if you’re particularly
+interested in the extreme values, but they might not offer a lot of
+contrast in the middle. There’s also diverging colormaps, which have
+a focus point in the middle, these here have either grey or white,
+and then have different hues going in either direction. This is great
+if you have a neutral point and then deviations for that, like profits
+that can be zero or positive and negative, and you can easily see which
+side of the zero any point is on.
+
+---
+class: center, middle
+
+# Colormaps
+
+.left-column[
+![:scale 90%](images/sequential_color_maps.png)<br \>
+![:scale 90%](images/qualitative_color_maps.png)
+]
+
+.right-column[
+![:scale 90%](images/diverging_color_maps.png)<br \>
+![:scale 90%](images/misc_color_maps.png)
+]
+
+.reset-column[
+![:scale 50%](images/perceptually_uniform_colormaps.png)
+]
+???
+Quantitative colormaps are mean to not show a continuum, but just some
+discrete values, and they are designed in such a way to have optimum
+contrast for a particular number of discrete values.
+
+Finally, there are the miscellaneous colormaps shown here, and you can
+see them really everywhere, in particular rainbow colormaps like jet and
+rainbow. Don’t use them. Really, never ever use them. I’ll explain
+why in a second, but if I see it in this course, not only will I take
+points of your homework, I’ll also look at you really disappointedly.
+
+And there are other colormaps that have more than two hues, but that
+don’t have the problems that these very colorful ones have, and these
+are the perceptually uniform ones down here. These are carefully
+designed to ideally show quantitative information.
+So let's talk about how they are different.
+
+---
+class: center
+![:scale 35%](images/colormap_evaluation_gray.png)
+
+???
+So what’s the problem with these other colormaps. This is an evaluation
+of the grey color map. Let's look at the panels on the right first. There
+are three heat maps here. So each pixel here represents a floating point
+value on some scale. 
+On the left you see at the top the perceived changes in the color map,
+using a model of the human visual system. You can see that it's pretty
+constant. And at the bottom left you can see the the color map as a path
+in the 3d color space. This space is not RGB, it's a CIE color space
+that corresponds more to how humans perceive color. In the RGB space,
+humans can detect finer nuances in green than in red, for example.
+
+Each color map is a path in this 3d space. And ideally, you'd like
+this to be a smooth path, and you'd like the speed to be constant.
+The perceptual contrast at the top is something like the derivative,
+or speed, of the color map going through the perceptual space.
+---
+class: center
+![:scale 35%](images/colormap_evaluation_gray.png)
+.left-column[
+![:scale 80%](images/colormap_evaluation_jet.png)
+]
+.right-column[
+![:scale 80%](images/colormap_evaluation_viridis.png)
+]
+
+???
+Now let’s look at this in the jet color map. you see that green ring
+that looks like it has some boundary? Or the red core? Where are these
+in the greyscale? They are not there, because the are not in the data.
+So why does it look like there are edges? here is the color map, and this
+shows the differences in perceived color. You see these spikes? that’s
+where we perceive edges, because the color map has edges! Also here
+is the colormap converted to greyscale, say if someone printed it. and
+below are the brightness deltas. Do you see something?
+It’s not monotonous. It doesn’t go from dark to bright, it backs up
+on itself.
+--
+???
+And here’s one of the perceptual uniform colormaps In comparison.
+You can see that there’s a bit more detail then in the gray one, but
+no artificial contours appear. That’s because there are no perceptual
+edges. Also, the change in brightness is constant, so if you convert it
+to greyscale, you just got the greyscale colormap back.
+The other plots here show how it looks for various forms of
+color-blindness, and the path of the colormap  in a perceptual 3d
+color space.
+I posted a cool video explaining way more details on this on the course
+website.
+
+---
+class: center, middle
+
+# matplotlib
+
+???
+Which brings us to matplotlib.
+So matplotlib is the python plotting library on which basically all
+python plotting libraries build, and because it’s so important,
+we’re gonna go through it in some detail.
+Matplotlib was designed as a general plotting library and not really with
+data analysis in mind, which is why it is a bit cumbersome in some cases,
+and not as elegant for data science as you might be used to if you're coming from R.
+But I think it’s still good to know how to effectively create graphics
+in python if you’re gonna work with python, which we will.
+Matplotlib is very powerful, and any figure you can imagine, you can
+create with matplotlib. Unfortunately sometimes it takes a bit of code,
+though.
+
+---
+class: center, middle
+
+# matplotlib v2
+
+update now!
+(you can enable classic style if your really want)
+
+???
+So matplotlib version 2 has been out for about a year now,
+though I still see people using matplotlib v1. I would really highly
+encourage you to upgrade. version two changes some of the default
+styles, but you can still enable the classic styles if you want.
+In particular version two uses virids as the default color map.
+If you create plots in version 1.X and show them in 2.X, they might
+look very differently or might not be comprehensible at all.
+---
+
+# Other libs
+
+- pandas plotting - convenience
+- seaborn - ready-made stats plots
+- bokeh - alternative to matplotlib for in-browser
+- several ggplot translations / interfaces
+- bqplot
+- plotly
+
+???
+There are some other interface you should look into which I won’t
+discuss in class.
+Pandas has some built-in plotting on top of matplotlib. It’s basically
+shortcuts to do some operations more easily on dataframes, and I highly
+encourage you to use it. You’ll get the most out of it if you actually
+understand matplotlib, though.
+Similarly seaborn has many tools for statistical analysis and
+visualization, also using pandas dataframes, also based on matplotlib.
+Seaborn is really great for more complex statistical plots.
+
+There is a completely separate project, bokeh, which uses javascript
+(but not d3) to do visualizations in the browser. I’m not entirely
+convinced yet, though.
+There’s also several reimplementations and interfaces to ggplot,
+if that’s what you’re into, and bq plot, a tool for time series
+visualization in the jupyter notebook.
+And finally there's a startup
+called plotly that also provides a plotting interface.
+---
+
+# Imports
+
+```python
+from matplotlib.pyplot import *
+from pylab import *
+from numpy import *
+```
+
+???
+So before we start, a word on imports.
+What do you think about these imports?
+Why are they bad?
+They hide where functionality came from. Is this squareroot from numpy
+or math or your own function? Is this plot from seaborne or pandas or
+matplotlib or something else?
+Never use import *. It makes your code less readable. And we don’t
+want that, right?
+
+Always use explicit imports and standard naming conventions.
+I haven’t decided if I’ll subtract points for that, but if I see
+that I will know that I failed.
+
+--
+NO!
+
+```python
+import matplotlib.pyplot as plt
+import numpy as np
+```
+YES!
+---
+
+# matplotlib & Jupyter
+.left-column[
+`%matplotlib inline`
+- sends png to browser
+- no panning or zooming
+- new figure for each cell
+- no changes to previous figures
+]
+.right-column[
+`%matplotlib notebook`
+- interactive widget
+- all figure features
+- need to create separate figures explicitly
+- ability to update figures
+- doesn't work with jupyter lab (right now)
+]
+
+???
+I highly recommend that you use jupyter to play around with matplotlib
+figures and visualizations.
+To show matplotlib figures embedded in jupyter, you have to call one of
+two magics. Jupyter magics are those that start with a percentage.
+There’s matplotlib inline and matplotlib notebook, and you should run
+one of them, and only one of them, at the very start of the notebook.
+Both will allow you to show the figures inside the the browser, but they
+are quite different. [read/explain table]
+---
+
+# Figures and Axes
+
+figure = one window or one image file
+
+axes = one drawing area with coordinate system
+
+![:scale 40%](images/figure_axis.png)
+
+by default: each figure has one axis
+
+???
+Now let’s start with the actual matplotlib.
+The most basic concepts in matplotlib are Figures and axes. A figure is a
+single window or a single output file. A figure can contain multiple axes,
+which are basically subplots. Axes are the things you actually draw on,
+and usually each one has a single coordinate system.
+
+By default, each figure has one axes.
+So her is a figure with two axes from the scikit-learn examples.
+
+---
+class: some-space
+# Creating Figures and Axes
+.smaller[
+.wide-left-column[
+1st way: don’t.<br />
+Creates figure with axes on plot command
+
+2nd way: `fig = plt.figure()`<br />
+Creates a figure with axes, sets current figure.
+Can add more / different axes later.
+
+3rd way: `fig, ax = plt.subplots(n, m)`<br />
+Creates a figure with a regular grid
+of n x m axes.
+]
+.narrow-right-column[
+![:scale 100%](images/subplots.png)
+]
+]
+???
+There’s several ways to create figures and axes.
+The first one is that you don’t. With your first plotting command,
+matplotlib will automatically create a figure, and that figure will
+contain axes and that’s what you’ll draw on.
+Once you created a figure, each subsequent plot command will apply to
+the current axes, which is usually the last axes you created.
+So if you want a second figure, you’ll have to create it explicitly,
+for example using the plt.figure command. That creates the single default
+axes, but you can also add more later.
+
+You can also create a figure with a grid of axes by using the subplots
+command (note the s in the end).
+You can see how that looks on the right for a 2 by 2 grid. I use that
+a lot. fig is an object representing the figure and ax is a numpy array
+of size n time m, with each entry being one axes object.
+---
+class: spacious
+
+# More axes via subplots
+.smaller[
+.wide-left-column[
+```python
+ax = plt.subplot(n, m, i) # or plt.subplot(nmi)
+# places ax at position i in n x m grid
+# (1-based index)
+
+ax11 = plt.subplot(2, 2, 1)
+ax21 = plt.subplot(2, 2, 2)
+ax12 = plt.subplot(2, 2, 3)
+ax22 = plt.subplot(2, 2, 4)
+```
+equivalent:
+```python
+fig, axes = plt.subplots(2, 2)
+ax11, ax21, ax12, ax22 = axes.ravel()
+```
+]
+.narrow-right-column[
+![:scale 100%](images/subplots2.png)
+]]
+???
+If you just created a figure but you want more axes, you can also add them
+one subplot at a time with the subplot command, this time without the s.
+The subplot command takes three numbers - you can leave out the comma
+between them if they are single digits, but please dont.
+The first two numbers specify a imaginary grid for the whole figure,
+let’s say I want a 2 by 2 grid.
+The third number is at which position in that grid I want my figure
+created. The numbers start with one and go column by column. I created
+the 2 by 2 grid here and labeled the axes according to the variable name.
+
+you could create all of them at the same time with the subplot commands,
+but there are two reason why you might choose not to.
+
+---
+
+# More axes via subplots
+
+```python
+ax = plt.subplot(n, m, i) # or plt.subplot(nmi)
+# places ax at position i in n x m grid
+# (1-based index)
+```
+
+.left-column[
+```python
+ax11 = plt.subplot(2, 2, 1)
+ax21 = plt.subplot(2, 2, 2)
+ax2 = plt.subplot(2, 1, 2)
+```
+]
+.right-column[
+![:scale 90%](images/complex_subplots.png)
+]
+???
+The first one is that the grid you specify doesn’t need to be the actual grid.
+It just tells the single subplot about where it should be. So you can create
+all kinds of different layouts. For example, I can create a 2 by 2 plot where
+the second row is a single axes, by telling it it should be at the second
+position for a 2 by 1 plot.  This allows me to create irregular grids, which is
+often quite useful.
+---
+
+# Two Interfaces
+
+Stateful interface - applies to current figure and axes
+
+object oriented interface - explicitly use object
+
+.wide-left-column[
+```python
+sin = np.sin(np.linspace(-4, 4, 100))
+plt.subplot(2, 2, 1)
+plt.plot(sin)
+plt.subplot(2, 2, 2)
+plt.plot(sin, c='r')
+
+
+fig, axes = plt.subplots(2, 2)
+axes[0, 0].plot(sin)
+axes[0, 1].plot(sin, c='r')
+```
+]
+.narrow-right-column[
+![:scale 70%](images/subplots_sin_last.png)
+
+![:scale 70%](images/subplots_sin_first.png)
+]
+
+???
+So now is the part where things become a bit tricky. There’s basically two
+different ways to use matplotlib, two interfaces if you want, one is the
+stateful one, and one is the object oriented interface.  If you’re using the
+stateful interface, you just call the module-level plot functions like plt.plot
+here, and it will plot in the current axes. What do you think will happen here?
+
+In the object based interface, you are explicit about which axes you want to
+draw into, so you hold onto your axes objects, and call the plotting commands
+on those! What do you think will happen here?
+
+This is another reason why some people like to add subplots one by one: they
+use the stateful interface. They add a subplot, plot into it, then add the next
+one and so on. So the plot commands are exactly the same for both interfaces,
+but there are some differences.
+---
+
+# Differences Between the Interfaces
+.smaller[
+.left-column[
+`plt.title`
+
+`plt.xlim, plt.ylim`
+
+`plt.xlabel, plt.ylabel`
+
+`plt.xticks, plt.yticks`
+
+]
+.right-column[
+`ax.set_title`
+
+`ax.set_xlim, ax.set_ylim`
+
+`ax.set_xlabel, ax.set_ylabel`
+
+`ax.set_xticks, ax.set_yticks
+(& ax.set_xtick_labels)`
+]]
+.reset-column[
+```python
+ax = plt.gca()   # get current axes
+fig = plt.gcf()  # get current figure
+```
+]
+
+???
+The formatting options in the object oriented interface all have a
+“set_” in front of them, while they don’t in the stateful interface.
+Also, for setting the tick marks, there are separate commands for the
+locations and the labels in the object oriented interface, but not in
+the stateful interface.
+In general, the object oriented interface provides more functionality and
+is more explicit and powerful, but the stateful interface is a bit terser.
+
+If you started plotting but then you want to use something that’s only
+part of the object oriented interface, you can always get the current
+axes or current figure with the gca or gcf commands.
+I use the stateful interface if I have a single axes and I don’t need
+any of the advanced functionality of the object oriented interface,
+so basically for simple plots.
+Whenever I have more than one axes objects, so for any grid, I always use
+the object oriented interface - but that’s just my personal preference.
+---
+
+# Plotting commands
+
+- Gallery:
+http://matplotlib.org/gallery.html
+
+- Plotting commands summary:
+http://matplotlib.org/api/pyplot_summary.html
+
+
+???
+I hope that sufficiently obfuscated everything.
+
+So lets finally start with the plotting.
+matplotlib has two pages that are helpful for figuring out how to plot
+something: the gallery and the plotting commands summary.
+I will go through only some of the commands from the summary that I
+think are particular important and their most important aspects.
+---
+class: center
+
+# plot
+
+![:scale 70%](images/matplotlib_plot.png)
+
+???
+Clearly plot it the most important one.
+Plot allows you to do line plots and scatter plots.
+If you give a single variable, it will plot it against it’s index,
+if you provide two, it will plot them against each other. By default,
+plot creates a line-plot, but you can also use “o” to create a
+scatterplot. You can change the appearance of the line in many ways,
+including width, color, dashing and markers.
+---
+class: center
+
+# plot
+
+![:scale 70%](images/matplotlib_plot_figsize_why.png)
+
+???
+One thing that I find slightly annoying and that always trips me off
+is that in subplots, it's rows, then columns, while the figure size is width,
+then height.
+
+---
+class: center, middle
+
+# scatter
+
+![:scale 60%](images/matplotlib_scatter.png)
+
+???
+While plot can create scatter plots, those are quite limited. the scatter
+function allows you to do scatter plots that not only encode the position
+of the points, but visualizes additional variables via color or size.
+In the bottom left, I colored the points by their distance to the
+diagonal, in the bottom right, I also added random size variations.
+Here I also used “subplot_kw” which allows you to specify some
+arguments for all subplots in a figure. I use it here to remove the ticks.
+---
+class: center, middle
+
+# histogram
+
+![:scale 90%](images/matplotlib_histogram.png)
+
+???
+Histograms are clearly also important. By default, histograms have ten
+bins, which is never right. You can adjust the number of bins, and I
+usually try to find the point when it will be too fine.
+There’s also a heuristic for finding the binsize which you can use
+with bins=”auto”
+---
+class: center, middle
+
+# bars
+.left-column[
+![:scale 100%](images/matplotlib_bar.png)
+]
+.right-column[
+![:scale 100%](images/matplotlib_barh.png)
+]
+
+???
+For barcharts, you always need to provide the position of the bar as
+well as the length. Usually that’s done via a range.
+If you use ticklabels, it’s usually a good idea to rotate them so
+you can actually read them. But I don’t really like tilting my head,
+so I often prefer horizontal bar-charts, which work the same way.
+The way I specified the positions here, the first bar is at the bottom. We
+could flip the axes or change the position if we wanted it at the top.
+---
+class: center, middle
+
+# heatmaps
+
+![:scale 50%](images/matplotlib_heatmap.png)
+
+???
+You can plot heatmaps with the imshow command.
+Previous to matplotlib v2 this automatically enabled interpolation,
+which you can see at the top right. Interpolation might hide data or
+might give the impression of more data then there is, by showing a smooth
+transition. You should always disable interpolation for heatmaps.
+At the bottom you can see some results with a gray colormap and with
+a diverging color map. Here, the background is zero and it makes sense
+to represent the neutral differently. So I ensured that white is mapped
+to zero, and we can clearly distinguish positive from negative entries,
+which is much harder with the other color maps.
+Doing colorbars on multiple axes can be tricky. You need to store the
+matplotlib image that is returned by imshow in an object, and then call
+the colorbar command with the image and the axes to which you want to
+attach the colorbar.
+---
+class: center
+# &nbsp;
+![:scale 35%](images/matplotlib_overplotting.png)
+
+???
+A command that I discovered way too late is the hexgrid. Hexgrids
+basically allow two-dimensional density maps.
+If you have a lot of points, a scatterplot can become too crowded to
+understand what’s going on.
+You can work around that a bit by using the alpha value, but that often
+throws away a lot of information.
+A better way is to use a hexgrid and plot the density in each grid cell
+directly. That also allows the use of arbitrary colormaps.
+Using hexgrids also allows you to map the density, for example using
+a logarithm, if the differences in density are very large between
+different regions.
+---
+class: center
+# hexgrids
+![:scale 35%](images/matplotlib_overplotting.png)
+
+![:scale 35%](images/matplotlib_hexgrid.png)
+
+???
+
+---
+class: center, middle
+
+# twinx, twiny
+
+![:scale 60%](images/matplotlib_twinx.png)
+
+???
+The last thing I want to mention is twin axes.
+Here I show two time series, the number of math PhDs awarded in the us
+and the revenue made by arcades in the US.
+If I plot them both in the same coordinate system, the number of PhDs
+will look just flat, because it lives on a completely different scale.
+Using the object oriented interface, I can create a twin x axis for the
+revenue to show both time series with their own scales.
+---
+class: middle
+
+# Questions ?
+
+    </textarea>
+    <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+    <script>
+    // Config Remark
+    remark.macros['scale'] = function (percentage) {
+        var url = this;
+        return '<img src="' + url + '" style="width: ' + percentage + '" />';
+    };
+    config_remark = {
+        highlightStyle: 'github',
+        highlightSpans: true,
+        highlightLines: true,
+        ratio: "16:9"
+    };
+      var slideshow = remark.create(config_remark);
+
+    // Configure MathJax
+    MathJax.Hub.Config({
+    tex2jax: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'] /* removed 'code' entry*/
+    }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for(i = 0; i < all.length; i += 1) {
+            all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+    });
+    </script>
+  </body>
+</html>

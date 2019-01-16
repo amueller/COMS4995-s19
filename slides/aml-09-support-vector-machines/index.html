@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Support Vector Machines</title>
+    <meta charset="utf-8">
+        <style>
+       @import url(https://fonts.googleapis.com/css?family=Garamond);
+       @import url(https://fonts.googleapis.com/css?family=Muli:400,700,400italic);
+       @import url(https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
+     </style>
+     <link rel="stylesheet" href="../style.css">
+  </head>
+  <body>
+    <textarea id="source">
+
+class: center, middle
+
+### W4995 Applied Machine Learning
+
+# Support Vector Machines
+
+02/14/18
+
+Andreas C. Müller
+
+???
+FIXME: more stuff on margin, normal vectors etc
+less bullet points
+revisit linear svc in more detail?
+explain approximation better?
+too much back and forth?
+on rbf heatmap: show overfitting more clearly!
+
+---
+class: spacious
+
+# Motivation
+
+- Go from linear models to more powerful nonlinear ones.
+- Keep convexity (ease of optimization).
+- Generalize the concept of feature engineering.
+
+???
+
+---
+class: spacious
+
+
+# Reminder on Linear SVM
+
+`$$ \min_{w \in \mathbb{R}^p} C \sum_{i=1}^n \max(0, 1 - y_i w^T\mathbf{x}) + ||w||^2_2 $$`
+
+$$ \hat{y} = \text{sign}(w^T \mathbf{x})  $$
+
+
+???
+
+---
+
+#Max-Margin and Support Vectors
+
+.center[
+![:scale 75%](images/max_margin.png)
+]
+
+???
+
+---
+class: center
+
+#Max-Margin and Support Vectors
+`$$ \min_{w \in \mathbb{R}^p} C \sum_{i=1}^n \max(0, 1 - y_i w^T\mathbf{x}) + ||w||^2_2 $$`
+
+$$\text{Within margin} \Leftrightarrow y_iw^T x < 1$$
+
+Smaller $w \Rightarrow$ larger margin
+
+
+---
+class: center
+
+#Max-Margin and Support Vectors
+
+.left-column[
+![:scale 80%](images/max_margin_C_0.1.png)
+]
+.right-column[
+![:scale 80%](images/max_margin_C_1.png)
+]
+
+???
+
+
+---
+
+# Reformulate Linear Models
+
+.smaller[
+- Optimization Theory
+
+$$ w = \sum_{i=1}^n \alpha_i \mathbf{x}_i $$
+
+(alpha are dual coefficients. Non-zero for support vectors only)
+
+
+$$ \hat{y} = \text{sign}(w^T \mathbf{x})  \Longrightarrow   \hat{y} = \text{sign}\left(\sum_i^{n}\alpha_i (\mathbf{x}_i^T  \mathbf{x})\right) $$
+
+$$ \alpha_i <= C$$
+
+]
+
+???
+- Can formulate learning as optimization over alpha, only involves x via
+dot-products 
+- Regularization parameter C is limit on alphas!
+
+---
+class: spacious
+
+# Introducing Kernels
+
+
+$$\hat{y} = \text{sign}\left(\sum_i^{n}\alpha_i (\mathbf{x}_i^T  \mathbf{x})\right) \longrightarrow \hat{y} = \text{sign}\left(\sum_i^{n}\alpha_i (\phi(\mathbf{x}_i)^T  \phi(\mathbf{x}))\right) $$
+
+$$ \phi(\mathbf{x}_i)^T \phi( \mathbf{x}_j) \longrightarrow k(\mathbf{x}_i,  \mathbf{x}_j) $$
+
+k positive definite, symmetric $\Rightarrow$ there exists a $\phi$! (possilby $\infty$-dim)
+
+
+???
+- Dimensionality of $\phi$ “doesn’t matter”. We only ever need to compute dot-product!
+
+- Can now design k instead of $\phi$ – which might be easier, more flexible!
+
+- Can be done for any linear model – not only SVM! (svm has some alpha zero).
+Kernel Logistic Regression, Kernel PCA, Kernel Kmeans….
+
+---
+
+# Examples of Kernels
+
+
+$$k_\text{linear}(\mathbf{x}, \mathbf{x}') = \mathbf{x}^T\mathbf{x}'$$
+
+$$k_\text{poly}(\mathbf{x}, \mathbf{x}') = (\mathbf{x}^T\mathbf{x}' + c) ^ d$$
+
+$$k_\text{rbf}(\mathbf{x}, \mathbf{x}') = \exp(\gamma||\mathbf{x} -\mathbf{x}'||^2)$$
+
+$$k_\text{sigmoid}(\mathbf{x}, \mathbf{x}') = \tanh\left(\gamma \mathbf{x}^T\mathbf{x}'  + r\right)$$
+
+`$$k_\cap(\mathbf{x}, \mathbf{x}')= \sum_{i=1}^p \min(x_i, x'_i)$$`
+
+- If $k$ and $k'$ are kernels, so are `$k + k', kk', ck', ...$`
+
+???
+
+---
+# Polynomial Kernel vs Features
+
+
+$$ k_\text{poly}(\mathbf{x}, \mathbf{x}') = (\mathbf{x}^T\mathbf{x}' + c) ^ d $$
+
+Primal vs Dual Optimization<br /><br />
+
+Explicit polynomials $\rightarrow$ compute on `n_samples * n_features ** d`
+
+Kernel trick $\rightarrow$ compute on kernel matrix of shape `n_samples * n_samples`
+<br /><br />
+For a single feature:
+
+$$ (x^2, \sqrt{2}x, 1)^T (x'^2, \sqrt{2}x', 1) = x^2x'^2 + 2xx' + 1 = (xx' + 1)^2 $$
+
+???
+- SVM with poly kernel similar to linear SVM with polynomial features!
+
+---
+
+# Poly kernels with sklearn
+
+.smaller[
+```python
+poly = PolynomialFeatures(include_bias=False)
+X_poly = poly.fit_transform(X)
+print(X.shape, X_poly.shape)
+print(poly.get_feature_names())
+```
+```
+((100, 2), (100, 5))
+['x0', 'x1', 'x0^2', 'x0 x1', 'x1^2']
+```
+]
+
+.center[
+![:scale 70%](images/poly_kernel_features.png)
+]
+
+???
+
+---
+class: smaller
+# Understanding Dual Coefficiants
+
+```python
+linear_svm.coef_
+#array([[0.139, 0.06, -0.201, 0.048, 0.019]])
+```
+$$ y = \text{sign}(0.139 x_0 + 0.06 x_1 - 0.201 x_0^2 + 0.048 x_0 x_1 + 0.019 x_1^2) $$
+
+```python
+linear_svm.dual_coef_
+#array([[-0.03, -0.003, 0.003, 0.03]])
+linear_svm.support_
+#array([1,26,42,62], dtype=int32)
+```
+`$$ y = \text{sign}(-0.03 \phi(\mathbf{x}_0)^T \phi(x) - 0.003 \phi(\mathbf{x}_{26})^T \phi(\mathbf{x})  +0.003 \phi(\mathbf{x}_{42})^T \phi(\mathbf{x}) + 0.03 \phi(\mathbf{x}_{63})^T \phi(\mathbf{x})) $$`
+
+???
+---
+# With Kernel
+`$$y = \text{sign}\left(\sum_i^{n}\alpha_i k(\mathbf{x}_i,  \mathbf{x})\right) $$`
+
+```python
+poly_svm.dual_coef_
+# array([[-0.057, -0. , -0.012, 0.008, 0.062]])
+poly_svm.support_
+# array([1,26,41,42,62], dtype=int32)
+```
+`$$ y = \text{sign}(-0.057 (\mathbf{x}_1^T\mathbf{x} + 1)^2
+         -0.012 (\mathbf{x}_{41}^T \mathbf{x} + 1)^2 \\
+         +0.008 (\mathbf{x}_{42}^T \mathbf{x} + 1)^2 + 0.062 * (\mathbf{x}_{63}, \mathbf{x} + 1)^2
+$$`
+
+???
+
+$$ y = sign(-0.03 * np.inner(poly(X[1]), poly(x)) – 0.003 * np.inner(poly(X[26]), poly(x)) +0.003 * np.inner(poly(X[42]), poly(x)) + 0.03 * np.inner(poly(X[63]), poly(x)) $$
+---
+
+# Runtime Considerations
+
+.center[
+![:scale 85%](images/img_2.png)
+]
+
+???
+
+---
+class:spacious
+
+# Kernels in Practice
+
+- Dual coefficients less interpretable
+- Long runtime for “large” datasets (100k samples)
+- Real power in infinite-dimensional spaces: rbf!
+- Rbf is “universal kernel” - can learn (aka overfit)
+anything.
+
+???
+
+---
+class:spacious
+
+#Preprocessing
+
+- Kernel use inner products or distances.
+- StandardScaler or MinMaxScaler ftw
+- Gamma parameter in RBF directly relates to scaling
+of data – default only works with zero-mean, unit
+variance.
+
+???
+
+---
+
+# Parameters for RBF Kernels
+
+- Regularization parameter C is limit on alphas
+(for any kernel)
+- Gamma is bandwidth: $k_\text{rbf}(\mathbf{x}, \mathbf{x}') = \exp(\gamma||\mathbf{x} -\mathbf{x}'||^2)$
+
+
+.center[
+![:scale 85%](images/img_3.png)
+]
+
+???
+
+---
+
+.center[
+![:scale 85%](images/img_4.png)
+]
+
+???
+
+---
+
+```python
+from sklearn.datasets import load_digits
+digits = load_digits()
+```
+.center[
+![:scale 65%](images/img_5.png)
+]
+
+???
+
+---
+
+# Scaling and Default Params
+
+.smaller[
+```
+gamma : float, optional (default = "auto")
+  Kernel coefficient for 'rbf', 'poly' and 'sigmoid'.
+  If gamma is 'auto' then 1/n_features will be used
+```
+```python
+scaled_svc = make_pipeline(StandardScaler(), SVC())
+print(np.mean(cross_val_score(SVC(), X_train, y_train, cv=10)))
+print(np.mean(cross_val_score(scaled_svc, X_train, y_train, cv=10)))
+```
+```
+0.578
+0.978
+```
+```python
+gamma = (1. / (X_train.shape[1] * X_train.std()))
+print(np.mean(cross_val_score(SVC(gamma=gamma), X_train, y_train, cv=10)))
+```
+```
+0.987
+```
+]
+
+???
+Default gamma is 1/ n_features, works reasonably well when feature have std 1.
+If features have similar std, we can also just rescale gamma by it, instead of the data.
+Features having the same scale is a bit unusual though, this is a very particular dataset.
+
+---
+
+# Grid-Searching Parameters
+
+```python
+param_grid = {'svc__C': np.logspace(-3, 2, 6),
+              'svc__gamma': np.logspace(-3, 2, 6) / X_train.shape[0]}
+param_grid
+```
+{'svc_C': array([   0.001,    0.01 ,    0.1  ,    1.   ,   10.   ,  100.   ]),   
+ 'svc_gamma': array([ 0.000001,  0.000007,  0.000074,  0.000742,  0.007424,  0.074239])}
+```python
+grid = GridSearchCV(scaled_svc, param_grid=param_grid, cv=10)
+grid.fit(X_train, y_train)
+```
+???
+
+---
+# Grid-Searching Parameters
+
+.center[
+![:scale 95%](images/img_6.png)
+]
+
+???
+
+---
+
+# Support Vector Regression
+
+.center[
+![:scale 80%](images/img_9.png)
+]
+
+???
+
+---
+
+# Using SVR
+
+- Fix epsilon based on application /outliers
+- Linear kernel → robust linear regression
+- Ploy / rbf kernel → robust non-linear regression
+.center[
+![:scale 60%](images/img_10.png)
+]
+
+???
+
+---
+class: middle, center
+
+## Undoing the Kernel-Trick
+
+???
+
+---
+
+# Why undo the kernel trick?
+
+.center[
+![:scale 50%](images/img_11.png)
+]
+
+???
+
+---
+class:spacious
+
+
+# RKHS vs RKS
+### (Reproducing Kernel Hilbert-Spaces vs Random Kitchen Sinks)
+
+-  Idea: ditch kernel, approximate (infinite-dimensional) feature
+map
+
+$$\phi(x)^T \phi(x') = k(x, x') \approx \hat{\phi}(x)^T \hat{\phi}(x')$$
+
+- For rbf-kernel
+random projection followed by sin/cos
+, higher n_features is better
+
+https://www.microsoft.com/en-us/research/video/random-kitchen-sinks-replacing-optimization-withrandomization-in-learning/
+
+???
+
+---
+
+# Kernel Approximation in sklearn
+
+```python
+from sklearn.kernel_approximation import RBFSampler
+gamma = 1. / (X_train.shape[1] * X_train.std())
+approx_rbf = RBFSampler(gamma=gamma, n_components=5000)
+print(X_train.shape)
+X_train_rbf = approx_rbf.fit_transform(X_train)
+print(X_train_rbf.shape)
+# (1347, 64)
+# (1347, 5000)
+
+np.mean(cross_val_score(LinearSVC(), X_train, y_train, cv=10))
+# 0.946
+
+np.mean(cross_val_score(SVC(gamma=gamma), X_train, y_train, cv=10))
+# 0.987
+
+np.mean(cross_val_score(LinearSVC(), X_train_rbf, y_train, cv=10))
+# 0.984
+```
+
+???
+Vinay - Included output in same cell due to size limit
+
+---
+
+# Nyström Approximation
+
+- Use low-rank approximation of kernel matrix
+- Select some samples, compute kernel with only
+those, embed all the points.
+- Using all points = full rank = exact
+- For same number of components more expensive
+than RBFSampler, but needs less!
+
+```pythom
+from sklearn.kernel_approximation import Nystroem
+nystroem = Nystroem(gamma=gamma, n_components=200)
+X_train_ny = nystroem.fit_transform(X_train)
+print(X_train_ny.shape)
+# (1347, 200)
+np.mean(cross_val_score(LinearSVC(), X_train_ny, y_train, cv=10))
+# 0.974
+```
+???
+
+---
+class: spacious
+
+# Fast Food etc
+
+- Many newer / faster algorithms out there
+- Not in sklearn so far
+- FastFood one of the most prominent ones
+- Current research on selecting good points for
+Nystroem.
+
+???
+
+---
+
+# Relation to Random Neural Nets
+
+- Why approximate kernels?
+- Just go random !
+
+```python
+rng = np.random.RandomState(0)
+w = rng.normal(size=(X_train.shape[1], 100))
+X_train_wat = np.tanh(scale(np.dot(X_train, w)))
+print(X_train_wat.shape)
+```
+(1347, 100)
+```python
+np.mean(cross_val_score(LinearSVC(), X_train_wat, y_train, cv=10))
+```
+0.966
+
+???
+
+---
+class: spacious
+
+# Extreme Learning Machine Hoax
+
+- AKA random neural networks
+- Same result published in the 90s
+- Bogus math
+
+???
+
+---
+class: spacious
+
+# Kernel Approximation in Practice
+
+- SVM: only when 100000 >> n_samples,
+but works for n_features large
+- RBFSampler, Nystroem can allow making anything
+kernelized!
+- Some kernels (like chi2 and intersection) have
+really fast approximation.
+
+???
+
+---
+class: spacious
+
+# Summary
+
+- Kernels are cool!
+- Kernels work best for “small” n_samples
+- Approximate kernels or random features for many
+samples
+- Could do even SGD / streaming with kernel
+approximations!
+- Could use Logistic Regression (hurray probabilities)
+
+---
+
+
+
+class: center, middle
+
+# Questions ?
+
+    </textarea>
+    <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+    <script>
+    // Config Remark
+    remark.macros['scale'] = function (percentage) {
+        var url = this;
+        return '<img src="' + url + '" style="width: ' + percentage + '" />';
+    };
+    config_remark = {
+        highlightStyle: 'magula',
+        highlightSpans: true,
+        highlightLines: true,
+        ratio: "16:9"
+    };
+      var slideshow = remark.create(config_remark);
+    // Configure MathJax
+    MathJax.Hub.Config({
+    tex2jax: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'] /* removed 'code' entry*/
+    }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for(i = 0; i < all.length; i += 1) {
+            all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+    });
+    </script>
+  </body>
+</html>

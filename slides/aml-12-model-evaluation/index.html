@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Model Evaluation</title>
+    <meta charset="utf-8">
+        <style>
+       @import url(https://fonts.googleapis.com/css?family=Garamond);
+       @import url(https://fonts.googleapis.com/css?family=Muli:400,700,400italic);
+       @import url(https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
+     </style>
+     <link rel="stylesheet" href="../style.css">
+  </head>
+  <body>
+    <textarea id="source">
+
+class: center, middle
+
+### W4995 Applied Machine Learning
+
+# Model evaluation and class imbalance
+
+02/26/18
+
+Andreas C. Müller
+
+???
+FIXME macro vs weighted average example
+FIXME balanced accuracy?
+FIXME move mape before plotting? or all metrics after?
+FIXME remove regression, go into more depth on cost-sensitive!
+FIXME relate to calibration!
+move using metrics in CV to the end?
+
+How to pick thresholds in multi-class?
+
+---
+class: centre,middle
+# Metrics for Binary Classification
+???
+
+
+---
+
+# Review : confusion matrix
+.center[
+![:scale 75%](images/confusion_matrix.png)
+]
+
+
+???
+Diagonal divided by everything.
+
+---
+# 
+.smaller[
+```python
+from sklearn.datasets import load_breast_cancer
+from sklearn.linear_model import LogisticRegression
+data = load_breast_cancer()
+
+X_train, X_test, y_train, y_test = train_test_split(
+    data.data, data.target, stratify=data.target, random_state=0)
+
+lr = LogisticRegression().fit(X_train, y_train)
+y_pred = lr.predict(X_test)
+
+from sklearn.metrics import confusion_matrix
+print(confusion_matrix(y_test, y_pred))
+print(lr.score(X_test, y_test))
+```
+]
+
+![:scale 20%](images/breast_cancer_cf_matrix.png)
+---
+# Problems with Accuracy
+Data with 90% positives:
+.smaller[
+```python
+from sklearn.metrics import accuracy_score
+for y_pred in [y_pred_1, y_pred_2, y_pred_3]:
+    print(accuracy_score(y_true, y_pred))
+```
+```
+0.9
+0.9
+0.9
+```
+]
+.center[
+![:scale 70%](images/problems_with_accuracy.png)
+]
+???
+- Imbalanced classes lead to hard-to-interpret accuracy.
+
+---
+class:split-40
+# Precision, Recall, f-score
+.left-column[
+`$$ \large\text{Precision} = \frac{\text{TP}}{\text{TP}+\text{FP}}$$`<br />
+`$$\large\text{Recall} = \frac{\text{TP}}{\text{TP}+\text{FN}}$$`<br />
+`$$\large\text{F} = 2 \frac{\text{precision} \cdot\text{recall}}{\text{precision}+\text{recall}}$$`]
+.right-column[
+<br />
+Positive Predicted Value (PPV)
+<br /> 
+<br /> 
+<br /> 
+<br />
+Sensitivity, coverage, true positive rate.
+<br /> 
+<br /> 
+<br /> 
+<br />
+Harmonic mean of precision and recall
+]
+???
+All depend on definition of positive and negative.
+
+---
+class: center, spacious
+# The Zoo
+![:scale 100%](images/zoo.png)
+
+https://en.wikipedia.org/wiki/Precision_and_recall
+???
+---
+
+class:split-40
+.left-column[
+![:scale 50%](images/confusion_matrix_col.png)]
+.right-column[
+<br />
+![:scale 100%](images/classification_report_1.png)
+<br />
+<br />
+![:scale 100%](images/classification_report_2.png)
+<br />
+<br />
+![:scale 100%](images/classification_report_3.png)
+]
+???
+---
+class:spacious
+# Goal setting!
+- What do I want? What do I care about? 
+- Can I assign costs to the confusion matrix?
+- What guarantees do we want to give?
+
+???
+(precision, recall, or something else)
+(i.e. a false positive costs me 10 dollars; a false negative, 100 dollars)
+---
+# Changing Thresholds
+.tiny-code[
+```python
+data = load_breast_cancer()
+
+X_train, X_test, y_train, y_test = train_test_split(
+    data.data, data.target, stratify=data.target, random_state=0)
+
+lr = LogisticRegression().fit(X_train, y_train)
+y_pred = lr.predict(X_test)
+
+print(classification_report(y_test, y_pred))
+```
+```
+          precision   recall  f1-score  support
+0              0.91     0.92      0.92       53  
+1              0.96     0.94      0.95       90
+avg/total      0.94     0.94      0.94      143
+```
+```python
+y_pred = lr.predict_proba(X_test)[:, 1] > .85
+
+print(classification_report(y_test, y_pred))
+```
+```
+          precision   recall  f1-score  support
+0              0.84     1.00      0.91       53  
+1              1.00     0.89      0.94       90
+avg/total      0.94     0.93      0.93      143
+
+```
+]
+
+
+???
+---
+# Precision-Recall curve
+```python
+X, y = make_blobs(n_samples=(2500, 500), cluster_std=[7.0, 2],
+                  random_state=22)
+
+X_train, X_test, y_train, y_test = train_test_split(X, y)
+
+svc = SVC(gamma=.05).fit(X_train, y_train)
+
+precision, recall, thresholds = precision_recall_curve(
+    y_test, svc.decision_function(X_test))
+```
+
+???
+---
+# Precision-Recall curve
+.center[
+![:scale 75%](images/precision_recall_curve.png)
+]
+???
+---
+# Comparing RF and SVC
+.center[
+![:scale 75%](images/rf_vs_svc.png)
+]
+???
+
+---
+# Average Precision
+.center[
+![:scale 100%](images/avg_precision.png)
+]
+???
+Related to area under the precision-recall curve
+(with step interpolation)
+---
+# F1 vs average Precision
+.smaller[
+```python
+from sklearn.metrics import f1_score
+print("f1_score of random forest: {:.3f}".format(
+      f1_score(y_test, rf.predict(X_test))))
+print("f1_score of svc: {:.3f}".format(f1_score(y_test, svc.predict(X_test))))
+```
+
+```
+f1_score of random forest: 0.709
+f1_score of svc: 0.715
+```
+```python
+from sklearn.metrics import average_precision_score
+ap_rf = average_precision_score(y_test, rf.predict_proba(X_test)[:, 1])
+ap_svc = average_precision_score(y_test, svc.decision_function(X_test))
+print("Average precision of random forest: {:.3f}".format(ap_rf))
+print("Average precision of svc: {:.3f}".format(ap_svc))
+```
+```
+Average precision of random forest: 0.682
+Average precision of svc: 0.693
+```
+]
+???
+AP only considers ranking!
+---
+
+# ROC Curve
+.center[
+![:scale 100%](images/zoo.png)
+]
+`$$ \text{FPR} = \frac{\text{FP}}{\text{FP}+\text{TN}}$$`
+`$$ \text{TPR} = \frac{\text{TP}}{\text{TP}+\text{FN}} = \text{recall}$$`
+???
+---
+.center[
+![:scale 75%](images/roc_curve.png)
+]
+???
+---
+# ROC AUC
+- Area under ROC Curve
+- Always .5 for random/constant prediction
+.tiny-code[
+```python
+from sklearn.metrics import roc_auc_score
+rf_auc = roc_auc_score(y_test, rf.predict_proba(X_test)[:,1])
+svc_auc = roc_auc_score(y_test, svc.decision_function(X_test))
+print("AUC for random forest: {:, .3f}".format(rf_auc))
+print("AUC for SVC: {:, .3f}".format(svc_auc))
+```
+
+```
+AUC for random forest: 0.937
+AUC for SVC: 0.916
+```
+]
+The Relationship Between Precision-Recall and ROC Curves
+<br />
+https://www.biostat.wisc.edu/~page/rocpr.pdf
+???
+---
+
+# Summary of metrics for binary classification
+
+Threshold-based:
+- accuracy
+- precision, recall, f1
+
+Ranking:
+- average precision
+- ROC AUC
+
+???
+add log loss?
+---
+class: centre,middle
+# Multi-class classification
+???
+---
+class:split-40
+#Confusion Matrix
+.left-column[
+.tiny-code[
+```python
+from sklearn.datasets import load_digits
+from sklearn.metrics import accuracy_score
+
+digits = load_digits()
+ # data is between 0 and 16
+X_train, X_test, y_train, y_test = train_test_split(
+    digits.data / 16., digits.target, random_state=0)
+lr = LogisticRegression().fit(X_train, y_train)
+pred = lr.predict(X_test)
+print("Accuracy: {:.3f}".format(accuracy_score(y_test, pred)))
+print("Confusion matrix:")
+print(confusion_matrix(y_test, pred))
+```
+```
+Accuracy: 0.964
+Confusion matrix:
+[[37  0  0  0  0  0  0  0  0  0]
+ [ 0 41  0  0  0  0  1  0  1  0]
+ [ 0  0 44  0  0  0  0  0  0  0]
+ [ 0  0  0 43  0  0  0  0  1  1]
+ [ 0  0  0  0 37  0  0  1  0  0]
+ [ 0  0  0  0  0 47  0  0  0  1]
+ [ 0  1  0  0  0  0 51  0  0  0]
+ [ 0  0  0  0  1  0  0 47  0  0]
+ [ 0  3  1  0  0  1  0  0 43  0]
+ [ 0  0  0  0  0  2  0  0  1 44]]
+```
+]
+]
+.right-column[
+.tiny-code[
+```python
+print(classification_report(y_test, pred))
+```
+```
+             precision    recall  f1-score   support
+
+          0       1.00      1.00      1.00        37
+          1       0.91      0.95      0.93        43
+          2       0.98      1.00      0.99        44
+          3       1.00      0.96      0.98        45
+          4       0.97      0.97      0.97        38
+          5       0.94      0.98      0.96        48
+          6       0.98      0.98      0.98        52
+          7       0.98      0.98      0.98        48
+          8       0.93      0.90      0.91        48
+          9       0.96      0.94      0.95        47
+
+avg / total       0.96      0.96      0.96       450
+```
+]
+]
+???
+---
+# Averaging strategies
+- "macro", "weighted", "micro" (multi-label), "samples" (multi-label)
+
+`$$\text{macro }\frac{1}{\left|L\right|} \sum_{l \in L} R(y_l, \hat{y}_l)$$`
+
+`$$\text{weighted } \frac{1}{n} \sum_{l \in L} n_l R(y_l, \hat{y}_l)$$`
+
+
+.smaller[
+```python
+print("Micro average: ", recall_score(y_test, pred, average="weighted"))
+print("Macro average: ", recall_score(y_test, pred, average="macro"))
+```
+```
+Micro average: 0.964
+Macro average: 0.964
+```
+]
+<br />
+???
+micro vs macro same for other metrics.
+
+---
+# Multi-class ROC AUC
+- Hand &amp; Till, 2001, one vs one
+`$$ \frac{1}{c(c-1)}\sum_{j=1}^{c}\sum_{k \neq j}^{c} AUC(j,k)$$`
+- Provost &amp; Domingo, 2000, one vs rest
+`$$ \frac{1}{c}\sum_{j=1}^{c}p(j) AUC(j,\text{rest}_j)$$`
+- https://github.com/scikit-learn/scikit-learn/pull/7663
+???
+FIXME unify notation with slide on averaging
+---
+# Summary of metrics for binary classification
+
+Threshold-based:
+- accuracy
+- precision, recall, f1 (macro average, weighted)
+
+Ranking:
+- OVR ROC AUC
+- OVO ROC AUC
+
+???
+
+---
+
+class: middle
+# Picking metrics
+
+???
+
+- Accuracy rarely what you want
+- Problems are rarely balanced
+- Find the right criterion for the task
+- OR pick one arbitrarily, but at least think about it
+- Emphasis on recall or precision?
+- Which classes are the important ones?
+---
+# Using metrics in cross-validation
+.smaller[
+```python
+X, y = make_blobs(n_samples=(2500, 500), cluster_std=[7.0, 2],
+                  random_state=22)
+
+# default scoring for classification is accuracy
+scores_default = cross_val_score(SVC(), X, y)
+
+# providing scoring="accuracy" doesn't change the results
+explicit_accuracy =  cross_val_score(SVC(), X, y, scoring="accuracy")
+
+# using ROC AUC
+roc_auc =  cross_val_score(SVC(), X, y, scoring="roc_auc")
+
+print("Default scoring: {}".format(scores_default))
+print("Explicit accuracy scoring: {}".format(explicit_accuracy))
+print("AUC scoring: {}".format(roc_auc))
+```
+```
+Default scoring: [ 0.92   0.904  0.913]
+Explicit accuracy scoring: [ 0.92   0.904  0.913]
+AUC scoring: [ 0.93   0.885  0.923]
+```
+]
+
+???
+Same for GridSearchCV
+<br />
+Will make GridSearchCV.score use your metric!
+
+---
+# Built-in scoring
+```python
+from sklearn.metrics.scorer import SCORERS
+print("\n".join(sorted(SCORERS.keys())))
+```
+.smaller[
+```
+accuracy                      log_loss                      precision_micro       
+adjusted_mutual_info_score    mean_absolute_error           precision_samples     
+adjusted_rand_score           mean_squared_error            precision_weighted   
+average_precision             median_absolute_error         r2                   
+completeness_score            mutual_info_score             recall               
+explained_variance            neg_log_loss                  recall_macro         
+f1                            neg_mean_absolute_error       recall_micro         
+f1_macro                      neg_mean_squared_error        recall_samples       
+f1_micro                      neg_mean_squared_log_error    recall_weighted
+f1_samples                    neg_median_absolute_error     roc_auc
+f1_weighted                   normalized_mutual_info_score  v_measure_score      
+fowlkes_mallows_score         precision                    
+homogeneity_score             precision_macro              
+
+```
+]
+
+
+???
+---
+class:spacious
+# Providing you your own callable
+- Takes estimator, X, y
+- Returns score – higher is better (always!)
+```python
+def accuracy_scoring(est, X, y):
+        return (est.predict(X) == y).mean()
+```
+???
+---
+# You can access the model!
+.tiny-code[```python
+def few_support_vectors(est, X, y):
+    acc = est.score(X, y)
+    frac_sv = len(est.support_) / np.max(est.support_)
+    # I just made this up, don't actually use this
+    return acc / frac_sv```
+```python
+from sklearn.model_selection import GridSearchCV
+
+param_grid = {'C': np.logspace(-3, 2, 6),
+              'gamma': np.logspace(-3, 2, 6) / X_train.shape[0]}
+grid = GridSearchCV(SVC(), param_grid=param_grid, cv=10)
+grid.fit(X_train, y_train)
+print(grid.best_params_)
+print(grid.score(X_test, y_test))
+print(len(grid.best_estimator_.support_))
+```
+```
+{'C': 10.0, 'gamma': 0.074}
+0.991
+498
+```
+```python
+param_grid = {'C': np.logspace(-3, 2, 6),
+              'gamma': np.logspace(-3, 2, 6) / X_train.shape[0]}
+grid = GridSearchCV(SVC(), param_grid=param_grid, cv=10, scoring=few_support_vectors)
+grid.fit(X_train, y_train)
+print(grid.best_params_)
+print((grid.predict(X_test) == y_test).mean())
+print(len(grid.best_estimator_.support_))
+```
+```
+{'C': 100.0, 'gamma': 0.007}
+0.978
+405
+```]
+???
+---
+class: centre,middle
+# Metrics for regression models
+???
+---
+class:spacious
+# Build-in standard metrics
+- $\text{R}^2$ : easy to understand scale
+- MSE : easy to relate to input
+- Mean absolute error, median absolute error: more robust
+- When using “scoring” use “neg_mean_squared_error” etc
+???
+---
+# Prediction plots
+.wide-left-column[
+.smaller[
+```python
+from sklearn.linear_model import Ridge
+from sklearn.datasets import load_boston
+boston = load_boston()
+X_train, X_test, y_train, y_test = train_test_split(
+    boston.data, boston.target)
+ridge = Ridge(normalize=True)
+ridge.fit(X_train, y_train)
+pred = ridge.predict(X_test)
+plt.plot(pred, y_test, 'o')
+```
+]]
+.narrow-right-column[
+![:scale 100%](images/regression_boston.png)
+]
+
+???
+---
+class:split-40
+# Residual Plots
+.left-column[![:scale 50%](images/regression_boston.png)
+<br />
+![:scale 60%](images/regression_boston_2.png)]
+.right-column[
+![:scale 100%](images/regression_boston_3.png)]
+???
+---
+# Target vs Feature
+![:scale 100%](images/target_vs_feature.png)
+???
+---
+# Residual vs Feature
+![:scale 100%](images/residual_vs_feature.png)
+???
+---
+class:spacious
+# Absolute vs Relative: MAPE
+`$$ \text{MAPE} = \frac{100}{n} \sum_{i=1}^{n}\left|\frac{y-\hat{y}}{y}\right|$$`
+
+.center[
+![:scale 50%](images/mape.png)
+]
+???
+---
+class: spacious
+# Over vs under
+-  Overprediction and underprediction can have different cost.
+- Try to create cost-matrix: how much does overprediction and underprediction cost? 
+- Is it linear?
+???
+---
+class: center, middle
+
+# Questions ?
+
+    </textarea>
+    <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+    <script>
+    // Config Remark
+    remark.macros['scale'] = function (percentage) {
+        var url = this;
+        return '<img src="' + url + '" style="width: ' + percentage + '" />';
+    };
+    config_remark = {
+        highlightStyle: 'magula',
+        highlightSpans: true,
+        highlightLines: true,
+        ratio: "16:9"
+    };
+      var slideshow = remark.create(config_remark);
+    // Configure MathJax
+    MathJax.Hub.Config({
+    tex2jax: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'] /* removed 'code' entry*/
+    }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for(i = 0; i < all.length; i += 1) {
+            all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+    });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Word Embeddings</title>
+    <meta charset="utf-8">
+        <style>
+       @import url(https://fonts.googleapis.com/css?family=Garamond);
+       @import url(https://fonts.googleapis.com/css?family=Muli:400,700,400italic);
+       @import url(https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
+     </style>
+     <link rel="stylesheet" href="../style.css">
+  </head>
+  <body>
+    <textarea id="source">
+
+class: center, middle
+
+### W4995 Applied Machine Learning
+
+# Word Embeddings
+
+04/11/18
+
+Andreas C. Müller
+
+???
+today we'll talk about word embeddings
+word embeddings are the logical next step in doing text analysis after working
+with topic models on Monday.
+
+FIXME: redo paragraph vector experiments
+FIXME: state of the art?
+FIXME: too short?
+FIXME: word embeddings with tensorflow?
+FIXME for CBOW and skip-gram shared weights for context
+FIXME for CBOW, which do we keep?
+
+---
+
+# Beyond Bags of Words
+
+Limitations of bag of words:
+- Semantics of words not captured
+- Synonymous words not represented
+- Very distributed representation of documents
+
+???
+
+Last time we started talking about limitations of bag of words, such as
+semantics of words are not captured synonymous words are not represented - if I
+use two synonymous words, for example film and movie, they are represented in
+completely different ways and there is no connection between them. and we also
+have a very distributed representation of documents, which might be hard to
+understand or hard to learn from.
+---
+
+# Last Time
+
+- Latent Semantic Analysis
+- Non-negative Matrix Factorization
+- Latent Dirichlet Allocation
+- All embed documents into a continuous, corpusspecific
+space.
+- Today: Embed words in a “general” space.
+
+???
+
+Last time we looked at latent semanic analysis, non-negative matrix
+factorization and latent dirichlet allocation.
+Each of them embedds the documents into a continuous, corpus specific space of a
+dimension of our choosing, using an unsupervised objective. The first two are
+matrix factorization, the third is a probabilistic generative model.
+
+Today we'll be talking about a more general embedding, which tries to embedd
+individual words, not documents. The goal is to learn an embedding that's
+generally useful, and not necessarily tied to a particular corpus.
+
+---
+# Idea
+
+- Unsupervised extraction of semantics using large
+corpus (wikipedia etc)
+- Input: one-hot representation of word (as in BoW).
+- Use auxiliary task to learn continuous
+representation.
+
+???
+
+We'll talk about several methods, but they'll all use a very large corpus to
+create a relatively generic embedding. So we might use something like wikipedia
+or google news or a big corpus of books. It's an unsupervised task, but the way
+it is phrased is using an auxiliary supervised task to learn the embedding. And
+what I mean by that will be more clear shortly. The starting principle is a
+one-hot representation of each word, as in Bag of words, which basically just
+means each word is identified by some index.
+
+---
+# Skip-Gram models
+
+- Given a word, predict surrounding word
+- Supervised task, each document yields many
+examples
+- Not interested in performance for this task, just
+want to learn representations.
+
+???
+
+A very commonly used auxiliary task is the skip-gram model.
+Here the task is, given a word, predict the surrounding words. This is a
+supervised task, with each document providing many examples, basically as many
+as there are words in the document. I'm saying this is an auxiliary task,
+because we're not really interested in actually solving this problem of
+predicting surrounding words, we just want to use this task to learn useful
+representations.
+
+---
+class: left
+
+# Example
+```
+[“What is my purpose?”, “You pass the butter.”]
+```
+.center[
+![:scale 50%](images/context_window.png)
+]
+
+Using context windows of size 1 (in practice 5 or 10):
+
+???
+Here's an example of what this task looks like.
+Let's say we have a corpus of two documents, "what is my purpose" and "you pass
+the butter". We specify a context window size, let's say one. Then, for each
+word that has enough context, we generate a training example.
+So for "is", we have a context of "what" and "my", for "my" we have "is" and
+"purpose", and so on. So the input would be "is" and the goal would be to
+predict that the word before is "what" and the word after is "my". that assigns
+a high probability to the outputs "what" and "my".
+In practice larger context windows are used, often 5-10 words in either
+direction. Cearly it's impossible to actually solve this task, because each word
+can appear in many different contexts. The goal is to learn which contexts are
+likely, and which are not.
+
+---
+.center[
+![:scale 50%](images/cbow_skipgram_1.png)
+]
+
+
+---
+
+#Softmax Training
+.center[
+![:scale 70%](images/softmax.png)
+]
+
+
+.smallest[
+<a href="http://papers.nips.cc/paper/5021-distributed-representations-of-words-and-phrases-and-their-compositionality.pdf">Mikolov et. al. - Distributed Representations of Words and Phrases and their Compositionality (2013)</a>]
+]
+---
+# CBOW vs Skip-gram
+
+.center[
+![:scale 70%](images/cbow_skipgram.png)
+]
+
+.smallest[
+Efficient Estimation of Word Representations in Vector Space https://arxiv.org/pdf/1301.3781.pdf
+]
+???
+
+This is the skip-gram model, here you can see it on the left (FIXME?!)
+So we start with the one-hot-encoding of the word, and we have a matrix
+multiplication into a latent space. A matrix multiplication with a one-hot
+vector just means that each row in that embedding matrix represents one word.
+From this latent space, we run logistic regression, trying to predict what the
+word is for each particular offset, so here in this picture we're trying to
+predict the word two to the left, one to the left, one to the right, and two to
+the right. So these are basically four classifiers running on the same input.
+
+Another approach is shown on the left, the continuous bag of words model, or
+CBOW. This is something that seems a bit more natural to me, where given the
+context, we are trying to predict the word in the center. So here we would be
+given four context words and try to figure out what's the most likely word to be
+in between those.
+
+---
+# Implementations
+
+- Gensim
+- Word2vec
+- Tensorflow
+- Don't train yourself
+---
+
+
+# Gensim - topic models for humans
+
+- Multiple Latent Dirichlet Allocation implementations
+- Wrappers for Mallet and vopal wabbit
+- Tools for analyzing topic models
+- No supervised learning
+- Uses list-of-tuples instead of sparse matrices to
+store documents.
+---
+# Introduction to gensim
+
+.smallest[
+```python
+docs = ["What is my purpose", "You bring butter"]
+texts = [[token for token in doc.lower().split()] for doc in docs]
+print(texts)
+```
+```
+[['what', 'is', 'my', 'purpose'], ['you', 'bring', 'butter']]
+```
+```python
+from gensim import corpora
+dictionary = corpora.Dictionary(texts)
+print(dictionary)
+```
+```
+Dictionary(7 unique tokens: ['butter', 'you', 'is', 'purpose', 'my']...)
+```
+```python
+new_doc = "what butter"
+dictionary.doc2bow(new_doc.lower().split())
+```
+```
+[(3, 1), (5, 1)]
+```
+```python
+corpus = [dictionary.doc2bow(text) for text in texts]
+corpus
+```
+```
+[[(0, 1), (1, 1), (2, 1), (3, 1)], [(4, 1), (5, 1), (6, 1)]]
+```
+]
+
+???
+
+Use NLTK or spacy or a regexp for tokenization in real
+applications. This method here doesn’t even handle
+punctuation.
+In gensim, a document is represented as list of tuples
+(index, frequency), corpus is a list of these.
+
+---
+
+# Converting to/from sparse matrix
+
+.smallest[
+```python
+import gensim
+corpus
+```
+```
+[[(0, 1), (1, 1), (2, 1), (3, 1)], [(4, 1), (5, 1), (6, 1)]]
+```
+```python
+gensim.matutils.corpus2csc(corpus)
+```
+```
+<7x2 sparse matrix of type '<class 'numpy.float64'>'
+  with 7 stored elements in Compressed Sparse Column format>
+```
+```python
+X = CountVectorizer().fit_transform(docs)
+X
+```
+```python
+sparse_corpus = gensim.matutils.Sparse2Corpus(X.T)
+print(sparse_corpus)
+print(list(sparse_corpus))
+```
+```
+<gensim.matutils.Sparse2Corpus object at 0x7fd6d776b438>
+[[(4, 1), (3, 1), (2, 1), (5, 1)], [(1, 1), (0, 1), (6, 1)]]
+```
+]
+
+???
+most transformations is gensim are lazy:
+They yield a generator (like Sparse2Corpus) which can
+be converted to a list.
+Note that the CSC is transposed to what we would expect in sklearn.
+
+---
+# Corpus Transformations
+
+.smaller[
+```python
+tfidf = gensim.models.TfidfModel(corpus)
+tfidf[corpus[0]]
+```
+```
+[(0, 0.5), (1, 0.5), (2, 0.5), (3, 0.5)]
+```
+```python
+print(tfidf[corpus])
+print(list(tfidf[corpus]))
+```
+```
+<gensim.interfaces.TransformedCorpus object at 0x7fd6d776b2b0>
+[[(0, 0.5), (1, 0.5), (2, 0.5), (3, 0.5)], [(4, 0.577), (5, 0.577), (6, 0.577)]]
+```
+
+]
+
+
+---
+
+# Word2Vec in Gensim
+
+```python
+from gensim import models
+w = models.KeyedVectors.load_word2vec_format(
+    '../GoogleNews-vectors-negative300.bin', binary=True)
+w['queen'].shape
+```
+```
+(300,)
+```
+```python
+w.vectors.shape
+```
+```
+(3000000, 300)
+```
+---
+# Cosine Similarity
+.padding-top[
+
+`$$\Large \text{similarity}(v, w)=\cos(\theta) = \frac{v^Tw}{\lVert v\rVert \lVert w \rVert}$$`
+]
+---
+class: smallerr
+# Inspecting Semantics
+```python
+w.most_similar(positive=['movie'], topn=5)
+```
+
+```
+[('film', 0.8676770925521851),
+ ('movies', 0.8013108968734741),
+ ('films', 0.7363011837005615),
+ ('moive', 0.6830361485481262),
+ ('Movie', 0.6693680286407471)]
+```
+--
+```python
+w.most_similar(positive=['good'], topn=5)
+```
+--
+```
+[('great', 0.7291510105133057),
+ ('bad', 0.7190051078796387),
+ ('terrific', 0.6889115571975708),
+ ('decent', 0.6837348341941833),
+ ('nice', 0.6836092472076416)]
+ ```
+--
+```python
+w.most_similar(positive=['cute', 'dog'], topn=5)
+```
+```
+[('puppy', 0.7645270228385925),
+ ('chihuahua', 0.7209305763244629),
+ ('adorable_puppy', 0.7108923196792603),
+ ('yorkie', 0.7013816833496094),
+ ('Shitzu', 0.7004074454307556)]
+ ```
+
+---
+
+# Prepare document (IMDB)
+
+.smallest[
+```python
+print(text_train_sub[0].decode())
+```
+```
+Maybe it's just because I have an intense fear of hospitals and medical stuff, but this one got under my skin
+(pardon the pun). This piece is brave, not afraid to go over the top and as satisfying as they come in terms
+of revenge movies. Not only did I find myself feeling lots of hatred for the screwer and lots of sympathy 
+towards the "screwee", I felt myself cringe and feel pangs of disgust at certain junctures which is really a
+rare and delightful thing for a somewhat jaded horror viewer like myself. Some parts are very reminiscant of
+"Hellraiser", but come off as tribute rather than imitation. It's a heavy handed piece that does not offer 
+the viewer much to consider, but I enjoy being assaulted by a film once and awhile. This piece brings it and 
+doesn't appologize.
+I liked this one a lot. Do NOT watch whilst eating pudding.
+```
+
+```python
+vect_w2v = CountVectorizer(vocabulary=w.index2word)
+vect_w2v.fit(text_train_sub)
+docs = vect_w2v.inverse_transform(vect_w2v.transform(text_train_sub))
+docs[0]
+```
+```
+array(['in', 'for', 'that', 'is', 'the', 'at', 'not', 'as', 'it', 'by',
+       'are', 'have', 'an', 'this', 'they', 'but', 'one', 'which', 'do',
+       'than', 'over', 'just', 'some', 'like', 'only', 'did', 'because',
+       'off', 'being', 'my', 'very', 'much', 'go', 'under', 'does', 'got',
+       'top', 'come', 'really', 'lot', 'find', 'thing', 'once', 'offer',
+       'feel', 'film', 'medical', 'terms', 'rather', 'certain', 'felt',
+       'consider', 'watch', 'parts', 'heavy', 'towards', 'enjoy',
+       'feeling', 'maybe', 'piece', 'fear', 'myself', 'stuff', 'handed',
+       'brings', 'movies', 'hospitals', 'rare', 'lots', 'skin', 'eating',
+       'intense', 'somewhat', 'liked', 'afraid', 'tribute', 'horror',
+       'revenge', 'brave', 'whilst', 'sympathy', 'assaulted', 'satisfying',
+       'hatred', 'viewer', 'awhile', 'pardon', 'delightful', 'disgust',
+       'imitation', 'pudding', 'cringe', 'jaded', 'pun', 'pangs', 'doesn',
+       'junctures', 'hellraiser', 'appologize'], 
+      dtype='<U98')
+```
+]
+
+???
+This is a silly way to tokenize the input and using only
+words that appear in the vocabulary used in the pretrained
+model.
+
+---
+# Represent doc by average
+
+.smaller[
+```python
+X_train = np.vstack([np.mean(w[doc], axis=0) for doc in docs])
+X_train.shape
+```
+```
+(18750, 300)
+```
+```python
+docs_val = vect_w2v.inverse_transform(vect_w2v.transform(text_val))
+X_val = np.vstack([np.mean(w[doc], axis=0) for doc in docs_val])
+```
+```python
+lr_w2v = LogisticRegression(C=100).fit(X_train, y_train_sub)
+lr_w2v.score(X_train, y_train_sub)
+```
+```
+0.867
+```
+```python
+lr_w2v.score(X_val, y_val)
+```
+```
+0.857
+```
+
+]
+
+---
+# Analogues and Relationships
+
+.center[
+![:scale 100%](images/king_queen.png)
+]
+
+
+.smaller[
+Answer “King is to Kings as Queen is to ?”:<br/>
+Find closest vector to vec(“Queen”) + (vec(“Kings”) - vec(“King”))
+]
+
+.smallest[
+<a href="http://www.aclweb.org/anthology/N13-1090">Mikolov et. al. Linguistic Regularities in Continuous Space Word Representations (2013)</a>]
+---
+.center[
+![:scale 80%](images/analogues.png)
+]
+
+
+.smallest[
+<a href="http://papers.nips.cc/paper/5021-distributed-representations-of-words-and-phrases-and-their-compositionality.pdf">Mikolov et. al. - Distributed Representations of Words and Phrases and their Compositionality (2013)</a>]
+---
+# Finding Relations
+<br />
+$$\large a : b : : c : ?$$
+<br />
+$$\large d = \text{arg}\max_i\frac{\left(\text{vec}(b) - \text{vec}(a) + \text{vec}(v)\right)^T vec_i}{\lVert\text{vec}(b) - \text{vec}(a) + \text{vec}(v)\rVert\lVert \text{vec}_i\rVert}$$
+---
+class: middle
+
+.center[
+![:scale 70%](images/table_cities_states.png)
+]
+
+.smallest[<a href="https://cs224d.stanford.edu/lecture_notes/notes2.pdf">Stanford CS 224D: Deep Learning for NLP</a>]
+
+---
+
+# Examples with Gensim
+
+.smaller[
+```python
+w.most_similar(positive=['woman', 'king'], negative=['man'], topn=3)
+```
+```
+[('queen', 0.7118192911148071),
+ ('monarch', 0.6189674139022827),
+ ('princess', 0.5902431607246399)]
+```
+```python
+w.most_similar(positive=['woman', 'he'], negative=['man'], topn=3)
+```
+```
+[('she', 0.8492251634597778),
+ ('She', 0.6329933404922485),
+ ('her', 0.6029669046401978)]
+```
+```python
+w.most_similar(positive=['Germany', 'pizza'], negative=['Italy'], topn=3)
+```
+```
+[('bratwurst', 0.5436394810676575),
+ ('Domino_pizza', 0.5133179426193237),
+ ('donuts', 0.5121968984603882)]
+```
+
+]
+
+
+
+---
+class: center
+
+<br>
+.center[
+![:scale 70%](images/paper_title.png)
+]
+
+<br>
+
+<br>
+
+.smaller[
+$\overrightarrow{man} - \overrightarrow{woman} \approx \overrightarrow{king} - \overrightarrow{queen}$
+
+<br>
+<br>
+
+$\overrightarrow{man} - \overrightarrow{woman} \approx \overrightarrow{computer programmer} - \overrightarrow{homemaker}$
+
+
+]
+
+
+---
+# Going along he-she direction:
+
+<br>
+.center[
+![:scale 90%](images/he_she.png)
+]
+
+---
+class: middle
+
+# Paragaph Vectors
+???
+Fixme rerun experiments from doc2vec paper to show it works?
+---
+
+# Doc2Vec
+
+<br>
+.center[
+![:scale 70%](images/doc2vec.png)
+]
+.smallest[
+<a href="https://cs.stanford.edu/~quocle/paragraph_vector.pdf">Le, Mikolov: Distributed Representations of Sentences and Documents (2014)</a>
+]
+???
+based on cbow, not skip-grams
+
+Add a vector for each paragraph / document, also
+randomly initialized.
+To infer for new paragraph: keep weights fixed, do
+stochastic gradient descent on the representation D,
+sampling context examples from this paragraph.
+
+FIXME better explanation.
+
+There is no gradient descent at encoding time for word2vec!
+
+
+---
+#Doc2Vec with gensim
+
+.smaller[
+```python
+def read_corpus(text, tokens_only=False):
+    for i, line in enumerate(text):
+        if tokens_only:
+            yield gensim.utils.simple_preprocess(line)
+        else:
+            # For training data, add tags
+            yield gensim.models.doc2vec.TaggedDocument(
+                gensim.utils.simple_preprocess(line), [i])
+
+train_corpus = list(read_corpus(text_train_sub))
+test_corpus = list(read_corpus(text_val, tokens_only=True))
+
+model = gensim.models.doc2vec.Doc2Vec(vector_size=50, min_count=2)
+model.build_vocab(train_corpus)
+
+model.train(train_corpus, total_examples=model.corpus_count, epochs=55)
+```
+]
+
+
+.smallest[
+https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/doc2vec-lee.ipynb
+]
+???
+fixme example of nearest neighbors to see if this learned something useful!
+Should use the unlabeled reviews!
+---
+# Validation of Word Vectors
+```python
+model.wv.most_similar("movie")
+```
+```
+[('film', 0.9482318758964539),
+ ('flick', 0.822228193283081),
+ ('series', 0.715380072593689),
+ ('programme', 0.7032747268676758),
+ ('sequel', 0.6939107179641724),
+ ('story', 0.6771408319473267),
+ ('show', 0.6559576392173767),
+ ('documentary', 0.6537493467330933),
+ ('picture', 0.6427854299545288),
+ ('thriller', 0.6300673484802246)]
+ ```
+---
+#Encoding using doc2vec
+
+.smaller[
+```python
+vectors = [model.infer_vector(train_corpus[doc_id].words)
+          for doc_id in range(len(train_corpus))]    
+
+X_train = np.vstack(vectors)
+
+X_train.shape
+```
+```
+(18759, 50)
+```
+```python
+test_vectors = [model.infer_vector(test_corpus[doc_id])
+                for doc_id in range(len(test_corpus))]   
+X_test = np.vstack(test_vectors)
+```
+
+]
+
+---
+
+```python
+from sklearn.linear_model import LogisticRegression
+lr = LogisticRegression(C=100).fit(X_train, y_train_sub)
+
+lr.score(X_train, y_train_sub)
+```
+```
+0.817
+```
+```python
+lr.score(X_val, y_val)
+```
+```
+0.803
+```
+
+???
+Not working well here. Either not enough training data,
+sgd didn’t converge yet, or too low dimension.
+FIXME combine with word vectors?
+In the paper: they actually get 0.926%
+400 dimensions (And using unsupervised data)
+
+---
+
+
+# GloVe: Global Vectors for Word Representation
+
+
+$X_{ij}$ = How often does work j appear in context of word i
+
+`$$ J = \sum\limits_{i,j=1}^{V} f(X_{ij}) (w_i^T \tilde{w_j} + b_i + \tilde{b_j} - \log X_{ij})^2$$`
+
+
+`$$ 
+f(x) = 
+\begin{cases}
+  (x/x_\text{max})^\alpha & \text{if  } x < x_\text{max}  \\
+  1 & \text{otherwise} \\
+\end{cases} 
+$$`
+
+.smaller[
+https://nlp.stanford.edu/projects/glove/
+]
+
+
+???
+
+Here X_ij is the coocurrance count matrix, counting
+how often word I and j appear in the same context –
+say a 5 word window.
+We are learning a factorization of log(X_ij) into w_i and
+~w_j, where w_i are the word-vectors we want to
+extract.
+Very infrequent word-pairs are less important to get
+right, and are down-weighted using f(X_ij).
+
+alpha is 3/4 empirically. x_max is 100.
+
+---
+class: center, spacious
+# GloVe  Weighting function f
+
+![:scale 90%](images/glove_weighting.png)
+???
+
+---
+# Word analogies
+
+.center[
+![:scale 45%](images/word_analogies.png)
+]
+
+???
+
+Comparison of CBOW, SGD, skip-gram and Glove on
+the semantic (ie. state→capital) and syntactic (ie
+singular→ plural) word analogy tasks
+
+---
+class: middle
+# Questions ?
+
+
+    </textarea>
+    <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+    <script>
+    // Config Remark
+    remark.macros['scale'] = function (percentage) {
+        var url = this;
+        return '<img src="' + url + '" style="width: ' + percentage + '" />';
+    };
+    config_remark = {
+        highlightStyle: 'magula',
+        highlightSpans: true,
+        highlightLines: true,
+        ratio: "16:9"
+    };
+      var slideshow = remark.create(config_remark);
+    // Configure MathJax
+    MathJax.Hub.Config({
+    tex2jax: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'] /* removed 'code' entry*/
+    }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for(i = 0; i < all.length; i += 1) {
+            all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+    });
+    </script>
+  </body>
+</html>

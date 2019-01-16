@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Advanced Neural Networks</title>
+    <meta charset="utf-8">
+        <style>
+       @import url(https://fonts.googleapis.com/css?family=Garamond);
+       @import url(https://fonts.googleapis.com/css?family=Muli:400,700,400italic);
+       @import url(https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
+     </style>
+     <link rel="stylesheet" href="../style.css">
+  </head>
+  <body>
+    <textarea id="source">
+
+class: center, middle
+
+### W4995 Applied Machine Learning
+
+# Advanced Neural Networks
+
+04/23/18
+
+Andreas C. Müller
+
+???
+drive home point about permuting pixels in imaged doesn't affect dense networks (or RF, or SVM)
+
+FIXME update with state-of-the-art instead of VGG16
+FIXME show how permuting pixels doesn't affect fully connected network,
+but does affect convolutional network
+---
+
+class:center,middle
+# VGG and Imagenet Filters
+???
+---
+# Inspecting VGG16
+.left-column[.smaller[
+```python
+from keras import applications 
+
+# load the VGG16 network
+model = applications.VGG16(
+    include_top=False,
+    weights='imagenet')
+model.summary()
+```]]
+.right-column[
+![:scale 90%](images/vgg_model_summary.png)
+]
+???
+This is not really state of the art any more.
+---
+#VGG filters
+.smaller[
+```python
+vgg_weights, vgg_biases = model.layers[1].get_weights()
+vgg_weights.shape
+```
+```
+(3, 3, 3, 64)
+```]
+.center[![:scale 45%](images/vgg_filters.png)]
+???
+---
+.left-column[![:scale 90%](images/bkny_image.png)]
+.right-column[.smallest[
+```python
+get_3rd_layer_output = K.function([model.layers[0].input],
+                                  [model.layers[3].output])
+get_6rd_layer_output = K.function([model.layers[0].input],
+                                  [model.layers[6].output])
+
+layer3_output = get_3rd_layer_output([[image]])[0]
+layer6_output = get_6rd_layer_output([[image]])[0]
+print(layer3_output.shape)
+print(layer6_output.shape)
+```
+```
+(1, 300, 192, 64)
+(1, 150, 96, 128)
+```
+]]
+???
+---
+.center[![:scale 75%](images/after_first_pooling.png)]
+.center[![:scale 75%](images/after_second_pooling.png)]
+???
+
+---
+class: middle
+![:scale 100%](images/distill-feature-vis.png)
+
+.smaller[https://distill.pub/2017/feature-visualization/]
+---
+class: middle
+# Transfer learning
+---
+class: center
+# Transfer Learning
+
+.center[
+![:scale 80%](images/pretrained_network.png)
+]
+
+.smaller[See http://cs231n.github.io/transfer-learning/]
+???
+
+- Train on “large enough” data.
+
+- Apply to new “small” dataset.
+
+- Take activations of last or second to last fully
+connected layer.
+
+
+Often we have a small but specific image dataset for a
+particular application. Training a neural net is not
+feasible unless we have tens of thousands or
+hundreds of thousands of images.
+However, if we have a convolutional neural net that
+was already trained on a large dataset that is similar
+enough, we can hope that the features it learned are
+also helpful for our task.
+The easiest way to adapt a trained network to a new
+task is to just apply it to our dataset and take the
+activations of the second to last or last layer.
+If the original task was rich enough – say 10000
+different classes as in imagenet – these layers
+contain a lot of information about the image.
+We can then use these activations as features for
+another classifier like a linear model or smaller dense
+neural network.
+
+The main point is that we don’t need to retrain all the
+weights in the network. You can think of it as
+retraining only the last layer – the classification layer
+– of the network, while holding all the convolutional
+filters fixed. If they learned generic patterns like
+edges and patterns, these will still be useful for your
+task.
+You can download pre-trained neural networks for
+many architectures online.
+Using a pre-trained network is sometimes also known
+as transfer learning.
+This potentially doesn’t work with images from a very
+different domain, like medical images.
+---
+class: spacious
+# Ball snake vs Carpet Python
+.center[
+![:scale 100%](images/ball_snake_vs_python.png)
+]
+???
+---
+.smaller[
+```python
+import flickrapi
+import json
+flickr = flickrapi.FlickrAPI(api_key, api_secret, format='json')
+json.loads(flickr.photos.licenses.getInfo().decode("utf-8"))
+def get_url(photo_id="33510015330"):
+    response = flickr.photos.getsizes(photo_id=photo_id)
+    sizes = json.loads(response.decode('utf-8'))['sizes']['size']
+    for size in sizes:
+        if size['label'] == "Small":
+            return size['source']
+            
+get_url()
+ids = search_ids("ball snake", per_page=100)
+urls_ball = [get_url(photo_id=i) for i in ids]
+
+from urllib.request import urlretrieve
+import os
+for url in urls_carpet:
+    urlretrieve(url, os.path.join("snakes", "carpet", os.path.basename(url)))
+```]
+???
+---
+.center[
+![:scale 80%](images/carpet_python_snake.png)
+]
+
+???
+---
+# Extracting Features using VGG
+.smaller[
+```python
+from keras.preprocessing import image
+
+
+X = np.array([image.img_to_array(img) for img in images_carpet + images_ball])
+
+# load VGG16
+model = applications.VGG16(include_top=False, weights='imagenet')
+
+# preprocessing for VGG16
+from keras.applications.vgg16 import preprocess_input
+
+X_pre = preprocess_input(X)
+features = model.predict(X_pre)
+print(X.shape)
+print(features.shape)
+features_ = features.reshape(200, -1)
+```
+```
+(200, 224, 224, 3)
+(200, 7, 7, 512)
+```]
+???
+VGG16 like each convnet has particular input requirements, for example 224x224 images.
+---
+# Classification with LogReg
+.smaller[
+```python
+from sklearn.linear_model import LogisticRegressionCV
+lr = LogisticRegressionCV().fit(X_train, y_train)
+print(lr.score(X_train, y_train))
+print(lr.score(X_test, y_test))
+from sklearn.metrics import confusion_matrix
+confusion_matrix(y_test, lr.predict(X_test))
+```
+```
+1.0
+0.82
+array([[24,  1],
+       [ 8, 17]])
+```]
+???
+---
+#Finetuning
+
+
+.center[
+![:scale 90%](images/finetuning.png)
+]
+
+
+???
+
+- Start with pre-trained net
+
+- Back-propagate error through all layers
+
+- “tune” filters to new data.
+
+A more complicated variant of this is to load a network
+trained on some other dataset, and replace the last
+layer with your classification task.
+Instead of training only the last layer, we can also keep
+training all the previous layers, backpropagating the
+gradient through the network and adjusting the
+previously learned filters for our task.
+You can think of this as warm-starting a neural network
+from one that was trained on another dataset.
+If you do that, we often want to train the last layer a
+little bit before we backpropagate through the
+network. Otherwise the random initialization of the
+last layer might destroy the filters that we used for
+initialization.
+
+---
+#Adverserial Samples
+
+.center[
+![:scale 80%](images/adverserial.png)
+]
+
+.smallest[
+<br />
+[Szegedy et. al.: Intriguing properties of neural networks](https://arxiv.org/abs/1312.6199)
+]
+???
+Since convolutional neural nets are so good at image
+recognition, some people think they are pretty
+infallible. But they are not. There is this interesting
+paper about intriguing properties of neural networks,
+that introduces adverserial samples.
+Adverserial samples are samples that were created by
+an adversary or attacker to fool your model. Here,
+they changed images to be classified as Ostrich by
+AlexNet trained on imagenet.
+The picture on the left is change just slightly, and went
+from correctly classified to classified as Ostrich.
+This technique uses gradient descent on the input and
+requires access to all the weights in the network to
+create the samples.
+Given how high-dimensional the input space is, this is
+not very surprising from a mathematical perspective,
+but it might be somewhat unexpected.
+
+requires the weights, done by gradient descent.
+---
+class: middle
+# Convolutional Neural Networks
+# for Text Classification
+---
+# Word Level CNNs for Text Classification
+.smallest[[Kim - Convolutional Neural Networks for Sentence Classification (2014)](https://arxiv.org/pdf/1408.5882.pdf)]
+![:scale 100%](images/word-level-cnn.png)
+---
+class: center
+# Datasets
+![:scale 60%](images/word-level-datasets.png)
+---
+class: center
+![:scale 100%](images/word-level-cnn-results.png)
+???
+rand: random initialized
+static: used word2vec embedding (and random for out-of-vocabulary)
+non-static: fine-tuning
+multi-channel: one fixed and one fine-tuned word2vec channel
+
+rand doesn't seem so good. Rest pretty much the same. Pretty competative (at the time) against
+highly specialized networks.
+---
+class: center
+# Learned Representations
+![:scale 30%](images/word-level-embeddings.png)
+???
+removes sentiment ambiguity in word2vec
+---
+class: middle
+# Character Level
+# Convolutional Neural Networks
+# for Text Classification
+---
+class: center
+# Character Level CNNs for Text Classification
+.smallest[[Zhang et. al. - Character-level Convolutional Networks for Text
+Classification (2015)](http://papers.nips.cc/paper/5782-character-level-convolutional-networks-for-text-classification.pdf)]
+![:scale 100%](images/character-level-cnn.png)
+--
+![:scale 50%](images/character-nn-characters.png)
+???
+Need to cut to fixed-length input.
+70 characters
+temporal max-pooling.
+---
+class: center
+# Datasets
+.padding-top[
+![:scale 100%](images/character-cnn-datasets.png)
+]
+???
+Much bigger than for word-level!
+epoch size: dataset size / minibatch size.
+---
+class: center, middle
+![:scale 75%](images/character-cnn-results.png)
+
+.smallest[
+Later improved in [Conneau et. al - Very Deep Convolutional Networks
+for Text Classification - 2016](http://www.aclweb.org/anthology/E17-1104)]
+???
+Might be good for very short texts, not necessarily the go-to solution (yet).
+---
+class: center, middle
+
+# Advanced Architectures
+---
+class: center, middle
+# Deep Residual Networks (ResNet)
+[He et. al. - Deep Residual Learning for Image Recognition (2015)](https://arxiv.org/pdf/1512.03385.pdf)
+---
+# Problem
+![:scale 90%](images/resnet-no-deep-nets.png)
+???
+We can't fit deep networks well - not even on training set!
+"vanishing gradient problem" - was motivation for relu, but not solved yet.
+---
+class: center
+# Solution
+![:scale 60%](images/residual-layer.png)
+
+`$$y = F(x, \{W_i\}) + x$$`
+
+--
+
+`$$y = F(x, \{W_i\}) + W_sx$$`
+
+???
+instead of learning a function. learn the difference to identity.
+if sizes different, add linear projection.
+---
+class: center, middle
+![:scale 25%](images/resnet-architecture.png)
+???
+dotted lines are linear projection, others are identity.
+---
+class: center, middle
+![:scale 100%](images/resnet-success.png)
+---
+class: center, middle
+![:scale 80%](images/resnet-results.png)
+???
+uses batch normalization and dropout.
+---
+class: middle, center
+# Densely Connected Convolutional Networks (DenseNet)
+[Huang et. al - Densely Connected Convolutional Networks (2016)](https://arxiv.org/pdf/1608.06993)
+---
+class: center
+![:scale 60%](images/densenet-architecture.png)
+--
+![:scale 80%](images/densenet-architecture2.png)
+---
+class: center, middle
+![:scale 70%](images/densenet-vs-resnet.png)
+
+???
+uses batch normalization and dropout.
+---
+class: center, middle
+![:scale 90%](images/pretrained-nets-in-keras.png)
+https://keras.io/applications/
+---
+class: center, middle
+# Recurrent Neural Networks
+---
+class: center, middle
+![:scale 100%](images/recurrent-neural-net.png)
+
+.smallest[
+Images from http://colah.github.io/posts/2015-08-Understanding-LSTMs/
+]
+
+---
+class: center, middle
+
+![:scale 100%](images/LSTM.png)
+.smallest[[Hochreiter, Schmidhuber - Long Short-Term Memory (1997)](http://www.bioinf.jku.at/publications/older/2604.pdf)]
+---
+class: center, middle
+
+![:scale 100%](images/GRU.png)
+.smallest[[Cho et. al. - Learning Phrase Representations using RNN Encoder-Decoder for Statistical Machine Translation(2014)](https://arxiv.org/pdf/1406.1078)]
+
+---
+class: center, middle
+
+![:scale 100%](images/lstm-unrolled.png)
+---
+class: center, middle
+
+![:scale 100%](images/seq2seq.png)
+.smallest[[Sutskever et. al. - Sequence to Sequence Learning with Neural Networks (2014)](https://arxiv.org/pdf/1409.3215.pdf)]
+---
+class: center
+# Machine Translation
+![:scale 45%](images/seq2seq-machine-translation.jpg)
+---
+class: center
+# Question answering
+![:scale 80%](images/general-qa.png)
+.smallest[[Chen et. al. - Reading Wikipedia to Answer Open-Domain Questions](https://arxiv.org/pdf/1704.00051v2.pdf)
+https://rajpurkar.github.io/SQuAD-explorer/]
+???
+These are actually training examples.
+---
+class: middle
+# Questions ?
+
+
+    </textarea>
+    <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+    <script>
+    // Config Remark
+    remark.macros['scale'] = function (percentage) {
+        var url = this;
+        return '<img src="' + url + '" style="width: ' + percentage + '" />';
+    };
+    config_remark = {
+        highlightStyle: 'magula',
+        highlightSpans: true,
+        highlightLines: true,
+        ratio: "16:9"
+    };
+      var slideshow = remark.create(config_remark);
+    // Configure MathJax
+    MathJax.Hub.Config({
+    tex2jax: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'] /* removed 'code' entry*/
+    }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for(i = 0; i < all.length; i += 1) {
+            all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+    });
+    </script>
+  </body>
+</html>

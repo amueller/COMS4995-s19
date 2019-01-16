@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Topic Models</title>
+    <meta charset="utf-8">
+        <style>
+       @import url(https://fonts.googleapis.com/css?family=Garamond);
+       @import url(https://fonts.googleapis.com/css?family=Muli:400,700,400italic);
+       @import url(https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
+     </style>
+     <link rel="stylesheet" href="../style.css">
+  </head>
+  <body>
+    <textarea id="source">
+
+class: center, middle
+
+### W4995 Applied Machine Learning
+
+# LSA & Topic Models
+
+04/09/18
+
+Andreas C. Müller
+
+???
+FIXME classification with LDA?
+FIXME How to apply LDA (and NMF?) to test-data
+FIXME do MCMC LDA (code)?
+FIXME theory before practice?
+FIXME classification with logisticregressioncv  instead of fixed C?
+FIXME preprocessing for LDA: mention no tfidf.
+FIXME Edward is called bayes flow now?
+FIXME Classification with NMF.
+FIXME dirichlet distribution better explanation
+---
+
+# Beyond Bags of Words
+
+Limitations of bag of words:
+- Semantics of words not captured
+- Synonymous words not represented
+- Very distributed representation of documents
+
+---
+
+# Latent Semantic Analysis (LSA)
+
+- Reduce dimensionality of data.
+- Can't use PCA: can't subtract the mean (sparse data)
+- Instead of PCA: Just do SVD, truncate.
+- "Semantic" features, dense representation.
+- Easy to compute - convex optimization
+
+---
+
+# LSA with Truncated SVD
+
+.smaller[
+```python
+from sklearn.feature_extraction.text import CountVectorizer
+vect = CountVectorizer(stop_words="english", min_df=4)
+X_train = vect.fit_transform(text_train)
+X_train.shape
+```
+```
+(25000, 30462)
+```
+```python
+from sklearn.decomposition import TruncatedSVD
+lsa = TruncatedSVD(n_components=100)
+X_lsa = lsa.fit_transform(X_train)
+lsa.components_.shape
+```
+```
+(100, 30462)
+```
+]
+---
+.smaller[
+```python
+plt.semilogy(lsa.explained_variance_ratio_)
+```
+]
+
+.center[
+![:scale 70%](images/lsa_truncated_svd_plot.png)
+]
+
+---
+# First Six eigenvectors
+
+.center[
+![:scale 100%](images/lsa_six_eigvec.png)
+]
+
+???
+Points in direction of mean
+---
+
+# Scale before LSA
+
+```python
+from sklearn.preprocessing import MaxAbsScaler
+scaler = MaxAbsScaler()
+X_scaled = scaler.fit_transform(X_train)
+
+lsa_scaled = TruncatedSVD(n_components=100)
+X_lsa_scaled = lsa_scaled.fit_transform(X_nscaled)
+```
+
+???
+- "Movie" and "Film" were dominating first couple of components. Try to get rid of that effect.
+
+---
+
+# Eigenvectors after scaling
+
+.center[
+![:scale 100%](images/lsa_six_eigvec_scaled.png)
+]
+???
+
+- Movie and film still important, but not that dominant any more.
+
+
+---
+# Some Components Capture Sentiment
+
+.smallest[
+```python
+plt.scatter(X_lsa_scaled[:, 1], X_lsa_scaled[:, 3], alpha=.1, c=y_train)
+```
+]
+
+.center[
+![:scale 35%](images/capture_sentiment.png)
+]
+
+.smallest[
+
+```python
+lr_lsa = LogisticRegression(C=100).fit(X_lsa_scaled[:, :10], y_train)
+lr_lsa.score(X_test_lsa_scaled[:, :10], y_test)```
+```
+0.827
+```
+```python
+lr_lsa.score(X_lsa_scaled[:, :10], y_train)
+```
+```
+0.827
+```
+]
+???
+
+- Not competitive but reasonable with just 10 components
+
+
+---
+class: center, middle
+
+# Topic Models
+
+---
+class: spacious
+
+# Motivation
+
+- Each document is created as a mixture of topics
+- Topics are distributions over words
+- Learn topics and composition of documents simultaneously
+- Unsupervised (and possibly ill-defined)
+
+---
+
+# NMF for topic models
+
+.center[
+![:scale 80%](images/nmf.png)
+]
+
+---
+# NMF objectives
+
+`$$\large d_{Fro} = \frac{1}{2} ||X - HW||_{\mathrm{Fro}}^2 = \frac{1}{2} \sum_{i,j} (X_{ij} - (HW)_{ij})^2$$`
+
+`$$\large d_{KL}(X, HW) = \sum_{i,j} \left(X_{ij} \log\left(\frac{X_{ij}}{(HW)_{ij}}\right) - X_{ij} + (HW)_{ij}\right)$$`
+
+???
+FIXME add non-negative constraints
+---
+
+# NMF for topic models
+
+.center[
+![:scale 95%](images/nmf_1.png)
+]
+???
+- Each row of W corresponds to one "topic"
+
+---
+# NMF on Scaled Data
+
+.smallest[
+```python
+nmf_scale = NMF(n_components=100, verbose=10, tol=0.01)
+nmf_scale.fit(X_scaled)
+```
+]
+
+.center[
+![:scale 65%](images/nmf_scaled_plot.png)
+]
+???
+Sorted by "most active" components
+---
+class: center
+# NMF components without scaling
+
+![:scale 70%](images/nmf_topics_no_scaling.png)
+
+
+---
+class: center
+
+# NMF with tfidf
+
+![:scale 70%](images/nmf_topics_tfidf.png)
+
+---
+
+
+# NMF with tfidf and 10 components
+
+.center[
+![:scale 70%](images/tfidf_10comp_plot.png)
+]
+
+
+---
+class: center, middle
+
+#Latent Dirichlet Allocation
+# (the other LDA)
+
+---
+
+# The LDA Model
+
+.center[
+![:scale 90%](images/lda_model.png)
+]
+.smallest[
+(stolen from Dave and John)
+]
+
+???
+- Generative probabilistic model (similar to mixture model)
+- Bayesian graphical model
+- Learning is probabilistic inference
+- Non-convex optimization (even harder than mixture models)
+
+---
+
+.center[
+![:scale 70%](images/lda_params.png)
+]
+
+.smallest[
+- For each topic $k$, draw $\phi_k \sim \text{Dirichlet}(\beta), k = 1 ... K$
+- For each document $d$ draw $\theta_d \sim \text{Dirichlet}(\alpha), d = 1 ... D$
+- For each word $i$ in document $d$:
+	* Draw a topic index $z_{di} \sim \text{Multinomial}(\theta_d)$
+	* Draw the observed word $w_{ij} \sim \text{Multinomial}(\beta_z)$
+
+
+- (taken from Yang Ruan, Changsi An (http://salsahpc.indiana.edu/b649proj/proj3.html)
+]
+???
+
+- K topics = multinomial distributions over words
+- "mixture weights" for each document:
+	* How important is each topic for this document
+    * Each document contains multiple topics!
+    
+
+---
+
+# Two Schools (of solvers)
+
+.left-column[
+Gibbs Sampling
+- Implements MCMC
+- Standard procedure for any probabilistic model
+- Very accuracte
+- Very slow
+
+]
+
+.right-column[
+
+Variational Inference
+- Extension of expectation-maximization algorithm
+- Deterministic
+- fast(er)
+- Less accurate solutions
+- Championed by Dave Blei
+
+]
+
+---
+# Pick a solver
+
+- “Small data” (<= 10k? Documents):
+	* Gibbs sampling (lda package, MALLET in Java)
+- “Medium data” (<= 1M? Documents):
+	* Variational Inference (scikit-learn future default)
+- “Large Data” (>1M? Documents):
+	* Stochastic Variational Inference (scikit-learn current default)
+	* SVI allows online learning (partial_fit)
+
+- Edward by Dustin Tran: http://edwardlib.org/
+	* Tensor-flow based framework for stochastic variational inference. 
+
+???
+- Remember SGD Lecture (and Leon Bottou):
+	* More data beats better inference (often)
+Variational might be more sensitive to hyper parameters? Or give different results?
+---
+
+.smallest[
+```python
+from sklearn.decomposition import LatentDirichletAllocation
+lda = LatentDirichletAllocation(n_components=10, learning_method="batch")
+X_lda = lda.fit_transform(X_train)
+```
+]
+
+.center[
+![:scale 70%](images/lda_plot_1.png)
+]
+???
+- Very generic, similar to NMF(n_components=10).
+TV Series, “family drama”, and “history / war” topics
+
+---
+
+
+.smallest[
+```python
+lda100 = LatentDirichletAllocation(n_components=100, learning_method="batch")
+X_lda100 = lda100.fit_transform(X_train)
+```
+]
+
+.center[
+![:scale 60%](images/lda_plot_2.png)
+]
+
+---
+.center[
+![:scale 80%](images/lda_topics.png)
+]
+
+---
+
+# Hyper-Parameters
+
+- $\alpha$ (or $\theta$) = doc_topic_prior
+- $\beta$ (or $\eta$) = topic_word_prior
+- Both dirichlet distributions
+- Large value $\xrightarrow[]{}$ more dispersed
+- Small value $\xrightarrow[]{}$ more concentrated
+
+.center[
+![:scale 50%](images/lda_params.png)
+]
+
+---
+
+# Dirichlet Distributions
+
+.left-column[
+PDF: 
+$\qquad \frac{1}{B(\alpha)} \Pi_{i=1}^{K}{x_i^{\alpha_i - 1}}$
+]
+
+.right-column[
+Mean: 
+$\qquad E[X_i] = \frac{\alpha_i}{\sum_k{\alpha_k}}$
+]
+
+.center[
+![:scale 60%](images/dirichlet_dist.png)
+]
+
+---
+
+# Conjugate Prior
+
+- Prior is called "conjugate" of the posterior has the same form as prior
+$$ P(\theta | x) = \frac{p(x | \theta)p(\theta)}{\int_{}^{} p(x | \theta^\prime)p(\theta^\prime)d\theta^\prime} $$
+
+--
+
+Multinomial
+$$ P(x_1, \dots, x_k |n, p_1, \dots, p_k) = \frac{n!}{x_1! \dots x_k!} p_1^{x_1} \dots p_k^{x^k}$$
+
+
+Dirichlet
+`$$ P(x_1, \dots, x_k | \alpha_1, \dots \alpha_k)=\frac{1}{B(\alpha)} x_1^{\alpha_1 - 1} \dots x_k^{\alpha_k - 1} $$`
+
+
+
+
+???
+- if $p(x|\theta)$ is multimnomial (discrete distribution), <br>then $p(\theta) = \text{Dirichlet}(...)$ is a conjugate prior.
+
+---
+
+# (Block) Gibbs Sampling for LDA
+.center[
+![:scale 50%](images/lda_params.png)
+]
+
+--
+
+`$p(z_{iv} = k \, \vert \, \mathbf{\theta}_i, \phi_k) \propto \exp(\log \theta_{ik} + \log \phi_{k, y_{iv}})$`
+
+`$p(\theta_i \, \vert \, z_{iv} = k, \phi_k) = \text{Dir}(\alpha + \sum_l \mathbb{I}(z_{il} = k))$`
+
+`$p(\phi_k \, \vert \, z_{iv} = k, \mathbf{\theta}_i) = \text{Dir}(\beta + \sum_i \sum_l \mathbb{I}(y_{il} = v, z_{il} = k))$`
+
+???
+i is index for documents, v is index for words in document, k index for topics.
+z is word-topic assignments.
+
+$z_{iv}=k$ means word v in document i is assigned topic k.
+
+$\theta$ is document topic distribution, $\theta_{ik}$ is the probability of a word in document i to come from topic k.
+
+$y_{iv}$ is the actual word (word-index) of word v in document i.
+
+$\phi_{k, y}$ is the probability of a drawing word y from document k.
+$\phi_{k, y_{iv}}$ is the probability 
+
+---
+
+# Collapsed Gibbs Sampling for LDA
+.center[
+![:scale 50%](images/lda_params.png)
+]
+
+Sample only `$p(z_i=k|\mathbf{z}_{-i})$`
+
+Compute $\theta$, $\phi$ from $\mathbf{z}$
+???
+Now looking at all documents together (i goes over words and documents).
+$z_{-i}$ is word-topic assignments for all other words for all documents.
+Now sequential problem!
+---
+# Further Reading
+
+- Rethinking LDA: Why Priors Matter - Hanna Wallach
+- LDA Revisited: Entropy, Prior and Convergence –
+Zhang et. al.
+
+
+
+---
+class: middle
+# Questions ?
+
+
+    </textarea>
+    <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+    <script>
+    // Config Remark
+    remark.macros['scale'] = function (percentage) {
+        var url = this;
+        return '<img src="' + url + '" style="width: ' + percentage + '" />';
+    };
+    config_remark = {
+        highlightStyle: 'magula',
+        highlightSpans: true,
+        highlightLines: true,
+        ratio: "16:9"
+    };
+      var slideshow = remark.create(config_remark);
+    // Configure MathJax
+    MathJax.Hub.Config({
+    tex2jax: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'] /* removed 'code' entry*/
+    }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for(i = 0; i < all.length; i += 1) {
+            all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+    });
+    </script>
+  </body>
+</html>

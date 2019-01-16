@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Tools and Infrastructure</title>
+    <meta charset="utf-8">
+    <style>
+        @import url(https://fonts.googleapis.com/css?family=Garamond);
+        @import url(https://fonts.googleapis.com/css?family=Muli:400,700,400italic);
+        @import url(https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
+      </style>
+      <link rel="stylesheet" href="../style.css">
+  </head>
+  <body>
+    <textarea id="source">
+
+class: center, middle
+
+### W4995 Applied Machine Learning
+
+# Tools and Infrastructure
+
+01/22/18
+
+Andreas C. Müller
+
+???
+
+Hey. Welcome to the second lecture on applied machine learning. Last
+week we talked a bit about very general and high-level issues in machine
+learning. Today, we’ll go right down to the metal. Actually, things we
+will talk about today are more generally about software engineering and less
+specifically about machine learning. If
+you want to build real-world systems, software engineering practices
+are really incredibly important.
+For those of you from CS, I hope this is a reminder, for those of
+you from DSI, some this is maybe new.
+We’ll talk about version control, in particular git, about some basic
+python, about testing, continuous integration and about documentation.
+Also, I apologize in advance for the slides. There’s a lot of bullet
+points and few diagrams and I don’t really like that.
+---
+
+class: middle
+
+# So you think you know git?
+
+???
+
+So this first part is about git. I assume you all know about git. Who
+here has not used git so far?
+If you haven’t this might be a bit steep for you, and you should read
+up on it later. Let me know if I’m going to fast.
+I assume that you know what version control is and why it’s
+important. You should really use version control any time you work on
+any code or any other document. And it looks like we’ll have to use
+git for now and some time to come.
+So you all have used git, but who of you thinks they understand git? Ok
+I’ll keep you in mind and ask you trick questions along the way.
+
+---
+
+class: center, middle
+
+![:scale 40%](images/git_xkcd.png)
+
+???
+Here’s a comic from xkcd that might seem familiar. I know many people
+that use git by just memorizing some commands and if things go south,
+they just delete the repository and start fresh.
+Who of you have done that? I certainly have.
+The goal of today is that you never have to throw your hands up ever
+again.
+
+---
+
+class: center, middle
+
+![:scale 40%](images/torvalds_ducreux.jpg)
+
+???
+Personally I like to think that git was a practical joke played on the
+open source community by Linux Torvals.
+Unfortunately, I think the real issue is that kernel developers, genius
+as they might be, are not the best at creating user interfaces. Git is
+great, but the user interface is horrible. But let’s try and understand
+what’s going on.
+
+---
+
+# Git Basics
+
+- Repository
+
+`$ git init`
+
+`$ rm .git`
+
+???
+There are some basic units of git that I want to go through. The first
+is a repository. What’s a repository?
+A folder who’s content we want to track with version control.
+And how can you create one?
+Run git init in a folder.
+And how can you make a folder not a repository any more?
+By removing the .git subfolder. That’s it.
+A repository is entirely self-contained. There is no service or database
+or anything like that, it’s all plain files within that folder. That
+also means if you remove the folder, you lose everything if you don’t
+have a backup.
+
+The next basic concept is a commit. What’s that?
+It’s a snapshot of the state of the folder, with a message attached,
+and identified with an ID. It’s also a node in a graph that describes
+the history of the snapshot, and usually has one or two parents, and
+can have arbitrary many children.
+The ID is a hash of the state and all the parents, so if you change
+anything, you change the hash and therefore the commit.
+
+The last basic concept I want to talk about is the remote. That’s just
+a pointer to another repository, often github, but it could also just be
+another folder on your computer.
+You can synchronize with that by pushing or pulling changes. 
+--
+
+- Commit
+
+--
+
+- Remote
+
+---
+
+# Typical Workflow
+
+- Clone
+
+- Branch
+
+- Add, commit, add, commit, add, commit, ...
+
+- Merge / rebase
+
+- Push
+
+???
+So here’s a typical workflow for making a change to an existing
+project. You clone the project from some remote repository. You change
+some files, add them, and commit them.
+Then you push them to the remote repository.
+That’s more or less what you’ll do with your homework.
+
+The advanced version of this is after cloning you create a branch, you
+make all your changes on the branch, and once you’re done, you merge
+the changes from your branch into the master branch.
+
+Everybody good so far?
+I want to give some basic tips that will help you even with these simple
+workflows.
+
+---
+
+# Some tips
+
+- `$ git status`
+
+- Install shell plugins for status and branch (`oh-my-zsh`)
+
+![:scale 90%](images/git_shell_extension.png)
+
+- Set editor, pager and diff-tool (check out meld!)
+
+- Use `.gitignore`
+
+???
+You should always call git status, to see what’s happening with your
+repository. It will tell you whether you changed anything, and which
+branch you’re on.
+I actually highly recommend using a plugin for your shell, that will give
+you the status in every line. If you use zsh, you can use oh-my-zsh for
+example. If you use something else like bash, there are also plenty of
+options out there.
+
+You should also set your editor and pager to something that is familiar
+to you. The default editor is vim, and if you’re not a vim user, you
+might want to change that. It’s also helpful to set up a diff program
+that you like. I like meld for example, that allows you to compare whole
+folders in a nice way.
+
+You should also use gitignore. It's a simple text file that allows you to
+ignore certain files or folders or file types. For example, you could ignore
+all .pyc files. Or you could ignore all .ipynb-checkpoints or your dataset
+folder.
+
+---
+
+# Git log
+
+![:scale 80%](images/git_log.png)
+
+???
+You should also become friends with git log. Git log allows you to
+view the history of your repository. It has a couple of very helpful
+options. Plain git log will have very long output and show full commit
+messages.
+
+If you want short summaries, use oneline.
+
+Often, it’s also useful to annotate branches, which you can do with
+A
+the decorate option.
+If you want to show more than just the branch you’re on, you can use
+the all option.
+
+Now it’s a bit hard to track the relations of the different commits,
+though, and you might want to use the graph option to show the structure
+of the history.
+
+You might want to alias a command like that because it’s rather long
+to type, but very informative. I’ll show you an alternative in a bit.
+
+---
+
+class: center, middle
+
+![:scale 50%](images/git_adog.png)
+
+???
+
+
+---
+
+# Understanding Git
+
+- Working directory
+
+- Repository (Commit graph, history)
+
+- Index (Staging Area)
+
+- Branches
+
+- Head
+
+???
+So now, I want to work towards really understanding git, and here
+are some lower level concepts that are important. First, the working
+directory. That’s the actual current content of the folder on disk.
+Then there is a graph of commits, also known as the history. Formally that's called
+the repository, though usually I think of the repository as the whole thing. It's a directed
+acyclic graph that contains all the changes and contains the information
+about the parents of a commit.
+Then the index. The index is what's also called the staging area,
+it's an intermediate space in which you accumulate changes you want to put in a commit.
+Branches are quite simple. They are just pointers to particular commits. They
+point to certain commits.
+Head is another pointer. Head points to the current active branch. That
+is the branch that will be updated if you make a commit. (unless you’re
+on no branch, in which case you are headless)
+The state of you repository is really much more than the state of the
+directory, it’s the state of all of these five things together. And
+if you think about commands, you should think about them in terms of
+what they do to each of these five.
+
+---
+
+# git Commands
+
+.smaller[
+- .normal[`git add`]<br />
+puts files from working director into staging area (index) If not tracked so far, adds them to tracked files.
+
+- .normal[`git commit`]<br />
+commits files from staging area (index) to repository, moves current
+branch with HEAD
+
+- .normal[`git checkout [<commit>] [<file>]`]<br />
+Set `<file>` in working directory to state at `<commit>` and stages it.
+
+- .normal[`git checkout [-b] <branch>`]<br />
+moves HEAD to `<branch>` (-b creates it), changes content of working dir
+
+- .normal[`git reset --soft <commit>`]<br />
+moves HEAD to `<commit>` (takes the current branch with it)
+
+- .normal[`git reset --mixed <commit>`]<br />
+moves HEAD to `<commit>`,  changes index to be at `<commit>` (but not
+working directory)
+
+- .normal[`git reset --hard <commit>`]<br />
+moved HEAD to `<commit>`, changes index and working tree to `<commit>`.
+]
+
+???
+Ok so now, let’s got through some of the commands and talk about what
+they do in terms of these five concepts
+[read slide]
+
+---
+class: center
+
+![:scale 60%](images/git_data_transport.png)
+
+???
+I found this data flow diagram online and I think it's quite helpful for a subset of the commands.
+It shows how you can propagate changes from the working directory to a remote repository and back.
+This is only a small part of all the commands, though. For example reset is missing, and generally
+nothing that moves branches or head is here.
+
+---
+
+# Merge
+
+- Fast-forward merge:
+
+![:scale 90%](images/git_fast_forward_merge.png)
+
+- Merge-commits:
+
+![:scale 90%](images/git_merge_commit.png)
+
+???
+
+Now let's talk about the  the more complex operations to the repository or
+history, merging and rebasing. They change the commit graph, and possibly the working
+tree. I find it most helpful to think of them as graph operations on the repository.
+
+Let's start with merges.
+There’s two kinds of merging: feed-forward merges, and merges that
+require a commit. If one commit is a descendants of the other and you
+merge them, it will be a feed-forward, and just move the branch.
+That happens for example if you just pull new changes from a remote
+repository that you cloned, if you haven't made any local changes.
+
+However, if one isn’t a descendant of the other, git will create a
+“merge commit” that will unite the two, and have both as its
+parent. Git will attempt its best but if there’s conflicting changes,
+you might need to resolve the conflicts by hand.
+
+---
+
+# Rebase
+
+- Rebase<br/>
+![:scale 50%](images/git_rebase1.png)
+
+- Rebase onto<br />
+`git rebase --onto master next`
+.left-column[
+![:scale 80%](images/git_rebase2.png)
+]
+.right-column[
+![:scale 80%](images/git_rebase3.png)
+]
+
+???
+Rebase is a whole different beast. It allows more or less arbitrary
+modifications of the graph, and therefore rewriting history.
+You should be aware that if you use rebase, you will change a commit's
+hash because the hash depends on the history.
+Basically what rebase does is place a range of commits on top of another
+commit. If you're on branch A and you do git rebase B (or any other commit),
+what will happen is that it will find the common ancestor, take everything
+up to that ancestor, and place it on branch B.
+You can change the commit that it puts the changes on top of by using
+the --onto flag. So if I want to take the last five changes I do git
+rebase HEAD~5 --onto B
+That will take the common ancestor with HEAD~5, which is HEAD~5, and
+place it onto B.
+
+
+---
+# Interactive rebase
+
+`git rebase -i <commit>`
+
+![:scale 66%](images/git_interactive_rebase.png)
+
+???
+You can make rebase even more complicated - and powerful, by making it
+interactive. While you could make any rebase interactive, it’s most common to
+rebase on an ancestor with interactive – in this case a non-interactive rebase would have no
+consequences.
+For each commit in the range that you want to rebase, interactive rebase
+allows you to pick the commit, which is leave it alone, squash it,
+which means incorporating it into the previous commit, removing it or
+amending it.
+Interactive can be useful for cleaning up your history after you worked
+on a feature, so that the remaining commits are logical units.
+
+---
+class: center, middle
+# Squash before Rebase
+
+???
+Rebasing can also create conflicts that need to be resolved the same way
+as merge conflicts. However, rebasing “plays back” all the commits
+that you moved on top of the target commit. That means that you might
+have to resolve conflicts on the same file multiple times – which you
+probably want to avoid.
+
+A good way to get around that is to squash all the commits you want to
+rebase into a single one, and then rebase that single commit. That means
+you only have to do conflict resolution once.
+
+So before you do a rebase on a different branch, you might do an
+interactive rebase to squash some commits and make conflict resolution easier.
+
+---
+
+# Interactive adding
+
+![:scale 55%](images/git_interactive_add.png)
+
+???
+What I find even more important is interactive adding. With git add,
+you usually add whole files to the staging area. I rarely ever do
+that. Usually I want to check line by line what changes I made and what
+changes I want to commit.
+Git add -i allows me to through all the different hunks or lines
+I changed.
+However, the command line interface is a bit clumsy for my taste. Or
+maybe I’m just not as used to it.
+I prefer a gui, which you can summon with git gui on the command line.
+
+---
+class: center, middle
+
+# git gui
+
+![:scale 80%](images/git_gui.png)
+
+???
+Git gui is basically an interface for git add and git commit. You can
+also use it to push, but not much more.
+This is the way I create most of my commits. You can see very easily
+which files have changed, see the changes, and stage single lines or
+whole files.
+Then you enter the commit message here, and click commit.
+
+---
+class: center, middle
+
+# gitk
+
+![:scale 80%](images/gitk.png)
+
+???
+Another tool that I use all the time is gitk.
+This is basically a graphical interface to git log, showing you the
+history of your project. But you can also use it as a graphical interface
+for reset, and for cherry-picking, which we won’t go into.
+Often I run gitk with gitk –all, which will show you all the
+branches. This is quite similar to the
+Git log –oneline –anotate –graph –all that I did earlier –
+but now in a gui!
+This is usually how I do resets and how I look at the graph before I do
+any merges or rebases.
+You can also use gitk to search commit messages, and there are many option
+on what to display and how. I mostly use the options to selectively show
+some branches that I’m interested in.
+
+---
+
+# reflog
+.left-column[
+`$ git reflog`
+![:scale 100%](images/git_reflog.png)
+]
+.right-column[
+<br \>
+![:scale 100%](images/git_simple_merge_graph.png)
+]
+???
+The last command I want to mention is reflog.
+Reflog is a very powerful tool that allows you to go through the history
+of your project, but not the same was as log. Reflog actually tracks
+the changes to HEAD that you do with all the crazy commands that we
+talked about.
+Log and gitk will only show you commits that are part of branches. If
+you do a rebase, for example, all the previous commits are still there,
+but not part of a branch any more. Remember, rebasing creates new hashes,
+so the rebased commits are different commits.
+Imagine you want to go back to some states that are not part of any branch
+any more. Reflog allows you to do that. So if you break something during
+a rebase, or you lost a commit, you can always find it with reflog!
+
+---
+class: center, middle
+# Git for ages 4 and up:
+
+https://www.youtube.com/watch?v=1ffBJ4sVUb4
+
+(with play-doh!)
+
+???
+For some of you, this was probably too slow, and for some of you, this
+was probably too fast.
+Who here knew already all of this?
+So for those of you who I managed to totally confuse, I recommend you
+go through these slides again, and also watch this video. It’s pretty
+good, but it’s also pretty long.
+And for those of you who though this was wayyy to much detail: this
+was still not all the important parts. There’s also tags, and bare
+repositories and the stash and cherries...
+
+---
+class: center, middle
+
+# Github - just another remote
+
+???
+I want to just briefly talk about github.
+For the purposes of git, github is just another remote. And it’s really
+nothing special. In terms of being a remote, you can replace github with
+a usb stick that you hand around.
+There is a lot of tools for user management and issue tracking which is
+great, but not really central what we’re talking about here. The main
+thing that’s different in using github from using any other remote,
+is the use of pull requests, and the ability to integrate with remote
+services.
+For now lets talk about pull requests, we'll come back to the services later.
+
+---
+class: center
+
+# Github pull request workflow
+<br />
+![:scale 50%](images/forks1.png)
+???
+
+So what are pull requests for?
+Basically they allow you to contribute to a repository to which you
+don’t have write permissions.
+Let’s say you want to contribute to scikit-learn. Or to the lecture slides.
+
+There’s the main repository, which we usually call "upstream",
+scikit-learn/scikit-learn. You want to change something there, but you
+don’t have write permissions.
+
+---
+class: center
+
+# Github pull request workflow
+<br />
+![:scale 50%](images/forks2.png)
+???
+
+What you can do is "fork" it on github – that’s a github concept,
+not a git concept. It’s just a clone that also lives on github.
+
+---
+class: center
+
+# Github pull request workflow
+<br />
+![:scale 50%](images/forks3.png)
+???
+To actually make any changes, you
+can then clone this fork locally, add a feature branch, make changes
+and push them.
+
+---
+class: center
+
+# Github pull request workflow
+<br />
+![:scale 50%](images/forks.png)
+???
+
+Then you can ask the owner of the repository if they want to merge your
+changes. That's a pull request and allows the owner to "pull" in your
+changes into the main repository.
+
+So far, so good. Makes mostly sense, I think.
+There is a slight oddity in this workflow, though.
+
+---
+class: center
+
+# Github pull request workflow
+<br />
+![:scale 60%](images/forks_master_feature.png)
+???
+
+Usually you pull the current status from the master branch,
+and make some changes that you want to include. So you always pull master
+and push feature branches.
+But the code in the upstream repository changes. How do you get
+these changes onto your laptop? 
+If the original repository gets updated, there is no way to directly update your fork.
+
+---
+class: center
+
+# Github pull request workflow
+<br />
+![:scale 60%](images/forks_master_feature2.png)
+???
+You have to add upstream as an additional remote, and then you can pull from
+there. You can create new features on top, and push the feature branches to
+your fork (which is usually the “origin” remote).
+But what happens with the master branch on your fork? It never gets
+updated and there is no point in pushing to it, so it will just sit there
+and rot, staying at the state of the original repository at the time of your fork.
+I think that’s kind of weird, but that’s how github works.
+So you always pull from upstream to get their changes, and push to
+your fork.
+---
+class: center, middle
+
+# End version control – but github will come back later ;)
+
+???
+Ok, so that’s enough version control for now. But we’ll get back to
+githubs integration of third party services later.
+
+---
+class: center, middle
+
+# General coding guidelines
+
+???
+Next, I want to talk about Python and some software engineering
+principles. But before we do that, I want to mention two famous quotes
+that provide great general guidelines for software development.
+
+---
+class: middle
+
+Programs must be written for people to read, and only incidentally for
+machines to execute.
+.quote_author[Harold Abelson (wizard book)]
+
+???
+The first one is by Harold Abelson from the foreword of “structure
+and interpretation of computer programs” a classic in programming
+languages and compilers.
+[read]
+The gist is that the main point of code is to communicate ideas to your
+peers and to your future self.
+A similar sentiment is expressed in the statement that “code is read
+more often than it is written”. Take more time writing code, so that
+you and other can spend less time reading it. Don’t focus on what’s
+“easy for the computer” or “elegant”. Focus on what’s easy to
+understand for people.
+
+---
+class: middle
+
+Everyone knows that debugging is twice as hard as writing a program in
+the first place. So if you're as clever as you can be when you write it,
+how will you ever debug it?
+.quote_author[Brian Kernighan]
+
+???
+This one is from Brian Kernighan, who wrote the first book on C together
+with Dennis Richie. Kernighan is also the creator of awk and many other
+parts of unix, in particular the name. He says
+[read]
+This is another call for simplicity. Make code easy to understand. For
+yourself now to debug, for your future self to know what the hell you were
+thinking, and for others that might want to use this code in the future.
+Hopefully all the code you write will be read again. Otherwise, what’s
+the point? That might not be true for your assignments in most classes,
+but the point of the assignments it to practice for the real world. So I
+want to make sure that the code that you write in class is on the same
+standard that it needs to be out there on your job. Also, think of the
+poor course assistants.
+
+---
+class: padding-top
+
+- Don’t be clever!
+
+
+- Make it readable!
+
+
+- Future you is the most likely person to try to understand your code.
+
+
+
+???
+So to summarize:
+[read]
+
+And there's one more trick to making your code readable and understandable.
+Don't write code. The more you write, the more you need to read. If you can
+avoid writing code, do it! If you can get a 10% speedup by making your code
+three times as long, usually it's not worth it.
+
+--
+- Avoid writing code.
+
+---
+class: center, middle
+
+# Python basics
+
+???
+So now I want to go over some Python basics. And don’t worries, we
+won’t go over syntax or the standard library.
+
+---
+class: spacious
+
+# Why Python?
+
+- General purpose language
+- Great libraries
+- Easy to learn / use
+- Contenders: R (Scala? Julia?)
+
+???
+First, a short defense on why I’m teaching this class in Python.
+Python is a general purpose programming language, unlike matlab or R,
+so you can do anything with it.
+It is very powerful, mostly because there are so many libraries for
+python that you can do basically anything with just a couple of lines.
+Python is arguably easy to learn and easy to use, and it allows for a
+lot of interactivity.
+The only real contender in the data science space that I can think of
+is R, which is also a good option, but well, I’m not an R guy. Much
+of this course could be taught in R instead, though the software
+development tooling is a bit worse (but other things are better).
+You might have better chances with Python in industry jobs.
+There’s also Scala, but I’d argue that’s way too complicated and
+doesn’t have the right tools for the kind of data analysis and machine
+learning we want to do in this course.
+
+---
+
+# The two language problem
+
+Python is sloooow…
+
+
+- Numpy: C
+- Scipy: C, fortran
+- Pandas: Cython, Python
+- Scikit-learn: Cython, Python
+
+- CPython: C
+
+???
+So there’s one thing that I really  don’t like about Python. Any
+idea what that is?
+Python is slooow. Like really slow.
+So you know all these great libraries for Python for data science, like
+numpy, scipy, pandas and scikit-learn. Do you know what language they
+are written in?
+Numpy is written in C,
+Scipy is written in C and Fortran, pandas and scikit-learn are written
+in Cython and Python. And Cpython, the interpreter we use, is written
+in … C obivously
+That creates a bit of a divide between the users, who write python,
+and the developers, who write C and Cython. I have to admit, I don’t
+write a lot of Cython myself, mostly Python… but that’s not great.
+So you need to be aware that if you actually want to implement new
+algorithms, and you can’t express them with pandas and numpy, you
+might need to learn cython.
+For this course, this won’t really be a problem, though. We’ll stay
+firmly on the Python side.
+
+
+---
+
+# Python 2 vs Python 3
+
+- “current” : 2.7, 3.4, 3.5, 3.6, 3.7
+
+???
+There’s another thing that you could call the two language problem,
+it’s python 2 vs python 3.
+The last version of python 2 is python 2.7, and really no-one should be
+using anything earlier. The commonly used versions of python 3 are 3.4
+and 3.5, 3.6 and 3.7.
+There is really no reason to use python 2 any more. Unless you already
+wrote lots of code earlier. If you’re at a company it might not be
+easy to make the  transition, and that’s why python 2 is still around.
+
+So the important part are the changes. Anyone know what changed?
+
+--
+
+Changes (that will bite you)
+
+- `print`
+
+- division
+
+- Iterators (range, zip, map, filter, dictionary keys, values, items)
+
+- Strings / unicode
+
+???
+The print statement was removed, now print is a function, so it need
+parenthesis. The most common and trivial change. Division was changed
+to produce floats, so if you devided 2 by 3, it was 2 before, and now
+it’s 2.5
+
+Then, many things that returned lists now return iterators, which is more
+memory efficient, but means you can’t necessarily retrieve things by
+index any more. That’s true for range, which now behaves like xrange
+before, zip, which behaves like izip, map and filter.
+Also, dictionary keys, values and items are now iterables and not
+lists. If you tried to index any of those, you probably had a bug anyhow.
+
+And really the main thing that changed is strings. And they changed
+completely. In 2, there was a string type and a unicode type. Now
+there’s a string type, which is always unicode, and a bytes type that
+is the raw bytes and needs an encoding to interpret.
+The story is really a bit complicated, and I suggest you read up on it.
+If your standard environment is Python2, you should update it to Python3
+today.
+
+---
+class: spacious
+
+# Python 2 && Python 3
+
+- `from __future__ import print_function`
+- Six – tools for making 2 and 3 compatible code
+- 2to3 – convert python2 code to python3 code
+
+???
+
+If you write a library or code that you want to have reused, I suggest writing
+code that is compatible with both python 3 and python 2. Hopefully soon we
+can write Python3 only. For the first assignment I’ll make you do that, for
+later assignments the code only needs to run in 3.4 or newer.
+
+Generally it’s easy for code to run on both. You can just always
+use parenthesis on print, it will have no effect in python2. Or you
+can import features, like float division from the future. ` __future__`
+is a module that exists in python2 and python3 and that allows you to
+use certain python3 feature in python 2.
+Some cases are not covered, though, and the `six` package helps out in
+these cases. It provides some common names between python2 and python3.
+If you want to convert a codebase from python2 to python3, there’s an
+automatic converter called 2to3, which can do that for you.
+
+The next thing I want to talk about is managing python packages and environments.
+
+---
+class: spacious
+
+# Python ...
+
+Package management:
+
+- don't use system python!
+
+- use Virtual environments
+
+- understand pip (and wheels)
+
+- probably use Conda (and anaconda or conda-forge)
+
+???
+Package management is really important if you want to become a serious python user.
+Unfortunately, it’s a bit tricky, partly due to the two language problem, which
+means packages have dependencies that are not in python.
+First of, you should be aware of the environment you are using. Usually
+it’s a good idea to work with virtual environments, in which you can
+control what software is installed in what version. If you’re on OS X
+or linux, your system will com with some python, but you don’t really
+want to mess with that. Create your own environments, and are aware of
+which environment you are using at any moment.
+The standard python way to install packages is pip, which is part of
+the setuptools package. Pip allows you to install all python packages in the pipy
+repository, which is basically all of them.
+
+--
+???
+Until not so long ago, pip needed to compile all C code locally on your
+machine, which was pretty slow and complicated. Now, there are binary distributions,
+called wheels, which mean no compilation for most packages! If you’re compiling
+something when you’re installing, you’re probably doing it wrong.
+The issue with pip is that it only works for python packages, and some
+of our packages rely on linear algebra packages like blas and lapack,
+and you need to install them some other way.
+A really easy work-around for that is using a different package manager,
+called conda. It was created by a company called Anaconda (used to be continuum
+IO) and they ship a bundle called anaconda, which installs basically all the
+important packages. I recommend you use that for the course.
+Conda can be used with different source repositories. By default, it uses
+the anaconda one that is managed by the company. There’s also an open
+repository that is managed by the community that’s called conda-forge.
+In practice I use both conda and pip.
+---
+class: some-space
+
+# Pip and conda and upgrades
+
+- Pip upgrade works on dependencies (unless you do -no-dep)
+
+- pip has no dependency resolution!
+
+- conda has dependency resolution
+
+- Use conda environments!
+
+- upgrading a conda package with pip (or vice versa) will break stuff!
+
+???
+Oh and one word of warning: if you do pip upgrade somepackage, it will
+also update all the dependencies. That is often not what you want, in
+particular if you are using it in a conda environment or if you installed
+a particular version of numpy or scipy that you don’t want upgraded.
+An imporatant thing to keep in mind about pip is that it has no dependency
+resolution, which means it will install the dependencies for any
+package you install, but it won't care about all the packages you installed
+before. So whenever you're using pip to install something, it could potentially
+break an already installed package.
+Conda on the other hand has a dependency resolution mechanism, which means
+it'll ensure that all the packages that you installed are compatible with each other.
+Sometimes there are conflicts between packages, though, which might prevent
+you from installing certain combinations.
+The solution here is to make liberal use of conda environments.
+If you need to work on a specific project, you should have a conda environment
+for that project ant it's requirements. Conda environments are really very useful
+and easy to use.
+
+Finally, don't try to upgrade a package with pip if it was installed
+with pip or the other way around. So if you mix conda and pip, make sure
+you check which one you used before upgrading. I recommend to use conda
+whenever possible.
+
+---
+# Environments and Jupyter Kernels
+.smaller[
+- Environment != kernels
+- Use nb_conda_kernels or add environment kernels manually:
+
+.smallest[
+```bash
+source activate myenv
+python -m ipykernel install --user --name myenv --display-name "Python (myenv)"
+source activate other-env
+python -m ipykernel install --user --name other-env --display-name "Python (other-env)"
+```
+]
+- Even with `nb_conda_kernels`: need to install `ipykernel` package.
+]
+.left-column[
+![:scale 100%](images/kernel_other_env.png)
+]
+.right-column[
+![:scale 100%](images/kernel_other_env2.png)
+]
+???
+
+If you're using conda environments, you will want to use them in your jupyter notebooks.
+However, jupyter is not immediately aware of your environments. Jupyter runtime environments
+are defined by kernels, which can be python environments, or different programming languages.
+You need to make sure that jupyter is aware of your environments to use them as a kernel.
+One way is to manually add them by using this command here which invokes `ipykernel install`.
+That works with any kind of python environment.
+For conda environments specifically, you can also install the `nb_conda_kernels` package,
+which will automatically create kernels for all environments that contain the `ipykernel`
+package. If you do either of them, you'll get a choice of which kernel you want to use for
+a notebook. That's a great way to use different versions of python, like 2 and 3, or different
+versions of scikit-learn or matplotlib or anything else.
+
+There is a bit more tooling around python that I want to talk about next.
+
+---
+class: spacious
+
+# Dynamically typed, interpreted
+
+- Invalid syntax lying around
+
+- Code is less self-documenting
+
+???
+One of the reasons Python is so easy to learn and use is because it’s
+a dynamically typed languages.
+So who of you have worked with statically typed languages like C, C++,
+Java or Scala?
+It’s often a bit cumbersome that you have to declare the type of
+everything, but it provides some safety nets. For example you know that
+if the code compiles, the syntax is correct everywhere. You don’t know
+whether the code does what you want, but you know it’ll do something.
+Mabye crash your machine, but whatever.
+Also, arguably, dynamically typed code is less self-documenting. If I write a
+function without documentation, it’s very hard for you to guess what I
+expect the input types to be. There’s now type annotations for Python,
+which is great, but they are not supported in Python2 and are not adopted
+everywhere yet. So how can we get back our safety nets?
+
+---
+class: spacious
+
+# Editors
+
+- Flake8 / pyflake
+
+- Scripted / weak typing: Have a syntax checker!
+
+- write pep8 (according to the standard, not the tool)
+
+- use autopep8 if you have code lying around
+
+???
+One of the simplest fixes is to have a syntax checker in your
+editor. Whatever editor you’re using, make sure you have something like
+flake8 or pyflake installed that will tell you if you have obvious errors.
+These will also tell you if you have unused imports, undeclared variables
+or unused variables. All that helps you to immediately fix problems,
+and not wait until you run your program.
+I also recommend having a style checker. Flake8 also enforces pep8,
+which is the python style guide.
+You should write pep8 compatible code. It will make it easier for others
+to read your code, and once you’re used to it, it’ll make it easier
+for you to read other’s code.
+If you want to convert code to be pep8 compatible, check out the autopep8
+package. The pep8 tool is very strict these days, and I don't heed
+all the warnings. There is a configuration file you can use to silence
+the more obnoxious ones. When I say you should write pep9, I mean
+you should write according to the standard, not the tool.
+The first guideline of pep8 is to use your own judgment and not
+blindly follow the guide.
+
+---
+class: middle
+
+# Questions ?
+
+    </textarea>
+    <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+    <script>
+    // Config Remark
+    remark.macros['scale'] = function (percentage) {
+        var url = this;
+        return '<img src="' + url + '" style="width: ' + percentage + '" />';
+    };
+    config_remark = {
+        highlightStyle: 'github',
+        highlightSpans: true,
+        highlightLines: true,
+        ratio: "16:9"
+    };
+      var slideshow = remark.create(config_remark);
+
+    // Configure MathJax
+    MathJax.Hub.Config({
+    tex2jax: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'] /* removed 'code' entry*/
+    }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for(i = 0; i < all.length; i += 1) {
+            all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+    });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Time Series</title>
+    <meta charset="utf-8">
+        <style>
+       @import url(https://fonts.googleapis.com/css?family=Garamond);
+       @import url(https://fonts.googleapis.com/css?family=Muli:400,700,400italic);
+       @import url(https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
+     </style>
+     <link rel="stylesheet" href="../style.css">
+  </head>
+  <body>
+    <textarea id="source">
+
+class: center, middle
+
+### W4995 Applied Machine Learning
+
+# Time Series and Forecasting
+
+04/25/18
+
+Andreas C. Müller
+
+???
+FIXME much more polish
+FIXME time series classification
+FIXME PCA / clustering on time series
+FIXME general autoregressive models.
+FIXME dynamic time warping
+FIXME too short?!
+FIXME deprecated pandas API on slides.
+---
+class: center, middle
+# Tasks 
+
+???
+
+---
+
+# 1d Forecasting
+
+.center[![:scale 80%](images/1d forecasting.png)]
+
+???
+
+- 1d time-series forecasting
+  - Number of customers (naive)
+---
+
+# Nd Forecasting
+
+.center[![:scale 80%](images/nd forecasting.png)]
+
+???
+- Multivariate time-series -- forecast all
+  - Stock market
+---
+class: spacious
+
+# Feature-based forecasting &nbsp; (expanatory variables)
+
+.center[![:scale 80%](images/feature based forecasting.png)]
+
+???
+- Multivariate time-series -- forecast one
+  - Number of customers (with features)
+---
+
+# Time Series Classification
+
+.center[![:scale 70%](images/time series classification.png)]
+
+???
+
+
+- Time-series classification (1d or Nd)
+  - Activity from smart phone sensors
+---
+class: spacious
+
+# What's different?
+
+- Forecasting: Not iid
+- Classification: Not necessarily same length
+
+
+???
+---
+class: middle
+# Preliminaries
+---
+
+# Measurement frequencies
+
+`$$ (x_{t_1}, y_{t_1}), ... (x_{t_m}, y_{t_m})  \quad t_1 < t_2 < ... < t_m $$`
+
+Equally spaced:
+
+$$ t_{i+1} - t_i = const$$ 
+
+--
+Unevenly spaced:
+
+$$ t_{i+1} - t_i  \quad varies $$ 
+
+
+
+???
+Equally:
+- 1 second, 1 day, 1 year
+Unevenly:
+- Event time series (earthquake, trade, ...)
+---
+# Examples
+
+.left-column[
+.center[Evenly spaced
+![:scale 100%](images/evenly spaced data.png)
+CO2 Measurements]
+
+]
+.right-column[
+.center[Unevenly spaced
+![:scale 100%](images/unevenly spaced data.png)
+Volcanic Eruption Deaths]
+]
+
+???
+Today only evenly spaced.
+For uneven: sometimes aggregates over fixed periods make sense
+---
+class: center, middle
+
+# Data reading / munging with Pandas
+
+???
+
+---
+
+# Parse Dates
+
+.smaller[
+```python
+url = "ftp://aftp.cmdl.noaa.gov/products/trends/co2/co2_weekly_mlo.txt"
+names = ["year", "month", "day", "year_decimal", "co2", "days", "1 yr ago", 
+          "10 yr ago", "since 1800"]
+maunaloa = pd.read_csv(url, skiprows=49, header=None, delim_whitespace=True,
+                       names=names, na_values=[-999.99])
+maunaloa.head()
+```
+]
+
+.center[![:scale 80%](images/parse dates.png)]
+
+???
+
+---
+
+# Parse Dates
+
+.smaller[
+```python
+maunaloa = pd.read_csv(url, skiprows=49, header=None, delim_whitespace=True,
+                       names=names, parse_dates=[[0, 1, 2]], na_values=[-999.99])
+maunaloa.head()                       
+```
+]
+
+.center[![:scale 80%](images/parse dates 2.png)]
+
+???
+
+Multiple columns combined to a single date !
+---
+
+# Time Series Index
+
+.smaller[
+```python
+maunaloa = pd.read_csv(url, skiprows=49, header=None, delim_whitespace=True,
+                       names=names, parse_dates=[[0, 1, 2]], na_values=[-999.99],
+                       index_col="year_month_day")
+maunaloa.head()                       
+```
+]
+
+.center[![:scale 90%](images/time series index.png)]
+
+
+???
+- Can also use set_index if we already read the data it.
+
+---
+class: spacious
+# Mauna Loa CO2 Dataset
+
+.wide-left-column[
+
+.center[![:scale 100%](images/maunaloa plot.png)]
+
+]
+
+.narrow-right-column[
+.smaller[
+```python
+maunaloa.co2.head()
+```
+```
+year_month_day
+1974-05-19    333.34
+1974-05-26    332.95
+1974-06-02    332.32
+1974-06-09    332.18
+1974-06-16    332.37
+Name: co2, dtype: float64
+```
+]
+
+]
+
+???
+
+---
+
+# Backfill and Forward Fill
+
+- Simple "imputation" method
+
+.smaller[
+```python
+maunaloa.co2.isnull().sum()
+```
+20
+```python
+maunaloa.fillna(method="ffill", inplace=True)  # or bfill
+maunaloa.co2.isnull().sum()                      
+```
+0
+]
+
+- If we resample later, we could also just drop
+
+???
+
+---
+class: compact
+
+# Resampling
+
+.left-column[
+.smallest[
+```python
+# resampling is lazy
+resampled_co2 = maunaloa.co2.resample("MS")
+resampled_co2
+```
+```
+DatetimeIndexResampler 
+[freq=<MonthBegin>, axis=0, 
+  closed=left, label=left, 
+  convention=start, base=0]
+```
+```python
+resampled_co2.mean().head()
+```
+```
+
+year_month_day
+1974-05-01    333.1450
+1974-06-01    332.0280
+1974-07-01    330.7125
+1974-08-01    329.0725
+1974-09-01    327.3240
+Freq: MS, Name: co2, dtype: float64
+
+```
+]
+]
+
+.right-column[
+
+.center[![:scale 75%](images/resampling 1.png)]
+.center[![:scale 70%](images/resampling 2.png)]
+
+]
+.reset-column[.smaller[
+http://pandas.pydata.org/pandas-docs/stable/timeseries.html#timeseries-offset-aliases]
+]
+
+
+???
+
+---
+
+.smaller[
+```python
+maunaloa.co2.resample("W").mean().plot(marker="o", markersize=1)
+maunaloa.co2.resample("AS").mean().plot(marker="o")
+maunaloa.co2.resample("3AS").mean().plot(marker="o")
+```]
+
+.center[![:scale 75%](images/maunaloa resample.png)]
+
+???
+
+---
+class: center, middle
+
+# 1d Forecasting Basics
+
+???
+
+---
+class: spacious
+
+# Stationarity
+
+- Required for some classical statistics methods
+- Mean independent of time
+- Variance independent of time
+- Covariance of two observations k steps apart independent of time
+
+???
+FIXME formulas
+---
+
+.center[![:scale 75%](images/stationarity.png)]
+
+- Mean changes -> not stationary, there is a trend
+
+???
+
+---
+
+# De-trending
+
+- Model trend
+- Or differencing (compute new series)....  $\quad x_{t + 1} - x_t$
+
+.smaller[
+```python
+ppm.diff.plot()
+```]
+.center[![:scale 55%](images/detrending.png)]
+
+???
+
+---
+class: spacious
+
+# Autocorrelation
+
+$$ R(s,t) = \frac{\operatorname{E}[(X_t - \mu_t)(X_s - \mu_s)]}{\sigma_t\sigma_s} $$
+
+--
+
+```python
+ppm.autocorr()
+```
+```
+0.9989
+```
+```python
+ppm.autocorr(lag=12)
+```
+```
+0.9997
+```
+
+???
+---
+# Autocorrelation function
+.smaller[
+```python
+from statsmodels.tsa.stattools import acf
+autocorrelation = acf(ppm)
+plt.plot(autocorrelation)
+```
+]
+
+.center[![:scale 65%](images/autocorr 2.png)]
+
+???
+Fixme axis labels
+
+---
+
+.smaller[
+```python
+from pandas.tools.plotting import autocorrelation_plot
+autocorrelation_plot(ppm)
+```
+]
+
+.center[![:scale 80%](images/autocorr.png)]
+
+
+???
+
+---
+# Autocorrelation of differenced series
+
+.left-column[
+.smallest[
+```python
+autocorrelation_plot(ppm.diff()[1:])
+```
+]
+
+.center[![:scale 100%](images/autocorr 3.png)]
+]
+.right-column[
+.smallest[
+```python
+from statsmodels.tsa.stattools import acf
+autocorrelation = acf(ppm.diff()[1:])
+plt.plot(autocorrelation)
+```
+]
+
+.center[![:scale 100%](images/autocorr 4.png)]
+
+]
+???
+
+---
+class: compact
+# Seasonal model for CO2
+.smaller[
+
+```python
+from statsmodels.tsa.seasonal import seasonal_decompose
+decomposition = seasonal_decompose(ppm, model='additive')
+fig = decomposition.plot()
+
+```
+]
+
+.center[![:scale 65%](images/seasonal model.png)]
+
+
+???
+Only for analysis, not prediction.
+
+---
+class: spacious
+
+# Autoregressive (linear) model
+
+- Order k AR model (can include trend and offset):
+
+`$$ x_{t+k} = c_0  x_t + c_1 x_{t + 1} + ... + c_{k - 1} x_t $$`
+
+- learn $c_i$ (i.e. using least squares)
+
+???
+
+---
+
+# AR model with statsmodels
+
+.left-column[
+.smaller[
+```python
+from statsmodels.tsa import ar_model
+ar = ar_model.AR(ppm[:500])
+res = ar.fit(maxlag=12)
+res.params
+```
+```
+const              -2.018779
+L1.interpolated     0.931758
+L2.interpolated    -0.240629
+L3.interpolated    -0.099048
+L4.interpolated    -0.076488
+L5.interpolated     0.164472
+L6.interpolated    -0.000531
+L7.interpolated    -0.023481
+L8.interpolated    -0.125134
+L9.interpolated     0.100288
+L10.interpolated   -0.021266
+L11.interpolated    0.414740
+L12.interpolated   -0.017268
+dtype: float64
+```
+]
+]
+
+.right-column[
+.smaller[
+```python
+ppm[300:].plot(label="true")
+res.predict(ppm.index[500], 
+  ppm.index[-1]).plot(label="predict")
+```
+]
+.center[![:scale 100%](images/ar model with statsmodel.png)]
+]
+
+???
+
+---
+
+# Impact of order
+
+.left-column[
+.smaller[
+```python
+ar6 = ar_model.AR(ppm[:500])
+res = ar6.fit(maxlag=6)
+ar_pred = res.predict(ppm.index[500], 
+                      ppm.index[-1])
+```
+]
+.center[![:scale 90%](images/impact of order 1.png)]
+]
+
+.right-column[
+.smaller[
+```python
+ar25 = ar_model.AR(ppm[:500])
+res = ar25.fit(maxlag=25)
+ar_pred = res.predict(ppm.index[500], 
+                      ppm.index[-1])
+```
+]
+.center[![:scale 90%](images/impact of order 2.png)]
+]
+
+???
+
+---
+# Autoregressive integrated moving average (ARIMA)
+
+.smaller[
+```python
+from statsmodels import tsa
+arima_model = tsa.arima_model.ARIMA (ppm[:500], order=(12, 1, 0))
+res = arima_model.fit()
+arima_pred = res.predict(ppm.index[500], ppm.index[-1], typ="levels")
+```
+]
+
+
+
+.center[![:scale 50%](images/arima.png)]
+
+
+???
+
+- More complicated process model
+- Internally uses differencing
+- Also checkout SARIMAX (state space model)
+- Note: typ = "levels" !!
+
+---
+
+# 1d with sklearn
+
+.smaller[
+```python
+ppm.shape 
+```
+```
+(709,)
+```
+```python
+train = ppm[:500]
+test = ppm[500:]
+X = ppm.index.to_series().apply(lambda x: x.toordinal())
+X = pd.DataFrame(X)
+X_train, X_test = X.iloc[:500, :], X.iloc[500:, :]
+X_train.shape
+```
+```
+(500,1)
+```
+```python
+from sklearn.linear_model import LinearRegression
+lr = LinearRegression().fit(X_train, train)
+lr_pred = lr.predict(X_test)
+plt.plot(ppm.index, lr.predict(X))
+ppm.plot()
+```
+]
+
+
+???
+
+---
+
+# Linear model for trend
+
+.center[![:scale 85%](images/linear model for trend.png)]
+
+???
+
+---
+
+# Quadratic Model
+
+.smaller[
+```python
+from sklearn.preprocessing import PolynomialFeatures
+lr_poly = make_pipeline(PolynomialFeatures(include_bias=False), 
+                          LinearRegression())
+lr_poly.fit(X_train, train)
+plt.plot(ppm.index, lr_poly.predict(X))
+ppm.plot()
+```
+]
+
+.center[![:scale 55%](images/quadratic model.png)]
+
+
+???
+
+---
+
+# Detrending with trend model
+
+.smaller[
+```python
+y_res = ppm - lr_poly.predict(X)
+y_res.plot()
+```]
+
+.center[![:scale 60%](images/detrending with trend model.png)]
+
+???
+
+---
+class: compact
+
+# AR model on residuals
+
+.left-column[
+.smaller[
+```python
+from statsmodels.tsa import ar_model
+ar_model_res = ar_model.AR(y_res[:500])
+res_res = ar_model_res.fit(maxlag=12)
+ar_pred_res = res_res.predict(
+        ppm.index[500], ppm.index[-1])
+pred_ar_res = ar_pred_res + 
+              r_poly.predict(X_test)
+res_res.params
+```
+```
+const              -0.008039
+L1.interpolated     0.922508
+L2.interpolated    -0.243015
+L3.interpolated    -0.101173
+L4.interpolated    -0.077538
+L5.interpolated     0.158073
+L6.interpolated    -0.006164
+L7.interpolated    -0.023890
+L8.interpolated    -0.126381
+L9.interpolated     0.092664
+L10.interpolated   -0.025640
+L11.interpolated    0.414180
+L12.interpolated   -0.018078
+dtype: float64
+```
+]
+]
+
+.right-column[
+.center[![:scale 120%](images/ar model residuals.png)]
+
+]
+
+
+???
+FIXME - Note: Couldn't decrease size further
+
+
+---
+
+# Just Linear Regression
+
+.smaller[
+```python
+X_month = pd.concat([X, pd.DataFrame({'month': X.index.month},index=X.index)],
+		         		axis=1)
+X_month.head()
+```
+]
+.center[![:scale 25%](images/linear regression.png)]
+.smaller[
+```python
+X_train_month = X_month[:500]
+X_test_month = X_month[500:]
+lr_poly_month = make_pipeline(PolynomialFeatures(include_bias=False), 
+								LinearRegression())
+lr_poly_month.fit(X_train_month, train)
+X_test_month.shape # (209,2)
+```
+
+]
+
+???
+
+---
+
+.center[![:scale 90%](images/arma month.png)]
+
+???
+
+---
+
+.smaller[
+```python
+from sklearn.preprocessing import OneHotEncoder
+lr_poly_month_ohe = make_pipeline(OneHotEncoder(categorical_features=[1], 
+												 sparse=False),
+                                  PolynomialFeatures(include_bias=False), 
+                                  LinearRegression())
+lr_poly_month_ohe.fit(X_train_month, train)
+```
+.center[![:scale 45%](images/arma res.png)]
+```python
+from sklearn.metrics import mean_squared_error
+mean_squared_error(ppm[500:], lr_poly_month_ohe.predict(X_test_month)) #0.505
+mean_squared_error(ppm[500:], pred_arma_res) #0.577
+```
+]
+
+???
+
+---
+class: spacious
+
+# General Autoregressors
+
+- https://github.com/scikit-learn/scikit-learn/pull/6029
+- Trees work well (as always)
+- Can take explanatory variables
+
+
+???
+---
+class: spacious
+
+# Seasonal Forecasting with FBProphet
+- A piecewise linear or logistic growth curve trend. Prophet automatically detects changes in trends by selecting changepoints from the data.
+- A yearly seasonal component modeled using Fourier series.
+- A weekly seasonal component using dummy variables.
+- A user-provided list of important holidays.
+
+https://research.fb.com/prophet-forecasting-at-scale/
+???
+FIXME formulas
+---
+```python
+from fbprophet import Prophet
+m = Prophet()
+m.fit(fb_ppm[:500])
+forecast = m.predict(fb_ppm)
+```
+.center[
+![:scale 60%](images/prophet_forecast.png)
+]
+---
+# Uncertainty prediction
+.center[
+![:scale 100%](images/prophet_forecast_uncertainty.png)
+]
+---
+# Seasonal Components
+.center[
+![:scale 50%](images/prophet_forecast_components.png)
+]
+???
+detected that there are no daily or weekly trends!
+---
+class: spacious
+
+# Where to go from here
+
+- Gaussian Processes
+
+- Recurrent Neural Nets / LSTMs
+---
+class: middle
+# Questions ?
+
+
+    </textarea>
+    <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+    <script>
+    // Config Remark
+    remark.macros['scale'] = function (percentage) {
+        var url = this;
+        return '<img src="' + url + '" style="width: ' + percentage + '" />';
+    };
+    config_remark = {
+        highlightStyle: 'magula',
+        highlightSpans: true,
+        highlightLines: true,
+        ratio: "16:9"
+    };
+      var slideshow = remark.create(config_remark);
+    // Configure MathJax
+    MathJax.Hub.Config({
+    tex2jax: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'] /* removed 'code' entry*/
+    }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for(i = 0; i < all.length; i += 1) {
+            all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+    });
+    </script>
+  </body>
+</html>

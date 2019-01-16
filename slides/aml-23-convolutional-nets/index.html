@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>More Neural Networks</title>
+    <meta charset="utf-8">
+        <style>
+       @import url(https://fonts.googleapis.com/css?family=Garamond);
+       @import url(https://fonts.googleapis.com/css?family=Muli:400,700,400italic);
+       @import url(https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
+     </style>
+     <link rel="stylesheet" href="../style.css">
+  </head>
+  <body>
+    <textarea id="source">
+
+class: center, middle
+
+### W4995 Applied Machine Learning
+
+# Neural Networks in Practice
+
+04/18/18
+
+Andreas C. Müller
+
+???
+HW: don't commit cache! Don't commit data!
+Most <1mb, some 7gb.
+Say something about GPUs.
+
+FIXME update with state-of-the-art instead of VGG16
+FIXME slide full vs valid vs same convolutions
+FIXME update syntax conv2d!
+FIXME doc screenshots resolution
+FIXME densenet
+FIXME resnet
+FIXME new convnet architectures
+FIXME move batch-norm before conv-nets
+FIXME add slide on imagenet?
+FIXME y_i in batch normalization confusing.
+FIXME add something about data augmentation
+FIXME move deconvolutions back (or remove and just do distil paper)
+FIXME show how permuting pixels doesn't affect fully connected network,
+but does affect convolutional network
+---
+class:center,middle
+#Introduction to Keras
+???
+---
+#Keras Sequential
+
+.smaller[
+```python
+from keras.models import Sequential
+from keras.layers import Dense, Activation
+```
+```
+Using TensorFlow backend.
+```
+```python
+model = Sequential([
+    Dense(32, input_shape=(784,)),
+    Activation('relu'),
+    Dense(10),
+    Activation('softmax')])
+
+# or
+model = Sequential()
+model.add(Dense(32, input_dim=784))
+model.add(Activation('relu'))
+
+# or
+model = Sequential([
+    Dense(32, input_shape=(784,), activation='relu'),
+    Dense(10, activation='softmax')])
+```
+]
+
+
+???
+There are two interfaces to keras, sequential and the
+functional, but we’ll only discuss sequential.
+Sequential is for feed-forward neural networks where
+one layer follows the other. You specify the layers as
+a list, similar to a sklearn pipeline.
+Dense layers are just matrix multiplications. Here we
+have a neural net with 32 hidden units for the mnist
+dataset with 10 outputs. The hidden layer nonlinearity
+is relu, the output if softmax for multi-class
+classification.
+You can also instantiate an empty sequential model
+and then add steps to it.
+For the first layer we need to specify the input shape
+so the model knows the sizes of all the matrices. The
+following layers can infer the sizes from the previous
+layers.
+---
+
+.smaller[
+```python
+model.summary()
+```
+]
+
+.center[
+![:scale 100%](images/model_summary.png)
+]
+
+???
+FIXME parameter calculation!
+
+---
+# Setting Optimizer
+
+.center[
+![:scale 90%](images/optimizer.png)
+]
+
+.smaller[
+```python
+model.compile("adam", "categorical_crossentropy", metrics=['accuracy'])
+```
+]
+
+???
+Compile method picks optimization procedure and
+loss
+---
+
+# Training the model
+
+.center[
+![:scale 100%](images/training_model.png)
+]
+
+???
+Fit gets many parameters, not as in sklearn.
+
+---
+#Preparing MNIST data
+.smaller[
+```python
+from keras.datasets import mnist
+import keras
+(X_train, y_train), (X_test, y_test) = mnist.load_data()
+X_train = X_train.reshape(60000, 784)
+X_test = X_test.reshape(10000, 784)
+X_train = X_train.astype('float32')
+X_test = X_test.astype('float32')
+X_train /= 255
+X_test /= 255
+print(X_train.shape[0], 'train samples')
+print(X_test.shape[0], 'test samples')
+
+num_classes = 10
+# convert class vectors to binary class matrices
+y_train = keras.utils.to_categorical(y_train, num_classes)
+y_test = keras.utils.to_categorical(y_test, num_classes)
+```
+```
+60000 train samples
+10000 test samples
+```
+]
+
+
+???
+---
+# Fit Model
+```python
+model.fit(X_train, y_train, batch_size=128, epochs=10, verbose=1)
+```
+
+
+.center[
+![:scale 80%](images/model_fit.png)
+]
+
+???
+---
+#Fit with Validation
+
+```python
+model.fit(X_train, y_train, batch_size=128, epochs=10, verbose=1, 
+          validation_split=.1)
+```
+
+
+.center[
+![:scale 100%](images/validation_fit.png)
+]
+
+
+???
+---
+#Evaluating on Test Set
+
+```python
+score = model.evaluate(X_test, y_test, verbose=0)
+print("Test loss: {:.3f}".format(score[0]))
+print("Test Accuracy: {:.3f}".format(score[1]))
+```
+
+```
+Test loss: 0.120
+Test Accuracy: 0.966
+```
+
+
+???
+---
+
+# Loggers and Callbacks
+
+.smaller[
+```python
+history_callback = model.fit(X_train, y_train, batch_size=128,
+                             epochs=100, verbose=1, validation_split=.1)
+pd.DataFrame(history_callback.history).plot()
+```
+]
+
+.center[
+![:scale 70%](images/logger_callback_plot.png)
+]
+
+???
+---
+#Wrappers for sklearn
+
+.smaller[
+```python
+from keras.wrappers.scikit_learn import KerasClassifier, KerasRegressor
+from sklearn.model_selection import GridSearchCV
+
+def make_model(optimizer="adam", hidden_size=32):
+    model = Sequential([
+        Dense(hidden_size, input_shape=(784,)),
+        Activation('relu'),
+        Dense(10),
+        Activation('softmax'),
+    ])
+    model.compile(optimizer=optimizer,loss="categorical_crossentropy",   
+                  metrics=['accuracy'])
+    return model
+
+clf = KerasClassifier(make_model)
+param_grid = {'epochs': [1, 5, 10],  # epochs is fit parameter, not in make_model!
+              'hidden_size': [32, 64, 256]}
+grid = GridSearchCV(clf, param_grid=param_grid, cv=5)
+grid.fit(X_train, y_train)
+```
+]
+
+???
+See https://keras.io/scikit-learn-api/
+
+Useful for grid-search.
+You need to define a callable that returns a compiled
+model.
+You can search parameters that in Keras would be
+passed to “fit” like the number of epochs.
+Searching over epochs in this way is not necessarily a good idea, though.
+---
+.smaller[
+```python
+res = pd.DataFrame(grid.cv_results_)
+res.pivot_table(index=["param_epochs", "param_hidden_size"],
+                values=['mean_train_score', "mean_test_score"])
+```
+]
+
+.center[
+![:scale 70%](images/keras_api_results.png)
+]
+
+
+
+???
+Training longer overfits more and more units overfit
+more, but both also lead to better results.
+We should probably train much longer actually.
+Setting the number of epochs via cross-validation is a
+bit silly since it means starting from scratch again
+each time. Using early stopping would be better.
+
+---
+class: middle
+# Drop-out
+---
+# Drop-out Regularization
+
+.center[
+![:scale 65%](images/dropout_reg.png)
+]
+
+--
+
+- https://www.cs.toronto.edu/~hinton/absps/JMLRdropout.pdf
+
+- Rate often as high as .5, i.e. 50% of units set to zero!
+
+- Predictions: use all weights, down-weight by rate
+
+???
+
+- Randomly set activations to zero.
+
+Drop out is a very successful regularization technique
+developed in 2014. It is an extreme case of adding
+noise to the input, a previously established method to
+avoid overfitting.
+Instead of adding noise, we actually set given inputs to
+0. And not only on the input layer, also the
+intermediate layer.
+For each sample, and each iteration we pick different
+nodes. Randomization avoids overfitting to particular
+examples.
+---
+class:spacious
+#Ensemble Interpretation
+
+- Every possible configuration represents different
+network.
+
+- With p=.5 we jointly learn `$\binom{n}{n/2}$` networks
+
+- Networks share weights
+
+- For last layer dropout: prediction is approximate
+geometric mean of predictions of sub-networks.
+???
+---
+#Implementing Drop-Out
+
+.smaller[
+```python
+from keras.layers import Dropout
+
+model_dropout = Sequential([
+    Dense(1024, input_shape=(784,), activation='relu'),
+    Dropout(.5),
+    Dense(1024, activation='relu'),
+    Dropout(.5),
+    Dense(10, activation='softmax'),
+])
+model_dropout.compile("adam", "categorical_crossentropy", metrics=['accuracy'])
+history_dropout = model_dropout.fit(X_train, y_train, batch_size=128,
+                            epochs=20, verbose=1, validation_split=.1)
+```
+]
+
+???
+---
+class:spacious
+# When to use drop-out
+
+- Avoids overfitting
+
+- Allows using much deeper and larger models
+
+- Slows down training somewhat
+
+- Wasn’t able to produce better results on MNIST (I
+don’t have a GPU) but should be possible
+
+???
+---
+class:center,middle
+#Convolutional neural networks
+
+???
+---
+class:spacious
+# Idea
+
+- Translation invariance
+
+- Weight sharing
+
+???
+FIXME figure with illustration
+---
+#Definition of Convolution
+
+
+`$$ (f*g)[n] = \sum\limits_{m=-\infty}^\infty f[m]g[n-m] $$`
+
+`$$ = \sum\limits_{m=-\infty}^\infty f[n-m]g[m] $$`
+
+.center[
+![:scale 80%](images/convolution.png)
+]
+
+???
+The definition is symmetric in f, but usually one is the
+input signal, say f, and g is a fixed “filter” that is
+applied to it.
+You can imagine the convolution as g sliding over f.
+If the support of g is smaller than the support of f (it’s
+a shorter non-zero sequence) then you can think of it
+as each entry in f * g depending on all entries of g
+multiplied with a local window in f.
+Not that the output is shorter than the input by half the
+size of g. this is called a valid convolution.
+We could also extend f with zeros, and get a result that
+is larger than f by half the size of g, that’s called a
+full convolution. We can also just pad a little bit and
+get something that is of the same size as f.
+Also not that the filter g is flipped as it’s indexed with
+-m
+---
+#1d example: Gaussian smoothing
+
+.center[
+![:scale 80%](images/Gaussian_Smoothing.png)
+]
+
+???
+---
+#2d Smoothing
+.center[
+![:scale 80%](images/2dsmoothing.png)
+]
+???
+---
+#2d Gradients
+.center[
+![:scale 80%](images/2dgradient.png)
+]
+
+???
+---
+#Convolution Neural Networks
+
+.center[
+![:scale 100%](images/CNET1.png)
+]
+
+- Y. LeCun, L. Bottou, Y. Bengio, and P. Haffner.
+
+- Gradient-based learning applied to document recognition
+
+???
+Here is the architecture of an early convolutional net
+form 1998. The basic architecture in current
+networks is still the same.
+You can multiple layers of convolutions and resampling
+operations. You start convolving the image, which
+extracts local features. Each convolutions creates
+new “feature maps” that serve as input to later
+convolutions.
+To allow more global operations, after the convolutions
+the image resolution is changed. Back then it was
+subsampling, today it is max-pooling.
+So you end up with more and more feature maps with
+lower and lower resolution.
+At the end, you have some fully connected layers to do
+the classificattion.
+---
+.center[
+![:scale 60%](images/cnn_digits.png)
+]
+???
+---
+# Deconvolution
+.center[
+![:scale 100%](images/deconvolution_1.png)
+]
+https://www.cs.nyu.edu/~fergus/papers/zeilerECCV2014.pdf
+???
+---
+class: center, middle
+
+![:scale 100%](images/deconvolution_2.png)
+
+???
+---
+class: center, middle
+
+
+![:scale 100%](images/deconvolution_3.png)
+
+???
+
+---
+
+#Max Pooling
+
+.center[
+![:scale 100%](images/maxpool.png)
+]
+
+???
+- Need to remember position of maximum for back-propagation.
+
+- Again not differentiable → subgradient descent
+---
+
+.center[
+![:scale 80%](images/other_architectures.png)
+]
+???
+Here are two more recent architectures, AlexNet from
+2012 and VGG net from 2015.
+These nets are typically very deep, but often have very
+small convolutions. In VGG there are 3x3
+convolutions and even 1x1 convolutions which serve
+to summarize multiple feature maps into one.
+There is often multiple convolutions without pooling in
+between but pooling is definitely essential.
+---
+class:center,middle
+#Conv-nets with keras
+
+???
+---
+#Preparing Data
+
+.smaller[
+```python
+batch_size = 128
+num_classes = 10
+epochs = 12
+
+# input image dimensions
+img_rows, img_cols = 28, 28
+
+# the data, shuffled and split between train and test sets
+(x_train, y_train), (x_test, y_test) = mnist.load_data()
+
+
+X_train_images = x_train.reshape(x_train.shape[0], img_rows, img_cols, 1)
+X_test_images = x_test.reshape(x_test.shape[0], img_rows, img_cols, 1)
+input_shape = (img_rows, img_cols, 1)
+
+y_train = keras.utils.to_categorical(y_train, num_classes)
+y_test = keras.utils.to_categorical(y_test, num_classes)
+```
+]
+
+
+???
+For convolutional nets the data is n_samples, width,
+height, channels.
+MNIST has one channel because it’s grayscale. Often
+you have RGB channels or possibly Lab.
+The position of the channels is configurable, using the
+“channels_first” and “channels_last” options – but
+you shouldn’t have to worry about that.
+---
+# Create Tiny Network
+
+```python
+from keras.layers import Conv2D, MaxPooling2D, Flatten
+
+num_classes = 10
+cnn = Sequential()
+cnn.add(Conv2D(32, kernel_size=(3, 3),
+                 activation='relu',
+                 input_shape=input_shape))
+cnn.add(MaxPooling2D(pool_size=(2, 2)))
+cnn.add(Conv2D(32, (3, 3), activation='relu'))
+cnn.add(MaxPooling2D(pool_size=(2, 2)))
+cnn.add(Flatten())
+cnn.add(Dense(64, activation='relu'))
+cnn.add(Dense(num_classes, activation='softmax'))
+```
+
+
+
+???
+For convolutional nets we need 3 new layer types:
+Conv2d for 2d convolutions, MaxPooling2d for max
+pooling and Flatten go reshape the input for a dense
+layer.
+There are many other options but these are the most
+commonly used ones.
+---
+#Number of Parameters
+
+.left-column[
+Convolutional Network for MNIST
+![:scale 100%](images/cnn_params_mnist.png)
+]
+.right-column[
+Dense Network for MNIST
+![:scale 100%](images/dense_params_mnist.png)
+]
+
+???
+---
+#Train and Evaluate
+
+.smaller[
+```python
+cnn.compile("adam", "categorical_crossentropy", metrics=['accuracy'])
+history_cnn = cnn.fit(X_train_images, y_train,
+                      batch_size=128, epochs=20, verbose=1, validation_split=.1)
+cnn.evaluate(X_test_images, y_test)
+```
+```
+ 9952/10000 [============================>.] - ETA: 0s
+ [0.089020583277629253, 0.98429999999999995]
+```
+]
+.center[
+![:scale 50%](images/train_evaluate.png)
+]
+???
+---
+#Visualize Filters
+.smaller[
+```python
+weights, biases = cnn_small.layers[0].get_weights()
+weights2, biases2 = cnn_small.layers[2].get_weights()
+print(weights.shape)
+print(weights2.shape)
+```
+```
+(3,3,1,8)
+(3,3,8,8)
+```
+]
+.center[![:scale 40%](images/visualize_filters.png)]
+???
+---
+.center[![:scale 80%](images/digits.png)]
+???
+---
+class:center,middle
+# Batch Normalization
+???
+---
+#Batch Normalization
+
+.center[
+![:scale 80%](images/batch_norm.png)
+]
+
+.smallest[
+[Ioffe, Szegedy: Batch Normalization: Accelerating Deep Network Training by Reducing Internal Covariate Shift](https://arxiv.org/abs/1502.03167)
+]
+
+???
+Another relatively recent advance in neural networks is
+batch normalization. The idea is that neural networks
+learn best when the input is zero mean and unit
+variance. We can scale the data to get that.
+But each layer inside a neural network is itself a neural
+network with inputs given by the previous layer. And
+that output might have much larger or smaller scale
+(depending on the activation function).
+Batch normalization re-normalizes the activations for a
+layer for each batch during training (as the
+distribution over activation changes). The avoids
+saturation when using saturating functions.
+To keep the expressive power of the model, additional
+scale and shift parameters are learned that are
+applied after the per-batch normalization.
+---
+# Convnet with Batch Normalization
+.smaller[```python
+from keras.layers import BatchNormalization
+
+num_class = 10
+cnn_small_bn = Sequential()
+cnn_small_bn.add(Conv2D(8, kernel_size=(3, 3),
+                 input_shape=input_shape))
+cnn_small_bn.add(Activation("relu"))
+cnn_small_bn.add(BatchNormalization())
+cnn_small_bn.add(MaxPooling2D(pool_size=(2, 2)))
+cnn_small_bn.add(Conv2D(8, (3, 3)))
+cnn_small_bn.add(Activation("relu"))
+cnn_small_bn.add(BatchNormalization())
+cnn_small_bn.add(MaxPooling2D(pool_size=(2, 2)))
+cnn_small_bn.add(Flatten())
+cnn_small_bn.add(Dense(64, activation='relu'))
+cnn_small_bn.add(Dense(num_classes, activation='softmax'))
+```]
+???
+very small to make it fit on a slide
+---
+# Learning speed and accuracy
+.center[![:scale 80%](images/learning_speed.png)
+]
+???
+FIXME label axes!
+---
+# For larger net (64 filters)
+.center[![:scale 80%](images/learning_speed_larger.png)
+]
+???
+FIXME label axes
+---
+
+class: middle
+# Questions ?
+
+
+    </textarea>
+    <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+    <script>
+    // Config Remark
+    remark.macros['scale'] = function (percentage) {
+        var url = this;
+        return '<img src="' + url + '" style="width: ' + percentage + '" />';
+    };
+    config_remark = {
+        highlightStyle: 'magula',
+        highlightSpans: true,
+        highlightLines: true,
+        ratio: "16:9"
+    };
+      var slideshow = remark.create(config_remark);
+    // Configure MathJax
+    MathJax.Hub.Config({
+    tex2jax: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'] /* removed 'code' entry*/
+    }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for(i = 0; i < all.length; i += 1) {
+            all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+    });
+    </script>
+  </body>
+</html>

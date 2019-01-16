@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Gradient Boosting; Stacking</title>
+    <meta charset="utf-8">
+        <style>
+       @import url(https://fonts.googleapis.com/css?family=Garamond);
+       @import url(https://fonts.googleapis.com/css?family=Muli:400,700,400italic);
+       @import url(https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
+     </style>
+     <link rel="stylesheet" href="../style.css">
+  </head>
+  <body>
+    <textarea id="source">
+
+class: center, middle
+
+### W4995 Applied Machine Learning
+
+# Boosting, Stacking, Calibration
+
+02/21/18
+
+Andreas C. Müller
+
+???
+We'll continue tree-based models, talking about boosting.
+Another ensemble technique called stacking.
+Finally, a technique called calibration that looks somewhat similar to ensembles
+but has the goal of obtaining good probability estimates from any classifier.
+
+FIXME: XGBOOST!!
+FIXME early stopping
+FIXME GBRT: better explain log-loss
+FIXME: add example of calibrated and inaccurate vs accurate but not calibrated!
+FIXME: calibration: what are the estimators fit to, and why does fitting it to 0 and 1 create probabilities in between
+
+Partial dependence plot. how is that different from feature importances.
+calibration curve plotting: bins are different for hist and calibration curve?
+slide 27: maybe put probabilities on x axis?
+calibration curve: blue histogram is number of total points, y axis not labeled
+---
+class: centre,middle
+# Gradient Boosting
+???
+Gradient boosting is one of the most successfull supervised machine learning methods in practice.
+It's often used in kaggle to win competition, it's used for credit scoring, it's one of the standard tools of the trade.
+It's one of the best of-the-shelf models
+A standard implementation that people use is XGBoost, but there's also an implementation in scikit-learn, and we'll talk about both of them.
+
+Last time we talked about Random forests, which builds many trees independently, each randomized in a different way, and then averages their predictions.
+Gradient boosting on the other hand builds trees one by one in a sequential manner, with each tree requiring the results of previous trees.
+Often, Gradient boosting is done with very small trees, or even decision stumps, which is trees of depth one, so a single split.
+
+---
+class: center, middle
+# Boosting (in General)
+
+???
+ - “Meta-algorithm” to create strong learners from weak learners.
+ - AdaBoost, GentleBoost, …
+ - Trees or stumps work best
+ - Gradient Boosting often the best of the bunch
+ - Many specialized algorithms (ranking etc)
+
+This is an instance of a more general family of models, called boosting models, which all iteratively
+try to improve a model built up from weak learners. Gradient boosting is this particular technique
+where we are trying to fit the residuals, and it's been found to work very well in practice, in particular
+if you're using shallow trees as the weak learners.
+In principle, you could use any model as a weak learner, but trees just work really well.
+
+---
+
+# Gradient Boosting Algorithm
+
+
+
+`$$ f_{1}(x) \approx y  $$`
+
+`$$ f_{2}(x) \approx y - f_{1}(x) $$`
+
+`$$ f_{3}(x) \approx y - f_{1}(x) - f_{2}(x)$$`
+
+--
+
+$y \approx$ ![:scale 22.5%](images/grad_boost_term_1.png) + ![:scale 22.5%](images/grad_boost_term_2.png) + ![:scale 20%](images/grad_boost_term_3.png) + ...
+???
+Let's look at the regression case first.
+We start by building a single tree f1 to try to predict the output y. But we
+strongly restrict f1, so it will be rather bad at predicting y.
+Next, we'll look at the residual of this first model, so y - f1(x).
+We now train a new model f2 to try and predict this residual, in other words to correct the mistakes made by f1.
+Again, this will be a very simple model, so it will still not be able to fix all errors.
+Then, we look at the residual of both of the models together, so y - f1(x) - f2(x), so the mistakes that could not be fixed by f2,
+and we build f3 to fix that, and so on.
+This is natural for regression. For classification this is not as clear.
+For binary classification you use log-loss, or rather you apply the logistic function to get a binary prediction, for multi-class
+you can use 1 vs rest.
+
+So we're sequentially building up a model using what's called "weak learners", small trees, and create a more
+powerful composite model.
+
+---
+# Gradient Boosting Algorithm
+
+
+
+`$$ f_{1}(x) \approx y  $$`
+
+`$$ f_{2}(x) \approx y - \alpha f_{1}(x) $$`
+
+`$$ f_{3}(x) \approx y - \alpha f_{1}(x) - \alpha f_{2}(x)$$`
+
+$y \approx \alpha$ ![:scale 22.5%](images/grad_boost_term_1.png) + $\alpha$ ![:scale 22.5%](images/grad_boost_term_2.png) + $\alpha$ ![:scale 20%](images/grad_boost_term_3.png) + ...
+<br />
+<br />
+Learning rate $\alpha, i.e. 0.1$
+
+???
+- Iteratively add regression trees to model
+- Use log loss for classification
+- Discount update by learning rate
+
+FIXME plot for regression models 
+Come back to this
+---
+#GradientBoostingRegressor
+
+.center[
+![:scale 50%](images/grad_boost_regression_steps.png)
+]
+???
+
+---
+#GradientBoostingClassifier
+
+.center[
+![:scale 70%](images/grad_boost_depth2.png)
+]
+???
+
+---
+class:spacious
+# Gradient Boosting Advantages
+
+- Slower to train than RF (serial), but much faster to predict
+- Small model size
+- Typically more accurate than Random Forests
+???
+---
+
+class:spacious
+# Tuning Gradient Boosting
+- Pick n_estimators, tune learning rate
+- Can also tune max_features
+- Typically strong pruning via max_depth
+
+???
+---
+
+# Partial Dependence Plots
+- Marginal dependence of prediction on one or two features
+
+.smaller[
+```python
+from sklearn.ensemble.partial_dependence import plot_partial_dependence
+boston = load_boston()
+X_train, X_test, y_train, y_test = train_test_split(
+    boston.data, boston.target,random_state=0)
+
+gbrt = GradientBoostingRegressor().fit(X_train, y_train)
+
+fig, axs = plot_partial_dependence(
+    gbrt, X_train, np.argsort(gbrt.feature_importances_)[-6:],
+    feature_names=boston.feature_names, n_jobs=3,
+    grid_resolution=50)
+```
+]
+
+???
+---
+# Partial Dependence Plots
+
+.center[
+![:scale 70%](images/feat_impo_part_dep.png)
+]
+
+???
+---
+# Bivariate Partial Dependence Plots
+.smaller[
+```python
+plot_partial_dependence(
+    gbrt, X_train, [np.argsort(gbrt.feature_importances_)[-2:]],
+    feature_names=boston.feature_names, n_jobs=3, grid_resolution=50)
+```
+]
+.center[
+![:scale 80%](images/feature_importance.png)
+]
+
+???
+---
+# Partial Dependence for Classification
+.tiny-code[
+```python
+from sklearn.ensemble.partial_dependence import plot_partial_dependence
+for i in range(3):
+    fig, axs = plot_partial_dependence(gbrt, X_train, range(4), n_cols=4,
+                                       feature_names=iris.feature_names, grid_resolution=50, label=i)
+```
+]
+.center[
+![:scale 50%](images/feat_impo_part_dep_class.png)
+]
+???
+
+---
+
+# XGBoost
+`conda install -c conda-forge xgboost`
+
+```python
+from xgboost import XGBClassifier
+xgb = XGBClassifier()
+xgb.fit(X_train, y_train)
+xgb.score(X_test, y_test))
+```
+
+- supports missing values
+- supports multi-core
+
+???
+- Efficient implementation of gradient boosting (5x sklearn)
+- Improvements on original algorithm
+- https://arxiv.org/abs/1603.02754
+- Adds l1 and l2 penalty on leaf-weights
+- Fast approximate split finding
+- Scikit-learn compatible interface
+
+---
+class: spacious
+
+.center[
+![:scale 50%](images/xgboost_sklearn_bench.png)
+]
+- Exact splits ~5x faster on single core
+- Appoximate splits, multi-core -> more speed!
+- Also check lightGBM (even faster?)
+- Both have GPU support
+- https://github.com/szilard/GBM-perf
+???
+---
+# Early stopping
+
+- Adding trees can lead to overfitting
+- Stop adding trees when validation accuracy stops increasing
+- Optional in XGBoost and sklearn >= 0.20 (development)
+
+???
+---
+class:spacious
+# When to use tree-based models
+- Model non-linear relationships
+- Doesn’t care about scaling, no need for feature engineering
+- Single tree: very interpretable (if small)
+- Random forests very robust, good benchmark
+- Gradient boosting often best performance with careful tuning
+
+???
+---
+class: centre,middle
+# More ensembles: Stacking
+???
+---
+# Simplified Stacking
+ .tiny-code[
+```python
+from sklearn.neighbors import KNeighborsClassifier
+
+X, y = make_moons(noise=.4, random_state=16, n_samples=300)
+X_train, X_test, y_train, y_test = train_test_split(X, y, stratify=y, random_state=0)
+
+voting = VotingClassifier(
+   [('logreg', LogisticRegression(C=100)),
+    ('tree', DecisionTreeClassifier(max_depth=3)),
+    ('knn', KNeighborsClassifier(n_neighbors=3))],
+    voting='soft')
+voting.fit(X_train, y_train)
+lr, tree, knn = voting.estimators_
+```
+]
+
+.center[
+![:scale 90%](images/average_voting.png)
+]
+
+???
+---
+# Simplified Stacking
+.tiny-code[
+```python
+stacking = make_pipeline(voting, LogisticRegression(C=100))
+stacking.fit(X_train, y_train)
+print(stacking.score(X_train, y_train))
+print(stacking.score(X_test, y_test))
+```
+
+```
+0.90
+0.77
+```
+
+```python
+stacking.named_steps.logisticregression.coef_
+```
+
+```
+array([[ 0.487,  1.519,  3.686]])
+```
+]
+.left-column[
+<br />
+<br />
+![:scale 90%](images/average_voting.png)
+]
+.right-column[
+![:scale 90%](images/simple_stacking_result.png)
+]
+
+???
+---
+class:centre,middle
+
+## Problem : Overfitting!
+???
+---
+class:spacious
+# Stacking
+- Use cross-validation (even LOO!) to produce probability estimates on training set.
+- Train second step estimator on held-out estimates
+- No overfitting of second step!
+- For testing: as usual
+???
+---
+# Hold-out estimates of Probabilities
+![:scale 100%](images/holdout_estimate.png)
+
+- Split 1 produces probabilities for Fold 1, split2 for Fold 2 etc.
+- Get a probability estimate for each data point!
+- Unbiased estimates (like on the test set) for the whole training set!
+- Without it: The best estimator is the one that memorized the training set.
+
+
+
+???
+---
+
+.tiny-code[
+```python
+from sklearn.model_selection import cross_val_predict
+# take only probabilities of positive classes for more interpretable coefficients
+first_stage = make_pipeline(voting, FunctionTransformer(lambda X: X[:, 1::2]))
+transform_cv = cross_val_predict(first_stage, X_train, y_train, cv=10, method="transform")
+second_stage = LogisticRegression(C=100).fit(transform_cv, y_train)
+print(second_stage.coef_)
+```
+```
+[[ 2.192  1.402  1.012]]
+```
+
+```python
+print(second_stage.score(transform_cv, y_train))
+print(second_stage.score(first_stage.transform(X_test), y_test))
+```
+
+```
+0.813
+0.800
+```
+]
+.center[
+![:scale 40%](images/simple_stacking_result.png)
+![:scale 40%](images/stacking_result.png)
+]
+
+
+???
+---
+class:spacious
+#Calibration
+.center[
+<a href="http://www.datascienceassn.org/sites/default/files/
+Predicting%20good%20probabilities%20with%20supervised%20learning.pdf">Source</a>
+]
+- Probabilities can be much more informative than labels:
+
+- “The model predicted you don’t have cancer” vs “The model predicted you’re 40% likely to have cancer”
+
+???
+---
+class: spacious
+#Calibration curve (Reliability diagram)
+.left-column[
+![:scale 80%](images/prob_table.png)
+]
+.right-column[
+![:scale 80%](images/calib_curve.png)
+
+]
+
+???
+- For binary classification only
+- you can be calibrated and inaccurate!
+- Given a predicted ranking or probability from a supervised classifier, bin predictions.
+- Plot fraction of data that’s positive in each bin.
+- Doesn’t require ground truth probabilities!
+
+---
+class: split-40
+# calibration_curve with sklearn
+
+Using subsample of covertype dataset
+.left-column[
+.tiny-code[
+```python
+from sklearn.linear_model import LogisticRegressionCV
+print(X_train.shape)
+print(np.bincount(y_train))
+lr = LogisticRegressionCV().fit(X_train, y_train)
+(52292, 54)
+[19036 33256]```
+
+
+```python
+lr.C_
+array([ 2.783])
+```
+
+```python
+print(lr.predict_proba(X_test)[:10])
+print(y_test[:10])
+[[ 0.681  0.319]
+ [ 0.049  0.951]
+ [ 0.706  0.294]
+ [ 0.537  0.463]
+ [ 0.819  0.181]
+ [ 0.     1.   ]
+ [ 0.794  0.206]
+ [ 0.676  0.324]
+ [ 0.727  0.273]
+ [ 0.597  0.403]]
+[0 1 0 1 1 1 0 0 0 1]
+```
+
+]
+]
+
+.right-column[
+.tiny-code[
+```python
+from sklearn.calibration import calibration_curve
+probs = lr.predict_proba(X_test)[:, 1]
+prob_true, prob_pred = calibration_curve(y_test, probs, n_bins=5)
+print(prob_true)
+print(prob_pred)
+[ 0.2    0.303  0.458  0.709  0.934]
+[ 0.138  0.306  0.498  0.701  0.926]
+```
+]
+.center[![:scale 70%](images/predprob_positive.png)
+]
+]
+
+???
+---
+class:spacious
+#Influence of number of bins
+
+.center[![:scale 100%](images/influence_bins.png)]
+
+???
+- Works here because dataset is big
+- Might become very noisy for larger datasets
+---
+class:spacious
+# Comparing Models
+
+.center[![:scale 90%](images/calib_curve_models.png)]
+???
+---
+# Brier Score (for binary classification)
+
+- “mean squared error of probability estimate”
+`$$ BS = \frac{\sum_{i=1}^{n} (\widehat{p} (y_i)-y_i)^{2}}{n}$$`
+
+.center[![:scale 70%](images/models_bscore.png)]
+???
+---
+# Fixing it: Calibrating a classifier
+- Build another model, mapping classifier probabilities to better probabilities!
+- 1d model! (or more for multi-class)
+
+`$$ f_{callib}(s(x)) \approx p(y)$$`
+
+
+
+- s(x) is score given by model, usually
+- Can also work with models that don’t even provide probabilities!
+Need model for $f_{callib}$, need to decide what data to train it on.
+- Can train on training set → Overfit
+- Can train using cross-validation → use data, slower
+
+???
+---
+
+# Platt Scaling
+
+- Use a logistic sigmoid for $f_{callib}$
+- Basically learning a 1d logistic regression
+- (+ some tricks)
+- Works well for SVMs
+
+`$$f_{platt} = \frac{1}{1 + exp(-ws(x))}$$`
+
+
+???
+---
+# Isotonic Regression
+
+- Very flexible way to specify $f_{callib}$
+- Learns arbitrary monotonically increasing step-functions in 1d.
+- Groups data into constant parts, steps in between.
+- Optimum monotone function on training data (wrt mse).
+.center[![:scale 40%](images/isotonic_regression.png)]
+
+???
+---
+class:spacious
+# Building the model
+- Using the training set is bad
+- Either use hold-out set or cross-validation
+- Cross-validation can be use as in stacking to make unbiased probability predictions, use that as training set.
+
+???
+---
+# CalibratedClassifierCV
+.tiny-code[
+```python
+from sklearn.calibration import CalibratedClassifierCV
+X_train_sub, X_val, y_train_sub, y_val = train_test_split(X_train, y_train,
+                                                          stratify=y_train, random_state=0)
+rf = RandomForestClassifier(n_estimators=100).fit(X_train_sub, y_train_sub)
+scores = rf.predict_proba(X_test)[:, 1]
+plot_calibration_curve(y_test, scores, n_bins=20)
+```
+.center[![:scale 30%](images/random_forest.png)]
+]
+???
+---
+# Calibration on Random Forest
+.smaller[
+```python
+cal_rf = CalibratedClassifierCV(rf, cv="prefit", method='sigmoid')
+cal_rf.fit(X_val, y_val)
+scores_sigm = cal_rf.predict_proba(X_test)[:, 1]
+
+cal_rf_iso = CalibratedClassifierCV(rf, cv="prefit", method='isotonic')
+cal_rf_iso.fit(X_val, y_val)
+scores_iso = cal_rf_iso.predict_proba(X_test)[:, 1]
+```]
+
+.center[![:scale 90%](images/types_callib.png)]
+
+???
+---
+
+# Cross-validated Calibration
+
+```python
+cal_rf_iso_cv = CalibratedClassifierCV(rf, method='isotonic')
+cal_rf_iso_cv.fit(X_train, y_train)
+scores_iso_cv = cal_rf_iso_cv.predict_proba(X_test)[:, 1]
+```
+
+.center[![:scale 90%](images/types_callib_cv.png)]
+
+???
+- kinda cheating, we have more trees now lol
+- we use all the data, get good probabilities. just time-consuming
+---
+# Multi-Class Calibration
+
+.center[![:scale 100%](images/multi_class_calibration.png)]
+
+???
+- per-class calibratoin
+- renormalization
+---
+class: center, middle
+
+# Questions ?
+
+    </textarea>
+    <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+    <script>
+    // Config Remark
+    remark.macros['scale'] = function (percentage) {
+        var url = this;
+        return '<img src="' + url + '" style="width: ' + percentage + '" />';
+    };
+    config_remark = {
+        highlightStyle: 'magula',
+        highlightSpans: true,
+        highlightLines: true,
+        ratio: "16:9"
+    };
+      var slideshow = remark.create(config_remark);
+    // Configure MathJax
+    MathJax.Hub.Config({
+    tex2jax: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'] /* removed 'code' entry*/
+    }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for(i = 0; i < all.length; i += 1) {
+            all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+    });
+    </script>
+  </body>
+</html>
