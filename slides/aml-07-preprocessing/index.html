@@ -24,16 +24,15 @@ class: center, middle
 Andreas C. Müller
 
 ???
-Today we’ll talk about preprocessing and featureengineering. What we’re talking about today mostly
-applies to linear models, and not to tree-based
-models, but it also applies to neural nets and kernel
-SVMs.
+Today we’ll talk about preprocessing and featureengineering.
+What we’re talking about today mostly applies to linear
+models, and not to tree-based models, but it also applies to
+neural nets and kernel SVMs.
 
-FIXME: Yeo-Johnson
-FIXME: box-cox fitting
-FIXME: move scaling motivation before scaling
-FIXME: add illustration of why one-hot is better than integer encoding
-FIXME: add rank scaler
+FIXME: Yeo-Johnson FIXME: box-cox fitting FIXME: move
+scaling motivation before scaling FIXME: add illustration of
+why one-hot is better than integer encoding FIXME: add rank
+scaler
 
 ---
 
@@ -43,14 +42,22 @@ class: middle
 
 
 ???
-Let’s go back to the boston housing dataset. The idea
-was to predict house prices. Here are the features on
-the x axis and the response, so price, on the y axis.
+Let’s go back to the boston housing dataset. The idea was to
+predict house prices. Here are the features on the x axis
+and the response, so price, on the y axis.
 
 What are some thing you can notice? (concentrated
 distributions, skewed distibutions, discrete variable,
 linear and non-linear effects, different scales)
 
+The last thing that we're going to do after we did all the
+preprocessing is a little bit more about feature engineering
+and how to add features. Feature engineering is most
+important if we have simple models like linear models. If
+you do something like support vector machines or neural
+networks, you probably don't have to do as much feature
+engineering the because the model can learn more complex
+things themselves.
 ---
 
 
@@ -75,12 +82,11 @@ class: center, middle
 Let’s start with the different scales.
 
 Many model want data that is on the same scale.
-KNearestNeighbors: If the distance in TAX is
-between 300 and 400 then the distance difference in
-CHArS doesn’t matter!
+KNearestNeighbors: If the distance in TAX is between 300 and
+400 then the distance difference in CHArS doesn’t matter!
 
-Linear models: the different scales mean different
-penalty. L2 is the same for all!
+Linear models: the different scales mean different penalty.
+L2 is the same for all!
 
 We can also see non-gaussian distributions here btw!
 ---
@@ -90,20 +96,40 @@ class: center
 <br />
 ![:scale 80%](images/img_3.png)
 ???
-StandardScaler: subtract mean, divide by standard
-deviation.
-
-MinMaxScaler: subtract minimum, divide by range.
-Afterwards between 0 and 1.
-
-Robust Scaler: uses median and quantiles, therefore
-robust to outliers. Similar to StandardScaler.
-
-Normalizer: only considers angle, not length. Helpful
-for histograms, not that often used.
-
-StandardScaler is usually good, but doesn’t guarantee
-particular min and max values
+Here's an illustration of four of the most common ways. One
+of the most common ones that we already saw before is the
+Standard Scaler. StandardScaler subtracts the mean and
+divides by standard deviation. Making all the features have
+a zero mean and a standard deviation of one. One thing about
+this is that it won't guarantee any minimum or maximum
+values. The range can be arbitrarily large. MinMaxScaler
+subtracts minimum and divides by range. Scales between 0 and
+1. So all the features will have an exact minimum at zero
+and exact maximum at one. This mostly makes sense if there
+are actually minimum and maximum values in your data set.
+If it's actually Gaussian distribution, the scaling might
+not make a lot of sense, because if you add one more data
+point, it's very far away and it will cram all the other
+data points more together. This will make sense if you have
+a grayscale value between 0 and 255 or something else that
+has like clearly defined boundaries. Another alternative is
+the RobustScaler. It’s the robust version of the
+StandardScaler. It computes the median and the quartiles.
+This cannot be skewed by outliers. The StandardScaler uses
+mean and standard deviation. So if you have a point that’s
+very far away, it can have unlimited influence on the mean.
+The RobustScaler uses robust statistics, so it’s not skewed
+be outliers. The final one is the Normalizer. This projects
+things either on the L1 or L0, meaning it makes sure to
+vectors have length one either in L1 norm or L2 norm. If you
+do this for L2 norm, it means you don't care about the
+length you project on a circle. More commonly used in L1
+norm, it projects onto the diamond. What that does is
+basically it means you make sure the sum of all the entries
+is one. That's often used if you have histograms or if you
+have counts of things. If you want to make sure that you
+have frequency features instead of count features, you can
+use the L1 normalizer. 
 
 ---
 class: spacious
@@ -115,17 +141,34 @@ class: spacious
 - Only scale, don’t center (use MaxAbsScaler)
 
 ???
-You have to be careful if you have sparse data. Sparse
-data is data where most entries of the data-matrix X
-are zero – often only 1% or less are not zero.
+There’s another one that's important for sparse data. It’s
+called the MaxAbsScaler in scikit-learn. So sparse data is
+the kind of data that happens actually quite frequently in
+practice where most of the features are zero most of the
+time. So if you have tens of thousands of features, but
+they're always nearly zero. For example, you can think about
+these being particular user actions and at any time, any
+user makes only very few actions. But there are many, many
+possibilities. So if you have data like that, you only want
+to store the non-zero values, you don't want to store all
+the zeros. If you would store all the zeros, the data
+wouldn't even fit into the RAM often. So you have this very
+large sparse data set and you want to scale it, but if you
+subtract anything from it, if you want to make it zero mean
+then all the entries will be non-zero because the chance
+that the mean is actually zero is small. So then if you
+subtract something from everything, you're going to move all
+those zeros away from zero and then you can't store the data
+in sparse format and your RAM will blow up. Basically, you
+can subtract anything from sparse matrix because that won't
+be sparse anymore. But we can still scale it because any
+number of times zero is still zero. So if we scale it, then
+it will have the same structure again. The MaxAbsScaler sets
+the maximum absolute values to one. Basically, it looks at
+the maximum absolute values in the whole dataset, or for
+each feature and makes sure that this is one, just by
+scaling by one divided by the maximum absolute value.
 
-You can store this efficiently by only storing the nonzero elements.
-Subtracting the mean results in all features becoming
-non-zero!
-
-So don’t subtract anything, but you can still scale.
-MaxAbsScaler scales between -1 and 1 by dividing
-with the maximum absolute value for each feature.
 ---
 # Standard Scaler Example
 
@@ -149,23 +192,21 @@ ridge.score(X_test_scaled, y_test)
 
 ???
 Here’s how you do the scaling with StandardScaler in
-scikit-learn. Similar interface to models, but
-“transform” instead of “predict”. “transform” is always
-used when you want a new representation of the
-data.
+scikit-learn. Similar interface to models, but“transform”
+instead of “predict”. “transform” is always used when you
+want a new representation of the data.
 
 Fit on training set, transform training set, fit ridge on
-scaled data, transform test data, score scaled test
-data.
+scaled data, transform test data, score scaled test data.
 
-The fit computes mean and standard deviation on the
-training set, transform subtracts the mean and the
-standard deviation.
+The fit computes mean and standard deviation on the training
+set, transform subtracts the mean and the standard
+deviation.
 
-We fit on the training set and apply transform on both
-the training and the test set. That means the training
-set mean gets subtracted from the test set, not the
-test-set mean. That’s quite important.
+We fit on the training set and apply transform on both the
+training and the test set. That means the training set mean
+gets subtracted from the test set, not the test-set mean.
+That’s quite important.
 ---
 
 class: center, middle
@@ -177,24 +218,23 @@ class: center, middle
 ???
 
 Here’s an illustration why this is important using the
-min-max scaler. Left is the original data. Center is
-what happens when we fit on the training set and
-then transform the training and test set using this
-transformer. The data looks exactly the same, but the
-ticks changed. Now the data has a minimum of zero
-and a maximum of one on the training set. That’s not
-true for the test set, though. No particular range is
-ensured for the test-set. It could even be outside of 0
-and 1. But the transformation is consistent with the
-transformation on the training set, so the data looks
-the same.
+min-max scaler. Left is the original data. Center is what
+happens when we fit on the training set and then transform
+the training and test set using this transformer. The data
+looks exactly the same, but the ticks changed. Now the data
+has a minimum of zero and a maximum of one on the training
+set. That’s not true for the test set, though. No particular
+range is ensured for the test-set. It could even be outside
+of 0 and 1. But the transformation is consistent with the
+transformation on the training set, so the data looks the
+same.
 
-On the right you see what happens when you use the
-test-set minimum and maximum for scaling the test
-set. That’s what would happen if you’d fit again on
-the test set. Now the test set also has minimum at 0
-and maximum at 1, but the data is totally distorted
-from what it was before. So don’t do that.
+On the right you see what happens when you use the test-set
+minimum and maximum for scaling the test set. That’s what
+would happen if you’d fit again on the test set. Now the
+test set also has minimum at 0 and maximum at 1, but the
+data is totally distorted from what it was before. So don’t
+do that.
 ---
 
 # Sckit-Learn API Summary
@@ -210,24 +250,24 @@ est.fit_predict(X) == est.fit(X).predict(X)   # mostly
 
 ???
 
-Here’s a summary of the scikit-learn methods.
-All models have a fit method which takes the training data X_train. If
-the model is supervised, such as our classification and regression
-models, they also take a y_train parameter. The scalers don’t use
-a y_train because they don’t use the labels at all – you could say
-they are unsupervised methods, but arguably they are not really
-learning methods at all.
+Here’s a summary of the scikit-learn methods. All models
+have a fit method which takes the training data X_train. If
+the model is supervised, such as our classification and
+regression models, they also take a y_train parameter. The
+scalers don’t use a y_train because they don’t use the
+labels at all – you could say they are unsupervised methods,
+but arguably they are not really learning methods at all.
 Models (also known as estimators in scikit-learn) to make a
-prediction of a target variable, you use the predict method, as in
-classification and regression.
-If you want to create a new representation of the data, a new kind of
-X, then you use the transform method, as we did with scaling. The
+prediction of a target variable, you use the predict method,
+as in classification and regression. If you want to create a
+new representation of the data, a new kind of X, then you
+use the transform method, as we did with scaling. The
 transform method is also used for preprocessing, feature
-extraction and feature selection, which we’ll see later. All of these
-change X into some new form.
-There’s two important shortcuts. To fit an estimator and immediately
-transform the training data, you can use fit_transform. That’s often
-more efficient then using first fit and then transform. The same
+extraction and feature selection, which we’ll see later. All
+of these change X into some new form. There’s two important
+shortcuts. To fit an estimator and immediately transform the
+training data, you can use fit_transform. That’s often more
+efficient then using first fit and then transform. The same
 goes for fit_predict.
 
 ---
@@ -236,25 +276,29 @@ goes for fit_predict.
 ![:scale 90%](images/knn_scaling.png)
 
 ???
-Here is an example of the importance of scaling using a distance-based algorithm, K nearest neighbors.
-My favorite toy dataset with two classes in two dimensions. The scatter plots look identical,
-but on the left hand side, the two axes have very different scales. The x axis has much
-larger values than the y axis.
-On the right hand side, I used standard scaler and so both features have zero mean and unit
-variance.
-So what do you think will happen if I use k nearest neighbors here?
-Let's see
+Here is an example of the importance of scaling using a
+distance-based algorithm, K nearest neighbors. My favorite
+toy dataset with two classes in two dimensions. The scatter
+plots look identical, but on the left hand side, the two
+axes have very different scales. The x axis has much larger
+values than the y axis. On the right hand side, I used
+standard scaler and so both features have zero mean and unit
+variance. So what do you think will happen if I use k
+nearest neighbors here? Let's see
 ---
 # Scaling and Distances
 
 ![:scale 90%](images/knn_scaling2.png)
 
 ???
-As you can see, the difference is quite dramatic. Because the X axis has such a larger magnitude
-on the left-hand side, only distances along the x axis matter. However, the important
-feature for this task is the y axis. So the important feature gets entirely ignored because
-of the different scales.
-And usually the scales don't have any meaning - it could be a matter of changing meters to kilometers.
+As you can see, the difference is quite dramatic. Because
+the X axis has such a larger magnitude on the left-hand
+side, only distances along the x axis matter. However, the
+important feature for this task is the y axis. So the
+important feature gets entirely ignored because of the
+different scales. And usually the scales don't have any
+meaning - it could be a matter of changing meters to
+kilometers.
 
 ---
 class: smaller, compact
@@ -307,22 +351,22 @@ np.mean(scores), np.std(scores)
 
 Let’s apply the scaler to the Boston housing data.
 
-First I used the StandardScaler to scale the training
-data. Then I applied ten-fold cross-validation to
-evaluate the Ridge model on the data with and
-without scaling. I used RidgeCV which automatically
-picks alpha for me. With and without scaling we get
-an R^2 of about .72, so no difference. Often there is
-a difference for Ridge, but not in this case.
+First I used the StandardScaler to scale the training data.
+Then I applied ten-fold cross-validation to evaluate the
+Ridge model on the data with and without scaling. I used
+RidgeCV which automatically picks alpha for me. With and
+without scaling we get an R^2 of about .72, so no
+difference. Often there is a difference for Ridge, but not
+in this case.
 
 If we use KneighborsRegressor instead, we see a big
 difference. Without scaling R^2 is about .5, and with
-scaling it’s .75. That makes sense since we saw that
-for distance calculations basically all features are
-dominated by the TAX feature.
+scaling it’s .75. That makes sense since we saw that for
+distance calculations basically all features are dominated
+by the TAX feature.
 
-However, there is a bit of a problem with the analysis
-we did here. Can you see it?
+However, there is a bit of a problem with the analysis we
+did here. Can you see it?
 
 ---
 
@@ -360,24 +404,25 @@ What we did was we trained the scaler on the training data,
 and then applied cross-validation to the scaled data. Tha’s
 what’s show on the left. The problem is that we use the
 information of all of the training data for scaling, so in
-particular the information in the test fold. This is also known
-as information leakage. If we apply our model to new data,
-this data will not have been used to do the scaling, so our
-cross-validation will give us a biased result that might be
-too optimistic.
+particular the information in the test fold. This is also
+known as information leakage. If we apply our model to new
+data, this data will not have been used to do the scaling,
+so our cross-validation will give us a biased result that
+might be too optimistic.
 
 On the right you can see how we should do it: we should only
 use the training part of the data to find the mean and
 standard deviation, even in cross-validation. That means
-that for each split in the cross-validation, we need to scale
-the data a bit differently. This basically means the scaling
-should happen inside the cross-validation loop, not outside.
+that for each split in the cross-validation, we need to
+scale the data a bit differently. This basically means the
+scaling should happen inside the cross-validation loop, not
+outside.
 
 In practice, estimating mean and standard deviation is quite
-robust and you will not see a big difference between the
-two methods. But for other preprocessing steps that we’ll
-see later, this might make a huge difference. So we should
-get it right from the start.
+robust and you will not see a big difference between the two
+methods. But for other preprocessing steps that we’ll see
+later, this might make a huge difference. So we should get
+it right from the start.
 
 ---
 class: smaller
@@ -411,12 +456,14 @@ pipe.score(X_test, y_test)
 
 ???
 
-Now I want to show you how to do preprocessing and crossvalidation right with scikit-learn.
+Now I want to show you how to do preprocessing and
+crossvalidation right with scikit-learn.
 
-At the top here you see the workflow for scaling the data and
-then applying ridge again. Fit the scaler on the training set,
-transform on the training set, fit ridge on the training set,
-transform the test set, and evaluate the model.
+At the top here you see the workflow for scaling the data
+and then applying ridge again. Fit the scaler on the
+training set, transform on the training set, fit ridge on
+the training set, transform the test set, and evaluate the
+model.
 
 Because this is such a common pattern, scikit-learn has a
 tool to make this easier, the pipeline. The pipeline is an
@@ -425,8 +472,8 @@ of the data before you apply a final model.
 
 You can build a pipeline using the make_pipeline function.
 Just provide as parameters all the estimators. All but the
-last one need to have a transform method. Here we only
-have two steps: the standard scaler and ridge.
+last one need to have a transform method. Here we only have
+two steps: the standard scaler and ridge.
 
 make_pipeline returns an estimator that does both steps at
 once. We can call fit on it to fit first the scaler and then
@@ -447,22 +494,22 @@ class: left, middle
 ???
 
 Let’s dive a bit more into the pipeline. Here is an
-illustration of what happens with three steps, T1, T2
-and Classifier. Imagine T1 to be a scaler and T2 to
-be any other transformation of the data.
+illustration of what happens with three steps, T1, T2 and
+Classifier. Imagine T1 to be a scaler and T2 to be any other
+transformation of the data.
 
-If we call fit on this pipeline, it will first call fit on the first
-step with the input X. Then it will transform the input
-X to X1, and use X1 to fit the second step, T2. Then
-it will use T2 to transform the data from X1 to X2.
-Then it will fit the classifier on X2.
+If we call fit on this pipeline, it will first call fit on
+the first step with the input X. Then it will transform the
+input X to X1, and use X1 to fit the second step, T2. Then
+it will use T2 to transform the data from X1 to X2. Then it
+will fit the classifier on X2.
 
 If we call predict on some data X’, say the test set, it
-will call transform on T1, creating X’1. Then it will use
-T2 to transform X’1 into X’2, and call the predict
-method of the classifier on X’2. This sounds a bit
-complicated, but it’s really just doing “the right thing”
-to apply multiple transformation steps.
+will call transform on T1, creating X’1. Then it will use T2
+to transform X’1 into X’2, and call the predict method of
+the classifier on X’2. This sounds a bit complicated, but
+it’s really just doing “the right thing”to apply multiple
+transformation steps.
 
 ---
 
@@ -481,14 +528,14 @@ np.mean(scores), np.std(scores)
 ???
 
 How does that help with the cross-validation problem?
-Because now all steps are contain in pipeline, we
-can simply pass the whole pipeline to crossvalidation, and all processing will happen inside the
-cross-validation loop. That solve the data leakage
-problem.
+Because now all steps are contain in pipeline, we can simply
+pass the whole pipeline to crossvalidation, and all
+processing will happen inside the cross-validation loop.
+That solve the data leakage problem.
 
 Here you can see how we can build a pipeline using a
-standard scaler and kneighborsregressor and pass it
-to cross-validation.
+standard scaler and kneighborsregressor and pass it to
+cross-validation.
 
 ---
 
@@ -512,21 +559,21 @@ pipe = Pipeline((("scaler", StandardScaler()),
 
 ???
 
-But let’s talk a bit more about pipelines, because they
-are great. The pipeline has an attribute called steps,
-which --- contains its steps. Steps is a list of tuples,
-where the first entry is a string and the second is an
-estimator (model). The string is the “name” that is
-assigned to this step in the pipeline. You can see
-here that our first step is called “standardscaler” in all
-lower case letters, and the second is called
-kneighborsregressor, also all lower case letters.
+But let’s talk a bit more about pipelines, because they are
+great. The pipeline has an attribute called steps, which ---
+contains its steps. Steps is a list of tuples, where the
+first entry is a string and the second is an estimator
+(model). The string is the “name” that is assigned to this
+step in the pipeline. You can see here that our first step
+is called “standardscaler” in all lower case letters, and
+the second is called kneighborsregressor, also all lower
+case letters.
 
-By default, step names are just lowercased classnames. You can also name the steps yourself using
-the Pipeline class directly. Then you can specify the
-steps as tuples of name and estimator.
-make_pipeline is just a shortcut to generate the names
-automatically.
+By default, step names are just lowercased classnames. You
+can also name the steps yourself using the Pipeline class
+directly. Then you can specify the steps as tuples of name
+and estimator. make_pipeline is just a shortcut to generate
+the names automatically.
 
 ---
 
@@ -551,16 +598,17 @@ print(grid.score(X_test, y_test))
 
 ???
 
-These names are important for using pipelines with gridsearch. Recall that for using GridSearchCV you need to
-specify a parameter grid as a dictionary, where the keys
-are the parameter names. If you are using a pipeline inside
+These names are important for using pipelines with
+gridsearch. Recall that for using GridSearchCV you need to
+specify a parameter grid as a dictionary, where the keys are
+the parameter names. If you are using a pipeline inside
 GridSearchCV, you need to specify not only the parameter
-name, but also the step name – because multiple steps
-could have a parameter with the same name.
+name, but also the step name – because multiple steps could
+have a parameter with the same name.
 
 The way to do this is to use the stepname, then two
-underscores, and then the parameter name, as the key for
-the param_grid dictionary.
+underscores, and then the parameter name, as the key for the
+param_grid dictionary.
 
 You can see that the best_params_ will have this same
 format.
@@ -585,9 +633,8 @@ class: left, middle
 ???
 
 Now that we discussed scaling and pipelines, let’s talk
-about some more preprocessing methods. One
-important aspect is dealing with different input
-distributions.
+about some more preprocessing methods. One important aspect
+is dealing with different input distributions.
 
 ---
 
@@ -600,19 +647,18 @@ class: left, middle
 ???
 
 Here is a box plot of the boston housing data after
-transforming it with the standard scaler. Even though
-the mean and standard deviation are the same for all
-features, the distributions are quite different. You can
-see very concentrated distributions like Crim and B,
-and very skewed distribuations like RAD and Tax
-(and also crim and B).
+transforming it with the standard scaler. Even though the
+mean and standard deviation are the same for all features,
+the distributions are quite different. You can see very
+concentrated distributions like Crim and B, and very skewed
+distribuations like RAD and Tax (and also crim and B).
 
 Many models, in particular linear models and neural
-networks, work better if the features are
-approximately normal distributed.
+networks, work better if the features are approximately
+normal distributed.
 
-Let’s also check out the histograms of the data to see
-a bit better what’s going on.
+Let’s also check out the histograms of the data to see a bit
+better what’s going on.
 
 ---
 
@@ -624,11 +670,10 @@ class: left, middle
 
 ???
 
-Clearly CRIM and ZN and B are very peaked, and
-LSTAT and DIS and Age are very asymmetric.
-Sometimes you can use a hack like applying a
-logarithm to the data to get better behaved values.
-There is slightly more rigorous technique though.
+Clearly CRIM and ZN and B are very peaked, and LSTAT and DIS
+and Age are very asymmetric. Sometimes you can use a hack
+like applying a logarithm to the data to get better behaved
+values. There is slightly more rigorous technique though.
 
 ---
 
@@ -659,17 +704,15 @@ pt.fit(X)
 
 The Box-Cox transformation is a family of univariate
 functions to transform your data, parametrized by a
-parameter lambda. For lamda=1 the function is the
-identity, for lambda = 2 it is square, lambda =0 is log
-and there is many other functions in between. For a
-given dataset, a separate parameter lambda is
-determined for each feature, by minimizing the
-skewdness of the data (making skewdness close to
-zero, not close to -inf), so it is more “gaussian”. The
-skewdness of a function is a measure of the
-asymmetry of a function and is 0 for functions that
-are symmetric around their mean.
-Unfortunately the Box-Cox transformation is only
+parameter lambda. For lamda=1 the function is the identity,
+for lambda = 2 it is square, lambda =0 is log and there is
+many other functions in between. For a given dataset, a
+separate parameter lambda is determined for each feature, by
+minimizing the skewdness of the data (making skewdness close
+to zero, not close to -inf), so it is more “gaussian”. The
+skewdness of a function is a measure of the asymmetry of a
+function and is 0 for functions that are symmetric around
+their mean. Unfortunately the Box-Cox transformation is only
 applicable to positive features.
 
 
@@ -691,15 +734,15 @@ applicable to positive features.
 Here are the histograms of the original data and the
 transformed data. The title of each subplot shows the
 estimated lambda. If the lambda is close to 1, the
-transformation didn’t change much. If it is away from
-1, there was a significant transformation.
+transformation didn’t change much. If it is away from 1,
+there was a significant transformation.
 
 You can clearly see the effect on “CRIM” which was
-approximately log-transformed, and lstat and nox
-which were approximately transformed by sqrt.
+approximately log-transformed, and lstat and nox which were
+approximately transformed by sqrt.
 
-For the binary CHAS the transformation doesn’t make
-a lot of sense, though.
+For the binary CHAS the transformation doesn’t make a lot of
+sense, though.
 
 ---
 
@@ -718,11 +761,11 @@ a lot of sense, though.
 
 ???
 
-Here is a comparison of the feature vs response plot
-before and after the box-cox transformation.
+Here is a comparison of the feature vs response plot before
+and after the box-cox transformation.
 
-The dis, lstat and crim relationships now look a bit
-more obvious and linear.
+The dis, lstat and crim relationships now look a bit more
+obvious and linear.
 
 ---
 
@@ -742,26 +785,26 @@ $$ \lbrace 'red', 'green', 'blue' \rbrace \subset ℝ^p ? $$
 
 ???
 
-Before we can apply a machine learning algorithm, we
-first need to think about how we represent our data.
+Before we can apply a machine learning algorithm, we first
+need to think about how we represent our data.
 
 Earlier, I said x \in R^n. That’s not how you usually get
 data. Often data has units, possibly different units for
-different sensors, it has a mixture of continuous
-values and discrete values, and different
-measurements might be on totally different scales.
+different sensors, it has a mixture of continuous values and
+discrete values, and different measurements might be on
+totally different scales.
 
 First, let me explain how to deal with discrete input
-variables, also known as categorical features. They
-come up in nearly all applications.
+variables, also known as categorical features. They come up
+in nearly all applications.
 
 Let’s say you have three possible values for a given
-measurement, whether you used setup1 setup2 or
-setup3. You could try to encode these into a single
-real number, say 0, 1 and 2, or e, \pi, \tau.
+measurement, whether you used setup1 setup2 or setup3. You
+could try to encode these into a single real number, say 0,
+1 and 2, or e, \pi, \tau.
 
-However, that would be a bad idea for algorithms like
-linear regression
+However, that would be a bad idea for algorithms like linear
+regression
 
 ---
 
@@ -772,20 +815,20 @@ class: center, middle
 
 ???
 
-If you encode all three values using the same feature,
-then you are imposing a linear relation between
-them, and in particular you define an order between
-the categories. Usually, there is no semantic ordering
-of the categories, and so we shouldn’t introduce one
-in our representation of the data.
+If you encode all three values using the same feature, then
+you are imposing a linear relation between them, and in
+particular you define an order between the categories.
+Usually, there is no semantic ordering of the categories,
+and so we shouldn’t introduce one in our representation of
+the data.
 
 Instead, we add one new feature for each category,
 
-And that feature encodes whether a sample belongs to
-this category or not.
+And that feature encodes whether a sample belongs to this
+category or not.
 
-That’s called a one-hot encoding, because only one of
-the three features in this example is active at a time.
+That’s called a one-hot encoding, because only one of the
+three features in this example is active at a time.
 
 You could actually get away with n-1 features, but in
 machine learning that usually doesn’t matter
@@ -798,7 +841,15 @@ class: center, middle
 .center[![:scale 60%](images/img_26.png)]
 
 ???
-N/A
+One way to do is with Pandas. Here I have an example of a
+data frame where I have the boroughs of New York as a
+categorical variable and variable salary. One to get the
+dummies is to get dummies on this data frame. This will
+create new columns, it will actually replace borough column
+by four columns that correspond to the four different
+values. The get_dummies applies transformation to all
+columns that have a dtype that's either object or
+categorical. 
 
 ---
 
@@ -809,7 +860,33 @@ class: center, middle
 .right-column[![:scale 50%](images/img_29.png)]
 
 ???
-N/A
+Sometimes, someone has already encoded the categorical
+variables to integers like here. So here this is exactly the
+same information only except instead of strings you have
+them numbered. If you call the get_dummies on this nothing
+happens because none of them are object data types or
+categorical data types. If you want to look at the One Hot
+Encoding, you can explicitly pass columns equal and this
+will transform into boro_1, boro_2, boro_3. The question is,
+why do I want to have this encoding instead of just
+enumerating them 01234. Making them 01234, you have to put
+an order on them and often there's not a natural order. The
+question is, why do we use a tree. So ideally, if you use a
+tree, then it'll handle categorical variables by itself and
+then it can actually do the split in one go. In scikit-learn
+unfortunately, it cannot. But it's still depends on the
+order. Right now, in scikit-learn, it would be treated as a
+continuous variable. So each individual node could make only
+these splits but you can have multiple nodes and that can
+make arbitrary splits. So doing these two things is not the
+same, but they probably both work. If you didn’t want it One
+Hot Encoding and do it in a tree right now, scikit-learning
+can only split away one class in each note that it does a
+split. Here it can split all the class apart, but only
+according to the numbering. So coming back to how to do this
+with pandas. There's one issue though, if you do this with
+pandas, there’s not four but five boroughs. 
+
 
 ---
 
@@ -818,8 +895,18 @@ class: center, middle
 .center[![:scale 70%](images/img_30.png)]
 
 ???
-N/A
-
+If someone else gives you a new data set and in this new
+data set there is Staten Island, Manhattan, Bronx and
+Brooklyn. So new dataset doesn't have anyone from Queens. So
+now you transform this with get_dummies, you get something
+that has the same shape as the original data but actually,
+the last column means something completely different.
+Because now the last column is Staten Island, not Queens. If
+someone gives you separate training and test data sets, if
+you call get_dummies, you don't know that the columns
+correspond actually to the same thing. Unless you take care
+of the names, unfortunately, scikit-learn completely ignores
+column names. 
 ---
 class: smaller
 
@@ -847,7 +934,23 @@ pd.get_dummies(df)
 
 
 ???
-N/A
+The way to fix this is by using Pandas categorical types.
+Since we know what the boroughs of Manhattan are, we can
+create Pandas categorical dtype, we can create this
+categorical dtype with the categories Manhattan, Queens,
+Brooklyn, Bronx, and Staten Island. So now I have my column
+here and I'm going to convert it to a categorical dtype. So
+now it will not actually store the strings. It will just
+internally store zero to four, and it will also store what
+are the possible values. If a call get_dummies it will use
+all the possible values and for each of the possible values
+it will create a column. Even though Staten Island has not
+appeared in my dataset, it will still make a column for
+Staten Island. If I fix this categorical dtype I can apply
+it to the training and test data set and that'll make sure
+all the columns are always the same no matter what are the
+values are actually in the data set. 
+
 
 ---
 
@@ -874,9 +977,31 @@ array([[   1.,    0.,    0.,    0.,  103.],
 - Only works for integers right now, not strings.
 
 ???
-N/A
-- Fit-transform paradigm ensures train and test-set categories correspond.
-
+You can also do this with scikit-learn. There are two ways
+to do this scikit-learn. The old way is One Hot Encoder.
+It’s a transformer, so you can call fit on something and
+call transform on something else. This fit transform
+paradigm in scikit-learn prevents you from having these
+columns matches. What this does is basically, it only
+considers the ones that are there during training and if
+there's a new value coming in during testing, it either
+throws that out or gives you an error depending on what
+parameters you set. This will actually produce by default,
+the sparse matrix so it will not actually store all the
+zeros. an You can also set a configuration option so that it
+will always return. The annoying thing with this is, this
+works only for integers. So one hot encoder, if you give it
+a string, it'll just say no. The one hot encoder assumes
+that the integers are from zero to number of categories, so
+if I would want to encode the salary column, it'll create
+219 features, which are also not always what you want. The
+other way to do it is a new way which is not released yet.
+What this does is it works on strings and integers. But it
+always does it on all columns and it computes the unique
+values. Here for salary there six unique value, so add six
+columns for salary and then there are four values for
+borough. So this is actually what you want but you only want
+to apply it to a subset of the columns. 
 
 ---
 
@@ -918,6 +1043,16 @@ preprocess = make_column_transformer(
 
 model = make_pipeline(preprocess, LogisticRegression())
 ```
+???
+There's this thing that's going to be hopefully in the next
+version of scikit-learn called column transformer, which
+allows you to transforms only some of the columns. For
+example, you can call categorical encoder only on the
+categorical columns and call StandardScaler on the
+non-categorical columns, and then use that to preprocess
+your data. Right now using Pandas, make sure your column
+names match up, make everything to an integer, use One Hot
+Encoder or get the development version.
 
 ---
 class: some-space
@@ -949,7 +1084,13 @@ class: some-space
 
 
 ???
-N/A
+In principle all tree-based models support categorical
+features, in scikit-learn none of them do, hopefully, soon
+they will. So what you can do is either you do the One Hot
+Encoder or you just encode this as integers and treat it as
+a continuous. If you have very high categorical variables
+with many levels, maybe it keeping it as an integer might
+make more sense. 
 
 ---
 
@@ -969,7 +1110,29 @@ class: some-space
 
 
 ???
-N/A
+So there's also another way to encode categorical variables
+that is often used, I like to call it Count-Based Encoding.
+It's basically for very high cardinality categorical
+features. For example, if you have categorical feature it's
+all US states and you don't have a lot of samples or if you
+have categorical features that's all US zip codes, if you
+have all different things, you don't want to do One Hot
+Encoding. So you get 50 new features, which if you don't
+have a lot of data would be a lot of features. So instead,
+you can use one single variable, it basically encodes the
+response. So for regression, it would be people in this
+state have an average response of that. Obviously you don't
+want to do this on the test set basically or you want to do
+this on the whole dataset for each level of the categorical
+variable, you want to find out what is the mean response and
+just use this as the future value. So you get one single
+future. For binary classification, you can just use the
+fraction of people that are classified as Class One. For
+multi-class, you usually do the percentage or fraction of
+people in each of the classes. So in multi-class, you get
+one new feature per class and you count for each state how
+many people in this state are classified for each of them.
+
 
 ---
 class: compact
@@ -1040,7 +1203,16 @@ Name: native-country, dtype: int64
 ]
 ]
 ???
-N/A
+A slightly different example which is the adult census. This
+is the dataset with stuff about jobs of adults living in the
+US and the idea is to predict whether their income is
+smaller or bigger than 50K a year. One of the variables in
+this is the country of origin. Most of the people in this
+dataset come from the US but there's a bunch of people from
+other countries. Using the response encoding instead of
+adding like 15 new features I only encode it as one new
+feature. 
+
 
 ---
 .smallest[
@@ -1134,7 +1306,19 @@ N/A
         0.245835                United-States   <=50K
 ```
 ]]
+???
+So the way I do this is for each country that someone can be
+from, I can look at how many people make less than 50k and
+more than 50k. People from the Netherlands alway make less
+than 50k in this dataset. People from Iran doing pretty well
+prepared, people from Ireland are not doing so well.
 
+For each native country, I just added a feature that I call
+frequency. And if it's in the States, I give the feature
+value that corresponds to the United States in the table. So
+everybody from the United States will have the same feature
+and so on. And so now I just have a single feature that
+hopefully encodes the information of the country. 
 ---
 
 class: left, middle
@@ -1142,7 +1326,9 @@ class: left, middle
 #Feature Engineering
 
 ???
-N/A
+I want to talk a little bit about feature engineering and in
+particular about interaction features. For linear models,
+interaction features are actually quite interesting. 
 
 ---
 
@@ -1153,8 +1339,7 @@ class: center
 ![:scale 70%](images/img_33.png)
 
 ???
-N/A
-
+So let's look at this 2 dimensional dataset, 2 classes. 
 ---
 
 class: center
@@ -1166,9 +1351,10 @@ class: center
 ![:scale 70%](images/img_35.png)
 
 ???
-N/A
-
-
+If I fit the model, do logistic regression, I get something
+like this, which does very badly. But if I do feature
+engineering, it means I add new features to dataset which
+will make my linear model more powerful. 
 ---
 
 class: center, middle
@@ -1179,7 +1365,10 @@ class: center, middle
 ![:scale 70%](images/img_37.png)
 
 ???
-N/A
+So one idea would be to just add the product of the 2
+existing features. So add a new feature that's like x zero
+times x one, and now I'm in a 3-dimensional space. In the 3
+dimensional space, I can literally separate the data.
 
 ---
 
@@ -1200,7 +1389,14 @@ logreg3.score(X_i_test, y_test)
 ```
 
 ???
-N/A
+If it’s projected down to the original space, it will be
+this black curve which is the logistic regression. So it's a
+linear classifier only in the expanded 3-dimensional feature
+space where it added the interaction. Interactions are one
+way to who blow up the feature space, adding more features
+in particular for linear models makes the model much more
+powerful. So you can do this for continuous features. 
+
 
 ---
 
@@ -1213,7 +1409,27 @@ N/A
 
 
 ???
-N/A
+For discrete features, it does something slightly different.
+So assume I have a database of users with an age, how many
+objects they bought, gender, how much money they spend on my
+website, and how much time they spend on my website. So I
+can Hot Encode the gender and they get like gender variable
+at 01. So now if I do interaction features of all the
+different features with the gender feature, it looks like
+this. Now I have age times male, article bought times male,
+males spend time, spend dollar male and so on and likewise
+for female. This is just the interaction features but the
+gender features are either zero or one. And so what this
+means is, these features are only active for men, these
+features only active for women. So learning a model on this
+feature space is basically the same as learning two separate
+models, one for men and one for women. What you might want
+to do is use the original features, and then use the feature
+interaction with men and the feature interaction with women.
+So you have a shared model, and then you have how men and
+women deviate from this model. So now you basically if you
+do that you have three times as many degrees of freedom in
+your linear model. 
 
 ---
 # More interactions
@@ -1229,8 +1445,17 @@ age articles_bought gender spend$ time_online
 ]
 
 ???
-N/A
-
+You can obviously do this with more discrete variables,
+let's say you have the original features, then you have a
+model that has the features only for men, a model that has
+the features only for women, then you can have a model only
+for people above 20, a model for people only below 20, a
+model for people below 20 that are male, and so on. So by
+adding these interaction features to basically create a
+bigger, bigger features space, which allows you to have
+linear models that adjust for a subpopulation of the overall
+dataset. So now I have instead of having six features, I now
+have 36 features and can have a much more powerful model. 
 
 ---
 
@@ -1257,8 +1482,17 @@ class: center
 
 
 ???
-N/A
-
+You can also add polynomials. So the thing called polynomial
+features in scikit-learn does interactions between all
+possible features and it adds polynomials. If you do
+interactions only equal to true, it will only do
+interactions and then the order is how many features it
+doesn't interactions with. Order of three means all products
+of three features. By default interactions is false and
+it’ll add also the powers of single feature, which only
+makes sense for continuous features. So for each x it will
+add x squared, x cube and so on. All right, that's all for
+today.
 ---
 
 class: spacious

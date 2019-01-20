@@ -35,6 +35,20 @@ extra tree: only one thereshold per feature?
 class: spacious, middle
 # Why Trees?
 ???
+Trees are really very powerful models both for
+classification and regression, they're very commonly used.
+Trees are very popular in the industry. Only beaten out by
+deep neural networks. Tree-based models are one of the main
+tools in the toolbox of most machine learning practitioners.
+
+Trees really don't care about the scale of the data so you
+don't really have to do a lot of preprocessing. Trees don't
+care about the distribution of your data. There are versions
+of trees that can deal with categorical variables and with
+missing values.  By combining multiple trees you can build
+stronger models.
+
+
 - Very powerful modeling method – non-linear!
 - Doesn’t care about scaling of distribution of data!
 - “Interpretable”
@@ -52,6 +66,17 @@ class: centre,middle
 ![:scale 70%](images/img_1.png)
 ]
 ???
+Binary classification trees are binary trees, where each
+node corresponds to a question asked about the data. This
+example is a fictional task where you want to distinguish
+hawks, penguins, dolphins, and bears. You ask a series of
+binary questions that will lead to which animal it might be.
+
+Depending on what the answer is for a particular question,
+you could ask another question. This way you can narrow it
+down for possible outcomes. Usually, when we are doing
+classification we have continuous features and so the
+questions are thresholds on single features.
 
 ---
 # Building Trees
@@ -71,6 +96,50 @@ Continuous features:
 ]
 
 ???
+Here is an example of a tree with depth one, that's
+basically just thresholding a single feature. In this
+example, the question being asked is, is X1 less than or
+equal to 0.0596. The boundary between the 2 regions is the
+decision boundary. The decision for each of the region would
+be the majority class on it. This decision tree of depth one
+would classify everything that is below the horizontal line
+as class red since there are more red points (32>2) and
+everything above as blue since there are more blue points
+(48>18).
+
+The way this threshold was chosen, the way that tree of
+depth one was learned was to find the best feature and the
+best threshold to minimize impurity. Which means it tries to
+make the resulting subsets, the top half and the bottom half
+here, to be as pure as possible (to consist mostly of one
+class)
+
+Basically, we're searching over all possible features and
+all possible thresholds. Possible thresholds are all values
+of the feature that we're observing. So I would start
+iterating over the first feature and for the first feature,
+I would look at all possible thresholds and see if this is a
+good question to ask, i.e. is this a good way to split the
+data set into two classes.
+
+If you search over all possible features, then the best
+split is found. Once we find this split, we can then
+basically apply this algorithm recursively to the two areas
+that the split created. For top area here, we can ask what
+the best feature is and what the best threshold for this
+feature is to make the resulting regions as pure as
+possible. 
+
+Here in the bottom, it asks is X0 less or equal than minus
+0.4? The model will predict accordingly, either blue or red.
+If only one class remain after a split, the tree will not
+add any splits since the regions have become pure. Each node
+corresponds to a split and the leaves correspond to regions.
+All tree building algorithms start greedily building a tree,
+so they don't really go back and revisit because it would be
+too computationally expensive. 
+
+
 Does the layout look okay??
 ---
 
@@ -90,6 +159,17 @@ Does the layout look okay??
  
  ![:scale 5%](images/img_9.png) distribution over classes in node m
 ???
+ For classification, there are two common criteria to
+ preserve the purity of the leaf. One is called the Gini
+ Index and the other one is Cross-Entropy. 
+
+Gini Index works well in practices. Cross-Entropy is the
+entropy of the distribution over classes. You want to
+minimize the entropy over the classes, you want to have a
+very spike distribution in the classes, you want mostly to
+be one class and less of the others so that the trees are
+very certain about what the class is for each leaf.
+
 ---
 
 # Prediction
@@ -99,6 +179,13 @@ Does the layout look okay??
 ]
 
 ???
+To make a prediction, I traverse the tree I ask all the
+questions in the node that I encounter and then I can
+predict the majority class in the leaf. One thing that's
+nice about this is this prediction is really, really fast
+since this tree is not very deep. 
+
+
  - Traverse tree based on feature tests
  - Predict most common class in leaf
 
@@ -119,6 +206,32 @@ Mean Absolute Error:
  
 
 ???
+You can do the same thing also for regression. In
+regression, the prediction is usually the mean over the
+target targets in a leaf. The impurity criteria that I
+minimized is usually the mean squared error. Basically, you
+look at how good of a prediction is the mean if I split like
+this. For each possible split, you can compute the mean for
+the two resulting nodes and you compute how well the mean in
+this leaf predicts. 
+
+You can use the mean absolute error, if you want it to be
+more robust outliers then you don’t penalize with the square
+norm, you only penalize with the L1 norm.
+
+One thing about the regression trees is that they have more
+tendency to get very deep if you don't restrict them.
+Because usually in regression, all targets are distinct,
+they’re distinct float numbers. So if you want all leaves to
+be pure, then all of these will have only one node in them,
+unless you have a special case where you have equal flow
+numbers as a target, which is not common.
+
+Another thing that's really nice about trees is that you can
+visualize them and you can look at them, and you can
+possibly even explain to your boss what they mean. 
+
+
  - Without regularization / pruning:
  - Each leaf often contains a single point to be “pure”
 
@@ -145,6 +258,25 @@ print(tree_dot)```
 ]
 
 ???
+The first way to visualize tree in scikit-learn is a little
+bit tricky. The second one is a one I hacked. 
+
+I'm going to use the breast cancer data center, which does
+the classification of breast tissues. So trees can do much
+more complicated things than multiclass. For the ease of
+visualization, I'm going to do binary. 
+
+I can build the decision tree classifier, and there's a
+method in scikit-learn called export _graphviz, which is
+basically a file format and the layout engine for showing
+graphs. 
+
+So you can take the tree, the estimator that’s the tree. You
+can also give it the feature names if you want. You can
+either write this to a file, or you can get back to string
+in this dot language. And that's what it looks like. This is
+a tree of depth 2 and I gave it the feature names. 
+
 ---
 # Visualizing trees with sklearn
 .smaller[
@@ -168,6 +300,8 @@ node [shape=box] ;
 ```
 ]
 ???
+In graph expression language, this is what the tree looks
+like.
 ---
 
 
@@ -182,6 +316,12 @@ Requires graphviz C library and Python library
  ]
 
 ???
+You can show them in Jupiter quite easily if you use
+graphviz. Graphviz is a library that does the graph layout
+thing from the subscriptions. Here, the output is the
+graphviz object. If you're not using Anaconda installing
+graphviz is really complicated, because it has a C library
+and Python library.
 ---
 # Easier visualization
 
@@ -196,6 +336,18 @@ tree_dot = plot_tree(tree, feature_names=cancer.feature_names)
 ]
 
 ???
+The other thing that I like to use which is easier is this
+pull request or there’s a gist that you download, it’s a
+single file called the tree_plotting. And that uses math
+plot to plot the trees.
+
+Here, at the top you can see the test, then you can see the
+criteria, then the number of samples in this node and then
+which class the samples belong to. In the original breast
+cancer dataset, the top node corresponds to the whole
+dataset. The tree gets purer and purer as you move down the
+tree.
+
 ---
 class:spacious
 
@@ -215,6 +367,22 @@ class:spacious
 
   - ...
 ???
+  I want to talk a little bit about the different parameters
+  that you can choose. Most of the tree growing algorithms
+  are greedy. There are two ways to restrict the growth of
+  the tree after you train them. There are pre-pruning and
+  post-pruning. 
+
+In pre-pruning, you restrict while you're growing. In
+post-pruning, you build the whole tree (greedily) and then
+you possibly merge notes. So you possibly undo sort of bad
+decisions that you made, but you don't restructure the tree.
+
+In scikit-learn right now, there's only pre-pruning. The
+most commonly used criteria are the maximum depth of the
+tree, the maximum number of leaf nodes, the minimum samples
+in a node split and minimum decrease impurity.
+
 ---
 class:spacious
 
@@ -223,7 +391,7 @@ class:spacious
 ![:scale 100%](images/img_13.png)
 ]
 ???
-
+Here’s the full tree for the same dataset.
 ---
 class:spacious
 
@@ -234,6 +402,25 @@ class:spacious
 ]
 
 ???
+Maximum depth of the tree restricted to 4. This is like a
+very simple way. If you are actually building just a single
+decision tree, this might not be the best way because for
+example, here you split away the single point which might
+not be great and other leaves are very mixed. So you can't
+make a good prediction here. Since it puts the same depth
+limit on everywhere in the tree, this is not very fine
+grained.
+
+What it does is it means that your predictions will be very
+fast because you never have to go very deep in the tree. It
+also makes the tree size very small. If you built a lot of
+trees, you might get issues with the RAM. If you have a lot
+of very deep trees, they will at some point be bigger than
+your RAM, and you'll run into troubles, or if they're very
+deep, it might be very slow to predict at some point. So
+this is a way to restrict how much memory and how much
+prediction time you're willing to give. 
+
 ---
 
 # max_leaf_nodes = 8
@@ -242,6 +429,12 @@ class:spacious
 ]
 
 ???
+If you use max_leaf_nodes, it will always put the one that
+has the greatest impurity decrease first. You can see that
+in different parts of the trees, there's different depth. It
+will prioritize the ones that decrease the impurity the
+most.
+
 ---
 class:spacious
 
@@ -251,6 +444,22 @@ class:spacious
 ]
 
 ???
+Min_samples_split is quite simple, it just says only split
+nodes that have this many samples on them. What I don't like
+about this criterion set here, for example, it splits off a
+single point, which I don't think is really great, because
+it's not going to improve the prediction very much. 
+
+So both the max leaf nodes and the minimum impurity decrease
+will allow you to basically get rid of these very small
+leaves that don't really add anything to the prediction. 
+
+Impurity decrease will only make splits that decrease the
+impurity by X amount. 
+
+If you want to tune this, you pick one of these and then you
+just tune this one parameter.
+
 ---
 
 .smaller[
@@ -267,6 +476,17 @@ grid.fit(X_train, y_train)
 ]
 
 ???
+So for example, if you want to tune max depth and restricted
+the depth of the tree. So run a grid search over max depth
+and you can do the parameter curves as we did before and you
+can see that maybe depth of five is good on this dataset.
+
+Again, you can see the typical curve with the more
+complexity you allow in your classifier, the better you get
+the training set, but possibly you overfit on a test set.
+So, here, you could say maybe it's overfitting a little bit,
+but it's not very visible.
+
 ---
 .smaller[
 ```python
@@ -282,6 +502,25 @@ grid.fit(X_train, y_train)
 ]
 
 ???
+Here is if you tune a maximum number of leaf nodes, you can
+see it’s slightly more overfitting happening but generally,
+there's not a big difference on this toy dataset between
+building the full tree or having a smaller tree. Obviously,
+if you have a small tree, predictions are going to be faster
+and need less memory to store and you can explain it better.
+
+So the thing with being able to explain is, if you have a
+tree up depth 14, then it's not really explainable anymore,
+no human can look at all of this and say “Oh, I understand
+exactly what's going on”. If you have 8 leaves, it's a very
+good chance you can draw this, and you can think about it,
+and you can understand that. 
+
+I wouldn't really say trees are interpretable but small
+trees are interpretable. So that's also the reason why you
+might want to restrict the rows of the tree. So you can
+easily communicate and easily explained.
+
 ---
 class:spacious
 # Relation to Nearest Neighbors
@@ -298,6 +537,25 @@ FIXME plots
 ]
 
 ???
+Trees are actually quite similar to nearest neighbors in
+some sense because both nearest neighbors and trees pick the
+average of their neighbors or delete the neighbors’ votes
+(depending on classification or regression)
+
+In KNearest Neighbors or epsilon nearest neighbors, where
+you have a radius around the data point in which you look
+for neighbors. In trees, you look at the same leaf, and you
+basically let the other point in the leaf vote what the
+output should be. 
+
+Trees are consistent if you give them enough data and they
+will eventually learn anything because eventually, they're
+just like nearest neighbors. Nearest neighbors are very slow
+to predict because you need to compute the distances to all
+training points while trees very fast to predict because you
+just need to traverse the binary tree. One thing that you
+should keep in mind is that both can't extrapolate.
+
 ---
 #Extrapolation
 .center[
@@ -310,6 +568,56 @@ FIXME plots
 ![:scale 80%](images/ram_prices_test.png)
 ]
 ???
+This is the RAM prices in dollar per megabyte historically.
+This is an instance of Moore's law. On log scale, it’s
+pretty linear because of the ram prices half every 18 months
+or something. 
+
+Let's say I want to build the prediction model for this. And
+I want to build it up to 2000, and I want to make
+predictions about the future. Now I'm going to compare a
+linear model in a tree-based model.
+
+The linear model, I kind of cheated a little bit because I
+did the log transform so that linear model can actually
+model it. I didn't restrict the tree model so it'll
+basically learn the training data set perfectly.
+
+Now the question is, if I want to do prediction, what are we
+going to predict? You probably are not going to be surprised
+by the linear prediction but you might be by the tree
+prediction.
+
+The tree predicts just a constant and the constant is
+basically the last point observed. This is the same thing
+that the nearest neighbor base model would do. So if you
+want to predict here, basically, you traverse the tree and
+you find basically the closest data point to it, the one or
+the other data point that is in the same leaf, and the ones
+that will share the leaf with are the ones on the very
+right. And then it will computer mean of these data points.
+And the mean is going to be just the value if the leaf is
+pure. If I did like coarser split level, it will tune the
+mean of all of these, but it’ll always compute the mean of
+some data points on the training set. So it'll never be able
+to predict these values that are not seen in a training set.
+
+
+In practice, this is usually not really a big issue. For
+example, if you want to do like extrapolation like this, you
+could instead of trying to predict the value, you could use
+the tree to predict the difference to the last day or to the
+last year or something like this, and then it would work.
+But it's definitely something you should keep in mind.
+Basically, outside of where you’ve observed training data,
+it'll just be a constant prediction. Basically falling back
+to what it was last seen. That might be a little bit
+surprising sometimes. Generally, extrapolation in machine
+learning is hard. And if you need to extrapolate, there's a
+chance you're not going to be able to do with any model. But
+in particular, for tree-based and nearest neighbor based
+models, you should keep in mind that they can't do that. 
+
 ---
 
 # Instability
@@ -336,6 +644,26 @@ tree.fit(X_train, y_train)
 .center[![:scale 70%](images/img_22.png)
 ]]
 ???
+Another weakness of trees that I want to mention is that
+they are very unstable. Using the iris dataset, let's say I
+want a small tree. So I say I want a maximum of six leaves
+nodes and I split my Iris dataset, and I build the tree, and
+then I split the same data set again, and take a different
+random state. Hopefully, I would assume that if it's the
+same dataset, and I split randomly, then the models should
+be similar. However, if you look at these models, even in
+the root note, the very first decision it made is different.
+One compares petal length to 2.45 while the other compares
+pedal width to 0.8.
+
+And the number of points that are split off are different
+too. So there's not really an easy correspondence between
+these two trees. So this is sort of a caveat about
+interoperability. You can interpret the tree but maybe if
+the dataset was only slightly different, the tree might look
+completely different. So this tree structure is really
+something that's very unstable. 
+
 ---
 
 # Feature importance
@@ -365,6 +693,71 @@ array([0.0, 0.0, 0.414, 0.586])
 ]
 
 ???
+Another interesting feature of trees that I want to mention
+is feature importance. While looking at the trees, a nice
+way to inspect the tree if it's small, if your trees very
+big, it's very hard to understand what's happening in the
+tree. So what you can get out is how important each feature
+is for the tree. This is similar to the coefficients in the
+linear model, where you can see that “this feature
+influences the model in this way”. And the way this is done
+is basically each time a particular feature was chosen in a
+tree, you accumulate how much it decreased the impurity.
+It'll give more importance to features that were used often
+and where to use of it, than decreased impurity.
+
+Problem with the importance is you have the same issues with
+instability. Because the tree structures unstable, the
+features picked is unstable and so the importance will be
+unstable. 
+
+Similar to L1 norm, if you have too many correlated
+features, it might pick one or the other. If you have very
+correlated features, basically, the feature importance could
+be anything. Any linear combination of the two is completely
+equivalent. So keep that in mind when looking at feature
+importance. But they’re a very nice way to summarize what
+the tree does if you're in reasonably low dimensions and
+your tree is big. Obviously, if you're in super high
+dimensions, you might not be able to look at them, you might
+be able to look at the most important features. 
+
+The question was if use a feature multiple times, do I add
+up the degrees in purities and the answer is yes.
+
+Question is can I explain the difference between
+extrapolating and generalizing. In generalizing, usually you
+make this IID assumption that you draw data from the same
+distribution, and you have some samples from the
+distribution from which you learn, and other samples from a
+distribution which you want to predict. And if you're able
+to predict well, then it is generalizing.
+
+Here in the extrapolation example, the distribution that I
+want to try to predict on was actually different from the
+distribution I learned on because they’re completely
+disjoint. The years I trained on and the years that I'm
+testing on are completely disjoint and the target range is
+also completely disjoint. So this is not an IID task.
+
+In particular, even if it was IID, extrapolation sort of
+means looking at things outside the training set.
+
+One more comment about feature importance is that they give
+you the importance of a feature, but not the direction. If
+you look at the linear model and you say that a coefficient
+is large, or a coefficient is very small, this means for
+regression, if it's larger than it has a positive influence
+on target, or if it's classification, this feature has a
+positive influence to being a member of this class. For
+trees, you don't have the directionality, here you only get
+this is important only to make a decision. And the
+relationship with the class might not be monotonous.
+
+So you only have a magnitude you don't have a direction in
+the importance.
+
+
 - Unstable Tree $\rightarrow$ Unstable feature importances.
 - Might take one or multiple from a group of correlated features.
 ---
@@ -379,6 +772,46 @@ array([0.0, 0.0, 0.414, 0.586])
 - Not in sklearn :(
 
 ???
+You can use categorical data in trees, and you can do this
+in R up to a couple of hundred different values. In
+scikit-learns, unfortunately, it’s not there yet. 
+
+The cool thing about it working with categorical data is
+that it allows you to split into any subsets of the
+categories. So if you have, let's say have one categorical
+variable with five levels, or five different values, you
+could split it in a tree in all possible ways. So in three,
+two, four, one and with all of the possible combinations. 
+
+Usually, if you would want to do that you will need to try
+out two to the power number of values many possibilities for
+the splits, two to the power five in this example. That
+might not be feasible. But actually, for some criteria, for
+example, for Gini index you can do this efficiently in
+linear time. 
+
+So in scikit-learn right now, you have to use one hot
+encoding, which is not powerful because one hot encoding can
+only split one feature at a time. So you would need to grow
+a much deeper tree to split categorical variable in all
+possible ways. 
+
+There's also I think in R there's a bunch of tree
+implementations that work with missing values and there are
+several different strategies to deal with missing values. 
+
+But it's also not entirely clear which strategy to deal with
+a missing value in trees is the best. So one strategy is, if
+you have a missing value, you can basically go down both
+sides at once, if the question is about the value that's
+missing, just go down both things. But that's kind of slow.
+The other thing that it's actually just another value you
+can split on and you can say, “if I split on a missing
+value, I have a separate branch just for missing values.”
+
+But you can easily emulate this by replacing it with a
+binary feature which says missing or not missing.
+
 
 ---
 class:spacious
@@ -387,6 +820,24 @@ class:spacious
 - Without pruning: Always 100% certain!
 - Even with pruning might be too certain.
 ???
+You can also predict probabilities with trees. Although, I
+would recommend against it. The issue with trees is that
+they are very good at overfitting, they can fit anything if
+I grow them deep enough. If I grow them to the full depth,
+they will always be 100% certain. Because the probability is
+the fraction of the number of points in the leaves that
+belong to this class. So if I have a leaf with like 10 data
+points, and 7 of them belong to class A, then it will say,
+with 70% probability a point here is class A. But if you
+split until everything's pure, it will always be 100%
+certain, which is pretty meaningless.
+
+So you can do some pruning, and you can restrict the rows of
+the tree, but it still might be certain, and so the
+probability estimates that come out of a tree might not be
+very good. 
+
+
 FIXME PLOT
 ---
 
@@ -404,6 +855,35 @@ class:spacious
 .smaller[(taken from Shotton et. al. Real-Time Human Pose Recognition ..)]
 
 ???
+Another reason why trees are very popular is since they're
+very flexible. This is actually from a paper about the
+Kinect version one. Which allows you to use your body as a
+game controller and builds like a 3d image of you and
+follows your hand. They used decision trees in a quite
+clever way to find where different parts of the body are. 
+
+Here you have a depth image of a person. The questions that
+are asked are not looking at single pixels but if you want
+to decide for a particular pixel, you can ask questions
+about pixels that are somewhere else. So you can ask, how
+deep is the pixel five above me? How deep is the pixel five
+below me? And so on. And it can also do comparisons in
+saying, what's the difference between the value here and
+there? And so basically, you can come up with more complex
+ways to ask questions. And this leads to more powerful tree
+models. That's quite common in computer vision to ask either
+about comparing pixels or comparing regions of pixels or
+something like that. 
+
+Usually, by default, you just threshold each feature but you
+can come up with arbitrary things. I also know models where
+each node is like….linear model, for example, and the test
+is what the response of the linear model is? 
+
+Shortcomings of the trees are they very unstable, they can’t
+extrapolate and they tend to overfit a lot.
+
+
 - Could use anything as split candidate!
 - Linear models used if extrapolation is needed.
 - Computer vision: pixel comparisons
@@ -413,6 +893,13 @@ class:spacious
 class: centre,middle
 # Ensemble Models
 ???
+One way to get rid of these problems is to actually use
+multiple trees and Ensemble. Ensemble is a general term that
+captures any way you combine multiple models into one.
+There's like a lot of different kinds of ensemble models
+that work in many different ways. We're going to talk
+particularly about random forest. But that's only one
+association of this more general framework.
 ---
 
 
@@ -427,6 +914,31 @@ class: centre,middle
 - Scikit-learn: VotingClassifier hard and soft voting
 
 ???
+If you do computation, we'll see poor man’s ensembles which
+is just build the same model multiple times with different
+random seeds and average them.
+
+Owen Zhang who used to be in the first place in kaggle for
+five years, he just builds XGBoost models, which are off the
+tree based models with different random seeds, and then he
+just averaged all of them. And if you averaged multiple good
+models, it will get better. This is ideal for competitions.
+
+These are not usually done in practice because it makes the
+model hard to understand, it takes more RAM, it takes more
+time to predict because you have to do it like number of
+models many times.
+
+In scikit-learn, there’s this voting classifier which just
+takes the list of models of different types or be the same
+model type with different visualizations. And it will train
+all of them and average the results.
+
+You can either do soft voting or hard voting. Soft voting
+means averaging the probabilities and take the arg max. Hard
+voting means everything makes a prediction and then you take
+the thing that was most commonly predicted. 
+
 ---
 
 # VotingClassifier
@@ -449,6 +961,19 @@ voting.score(X_test, y_test), lr.score(X_test, y_test), tree.score(X_test, y_tes
 
 .center[![:scale 30%](images/img_25.png)]
 ???
+It looks like this. Here is the logistic regression model on
+this 2D data set. This is the decision tree based model and
+the voting classifier weights - probability estimates by
+most of them. And if you want, you can do that.  Again,
+mostly done in competitions.
+
+The easiest way to do ensembles is to just average models.
+Problem is, if they overfit in the same way, you're not
+going to get rid of the overfitting. So what you really want
+to do is you want to make sure you have models that are
+quite different from each other and you averaged the models
+that are different. 
+
 ---
 
 class: spacious
@@ -461,6 +986,27 @@ class: spacious
 .center[![:scale 100%](images/img_26.png)]
 ]
 ???
+One way to do this is called Bagging or Bootstrap
+Aggregation. And the idea in bagging is, imagine that these
+are your data points, you have five data points and so you
+want to make sure that you built similar but slightly
+different models. And you want to do more than just change
+the random seed. One way is to take bootstrap samples of
+your dataset. Bootstrap samples mean sampling with
+replacement, number of samples many points. So here in this
+example, from these five data points, I would sample a new
+dataset that again has five data points (sample with
+replacement). On average this will mean that each dataset
+will have about 66% of the original data points, and the
+other data points will be just duplicates. So you leave out
+some data, duplicate some other data, and you end up with a
+slightly different dataset. 
+
+You can do this obviously, as often as you want. If you
+average these models, if the model was prone to overfitting,
+then the average might not overfit as much. 
+
+
 - Draw bootstrap samples from dataset
 - (as many as there are in the dataset, with repetition)
 
@@ -477,6 +1023,38 @@ class: spacious
 ]
 
 ???
+What you often hear in this context is talking about bias
+and variance, which is not entirely the same thing as
+underfitting and overfitting but quite related to it. The
+idea is that the errors you make on the test set are
+basically combinations of the error you make in modeling
+plus the uncertainty in the modeling.
+
+The idea is that you can have models that are very
+consistent, but off. So that would be a high bias low
+variance model. So this would be, for example, a low
+dimensional linear model that is mixed inconsistent
+predictions, but it might not be able to capture the target
+very well since it's not powerful enough.
+
+You want ideally a model that has low bias and low variance.
+So that's sort of captures the data concept very well and
+also has very little variance in the predictions it makes. A
+high variance model is one that on average captures the
+predictions but has very high variance in the prediction it
+makes.
+
+The idea of bagging is that you can take multiple high
+variance models and if you average them, then it will reduce
+the variance of the average. If the predictions are not very
+correlated, then there's like a very nice, easy proof to say
+that if I average multiple high variance estimators, I get a
+low variance estimator.
+
+They need to be sort of good enough, on average, if they're
+all really, really bad, and if you average then it will
+still be pretty bad. 
+
 ---
 class: spacious
 
@@ -486,6 +1064,17 @@ class: spacious
 - Uncorrelating them might help, even at the expense of strength
 
 ???
+There’s this proof that shows that if you have decorrelated
+errors, then averaging will help. Basically, the correlation
+between the errors that you make shows up there. And so the
+idea is to make the errors as different as possible. Maybe
+even go further than the bagging in trying to make sure the
+different models that you build are as different from each
+other as possible, while still being reasonably good models.
+This leads to the idea of random forests, which basically
+tries to randomize trees, even more than you would do with
+bagging, and then average results of these trees.
+
 FIXME worst slide!
 ---
 
@@ -496,6 +1085,8 @@ class: spacious
 .center[![:scale 90%](images/img_28.png)]
 
 ???
+Here example of a random forest on a 2-dimensional dataset. 
+
 - Smarter bagging for trees!
 ---
 
@@ -520,6 +1111,23 @@ class: spacious
 ]
 
 ???
+The way that random forest work is they randomize tree
+building in two ways. As with bagging if you do a bootstrap
+sample of the dataset, so each tree you take a bootstrap
+sample of the data set and then for each split in the tree,
+you take a sampling without replacement of the features. So
+let's say you have this representation of the dataset again.
+And for each node where you want to make a splitting
+decision before you want to scan all over the features and
+all the thresholds, you select just the subset of the number
+of features and just look for splits there. And this is done
+for each node independently. In the end, the tree will use
+all the features probably, if it's deep enough, eventually
+it might use all the features but you randomize the tree
+building process in a way that hopefully de-correlated the
+error of the different trees. And so this adds another
+hyperparameter in the tree building.
+
 ---
 class:some-space
 # Tuning Random Forests
@@ -533,6 +1141,42 @@ class:some-space
 - max_depth, max_leaf_nodes, min_samples_split again
 
 ???
+Which are max features, which is the number of features that
+you want to look at each split. So the heuristic is usually
+for classification you want something like the square root
+of the number of features, whereas, for regression, you
+usually want something that is around the same size as the
+number of features. This basically, controls the variance of
+the model because if you set this to number of features, it
+will be just sort of the old decision tree. If you set this
+to one, it will pick a feature at random, and then it needs
+to split on that feature, basically. 
+
+So this will be like a very, very random tree that probably
+would grow very deep because it can really make good
+decisions. 
+
+This is the main parameter that you need to tune, although
+random forest is actually very robust to these parameter
+settings. Usually, if you leave this to the default, it will
+be reasonably well.
+
+By default, in scikit-learn, the number of trees in the
+forest is way too low. Usually, you want something like 100,
+or 500 but scikit-learn only gives you like 10. 
+
+Sometimes people find that pre-pruning techniques like
+maximum depth or maximum leaf nodes help. Generally, the
+idea doesn't really matter that much, how good the vigil
+trees are as long as you have enough of them. But limiting
+the size of the tree will definitely help with model size.
+That said, if you randomize a lot, these trees will grow
+very deep. Because if you're unlucky, you'll always just
+split on bad feature so you will always not really get much
+further in getting pure leaves and so you need to do a lot
+of splits. So setting something like max depth will allow
+you to decrease RAM size and decrease prediction time.
+
 ---
 
 class:spacious
@@ -545,6 +1189,26 @@ class:spacious
 - Can have smoother boundaries
 
 ???
+Alright, so there's a slightly different variant of random
+forest that's also kind of interesting, which is Extremely
+Randomized Trees. They work very similarly except for the
+fact that you draw randomly a threshold for each feature. So
+here, you don't search over the thresholds, you just pick
+one at random. And usually, you don't use bootstrap.
+
+Since you don’t need to do sorting these are faster to
+build. You probably get smoother decision boundaries since
+the thresholds are drawn at random. 
+
+Sometimes they aren’t as bad as random forest but they're
+definitely not commonly used as the default random forest. 
+
+One of the nice things about extremely randomized trees and
+the random forests is they work without any preprocessing.
+If you set number of estimators large enough, they will just
+work. They will not be the best model but they will always
+work. 
+
 ---
 
 # Warm-Starts
@@ -569,6 +1233,40 @@ for n_estimators in estimator_range:
 ]
 
 ???
+The more trees you use, the better it is since you decrease
+the variance more. Don't ever grid search the number of
+trees, because the higher will be better and you're just
+wasting your time. 
+
+But there are diminishing returns. So maybe 100 trees are
+good enough and if you built 500 trees, again, you're
+wasting your time and you might not want to do that. 
+
+In scikit-learn, when you use Warm-Starts, you basically
+iteratively add more and more trees to the forest and you
+can stop whenever you think it's good enough.
+
+Basically, the fit method will keep all the previous trees
+and add on more trees. 
+
+I go from 1 feature to 100 features in steps of five. I set
+the number estimator. So I started with one tree and then
+increased by five every time. I fit the model. And then I
+look at training and test score. This is much better than
+grid searching it because in grid search I would do the same
+work over and over again, while here, I'm adding more and
+more trees and find out what is it good enough. 
+
+Usually, I would double the search like 50, 100, and 200 and
+so on and find where it stabilizes, and then only I will
+stop adding more trees. 
+
+If you don't want to do that, just picking large enough
+number and stick to that number. Then you don't need to
+fiddle around as much but you might be wasting computational
+resources that could be used otherwise for like parameter
+tuning, for example.
+
 ---
 
 # Out-of-bag estimates
@@ -596,12 +1294,58 @@ for max_features in feature_range:
 ]
 
 ???
+Another thing is looking at out of back estimates. This is
+something that's specific to random forest. That said, if
+you do bootstrap sampling, usually you get like 66% of your
+data for each estimator. That means there's about 33% of
+your data that you haven't used for each individual tree. So
+you can use that data as a test set for that particular
+tree. 
+
+The out of back estimate in a random forest is for each
+tree, I individually predict on the 33% on which I haven't
+trained. And then for each data point, I look at all the
+trees that held out this particular data point and let them
+vote. So then for each data point, I only have a subset of
+the trees that makes a prediction but if I have enough trees
+overall, it'll still be fine. 
+
+Let's say, I used 300 estimators, then basically, on
+average, for each data point, I will have 100 estimators
+that didn't use those data points. And so it can use this
+data point as a test set for this 100 estimators and can let
+them vote on what the prediction should be. And this way,
+basically, I get a test set score for free. In fact, it's
+like a bootstrap estimate of a test set score. 
+
+And so basically, I don't need to use a test set, I can just
+use the out of bag estimate. 
+
+So here, for example, using this to find the best number of
+features.  I look for max number of features in a particular
+range in a random forest classifier. In this case, for
+illustration purposes, I use both the out of bag estimate
+and the test set scores to see how they compare. 
+
 ---
 .center[
 ![:scale 90%](images/img_31.png)
 ]
 
 ???
+You can see that since I didn’t prune the trees in any way,
+the training scores is always one because it's always
+perfect and you perfectly overfit everything. The test sets
+scores and the out of bag scores are at least somewhat
+similar in trend and also in magnitude because the out of
+bag estimate uses only one-third of the trees, it might be
+slightly worse. But basically, I got this for free without
+spending any additional data or any additional computation. 
+
+And so both of these probably have a habit of uncertainty. I
+have no uncertainty estimate but theoretically, this is sort
+of an unbiased estimate of the test set accuracy. 
+
 ---
 
 # Variable Importance
@@ -621,12 +1365,44 @@ plt.yticks(range(4), iris.feature_names);
 ![:scale 40%](images/img_32.png)
 ]
 ???
+As for the trees, for the random forest, I can get variable
+importance. And these are more useful now because they're
+more robust. Again, they don't have directionality. 
+
+But now, if you have two correlated features, probably if
+you build enough trees, and because of the way they’re
+randomized, both of these features will be picked some of
+the time. And so if you average over all of the trees, then
+both will have the same amount of importance. So this will
+basically just give you like a smoother estimate of the
+feature importance that will be more robust and will not
+fail on correlated features. 
+
 ---
 
 class: center, middle
 
 # Questions ?
+???
+Question: Is there a statistical test where the variable is
+important?
 
+It's probably the wrong question to ask. Because these are
+like greedily trained and so trying to extract any
+statistical meaning out of that is probably not the best
+idea. So if you're trying to understand your dataset or your
+data generating process, I probably wouldn't use tree-based
+models. These are really good for predicting no matter what
+your input is.
+
+Question: How is the feature importance calculated?
+
+Whenever a particular feature was used in the tree, you look
+at the decrease in impurity, and you aggregate these and at
+the end, you normalize it sum to one. 
+
+
+---
     </textarea>
     <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>

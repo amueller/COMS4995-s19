@@ -24,7 +24,12 @@ class: center, middle
 Andreas C. Müller
 
 ???
-FIXME random forest code is confusing because I tried to simplify it. Also: we haven't seen those yet?!
+Alright, everybody. Today we will talk about Imputation and
+Feature selection, look to do this in general, and how to do
+it with scikit-learn. We're also going to look into a couple
+of other Python libraries that help doing these two things. 
+FIXME random forest code is confusing because I tried to
+simplify it. Also: we haven't seen those yet?!
 FIXME mutual information needs better explanation
 
 ---
@@ -40,9 +45,47 @@ class: spacious
 
 ???
 
-- Add feature that encodes that data was missing!
+So first we're going to talk about imputation, which means
+basically dealing with missing values. Before that, we're
+going to talk about different methods to deal with missing
+values. The first thing about missing values is that you
+need to figure out whether your dataset has them and how
+they encode it. If you're on Python, numpy has no standard
+way to represent missing values while Pandas does and it's
+usually nan. But the problem is usually more in the data
+source. So depending on where your data comes from, missing
+values might be encoded as anything. They might be
+differently encoded for different parts of the data set. So
+if you see some question marks somewhere, it doesn't mean
+that all missing values are encoded as question marks. There
+might be different reasons why data is missing. If you look
+into like theoretical analysis missingness, often there you
+can see something that's called missing at random or missing
+completely at random, meaning that data was retracted
+randomly from the dataset. That's not usually what happens.
+Usually, if the data is missing, it's missing because
+something when differently in a process, like someone didn't
+fill out the form correctly, or someone didn't reply in a
+survey. And very often the fact that someone didn't reply or
+that something was not measured is actually informative.
+Whenever you have missing values, it's often a good idea to
+keep the information about whether the value was missing or
+not. If a feature was missing, while we're going to do
+imputation and we're going to try to fill in the missing
+values. It's often really useful information that's
+something was missing and you should record the fact and
+represent it in the dataset somehow. We're only going to
+talk about missing input today. You can also have missing
+values in the outputs that are usually called
+semi-supervised learning where you have the true target or
+the true class only for some data points, but not for all of
+them. So there's the first method which is very obvious.
+Let's say your data looks like this. All my illustrations
+today we'll be adding randomness to the iris data set. 
 
-FIXME: Better digram for feature selection. What are the hypothesises for the tests
+
+FIXME: Better digram for feature selection. What are the
+hypothesises for the tests
 ---
 
 .center[
@@ -50,8 +93,36 @@ FIXME: Better digram for feature selection. What are the hypothesises for the te
 ]
 
 ???
-- Problem : Prediction not for all samples !
-- Accuracy might be biased
+So if my dataset looks like something on the left-hand side
+here, then you can see that there are only missing values in
+the first feature and it's mostly missing. One of the ways
+to deal with this is just completely dropped the first
+feature, and that might be a reasonable thing to do. If
+there are so few values here that you don't think there's
+any information in this just drop it I always like to
+compare everything to a baseline approach. So your baseline
+approach should be if there's only missing values in some of
+the columns, just drop these columns, see what happens. You
+can always iterate and improve on that but that should be
+the baseline. A little bit trickier situation is that there
+might be some missing values only for a few rows, the rows
+are data points. You can kick out these data points and
+train the model on the rest and that might be fine. There's
+a bit of a problem with this though, that if you want to
+make predictions on new data and the data that arrives has
+missing values you'll not be able to make predictions
+because you don't have a way to deal with missing values. If
+you're guaranteed that any new test point that comes in will
+not have missing values then doing this might make sense.
+Another issue with dropping the rows with missing values is
+that if this was related to the actual outcome then it might
+be that you biased how well you think you're doing. Maybe
+all the hard data points are the ones that have missing
+values. And so by excluding them from your training data,
+you're also excluding them from the validation. So it means
+you think you're doing very well because you discarded all
+the hard data points. Discarding data points is a little bit
+trickier and it depends on your situation. 
 
 
 ---
@@ -61,6 +132,21 @@ FIXME: Better digram for feature selection. What are the hypothesises for the te
 ]
 
 ???
+The other solution is to impute them. So the idea is that
+you have your training data set, you build some model of the
+training data set, and then you fill in the missing values
+using the information from the other rows and columns. And
+you built a model for this and then you can also apply the
+same imputation model on the test data set if you want to
+make predictions. Question is what if it has all missing
+values? Then you have no choice but drop that. If in the
+dataset that happens, you need to figure out what you are
+going to do. Like, if you have a production system, and
+something comes in with all missing values, you need to
+decide what you're going to do. But you probably cannot use
+this data point for training model. You could like use the
+outputs and train to find the mean outcome of all the values
+that are missing.
 
 ---
 class: spacious
@@ -73,6 +159,16 @@ class: spacious
 - Probabilistic models
 
 ???
+So let's talk about the general methods for data imputation.
+So these are the ones that we are going to talk through. The
+easiest one is me doing a constant value per column.
+Imputing the mean or the medium of the column that we're
+trying to compute. kNN means taking the average of KNearest
+Neighbors. Regression means I build a regression model from
+some of the features trying to rip the missing future. And
+finally, elaborate probabilistic models. They try to build a
+probabilistic model of the dataset and complete the missing
+values based on this probabilistic model
 
 ---
 
@@ -94,6 +190,15 @@ np.mean(scores)
 ]
 
 ???
+Here’s my baseline, which is dropping the columns. I used
+iris dataset where I had to put some missing values into the
+second and third column. Here, x_score has like some missing
+values, I split into test and training test data set and
+then I drop all columns that have missing values and then I
+can train logistic regression, which is sort of the model
+I'm going to use to tell me how well does this imputation
+work for classification. For my baseline, using a logistic
+regression model and 10 fold baseline, I get 77.2% accuracy.
 
 ---
 
@@ -104,6 +209,15 @@ np.mean(scores)
 ]
 
 ???
+The simplest imputation is mean or medium. Unfortunately,
+only one is implemented in scikit-learn right now. If this
+is our dataset, the imputation will look like this. For a
+column, each missing value is replaced by the mean of the
+column. The imputer is the only transformer in scikit-learn
+that can handle missing data. Using the imputer you can
+specify the strategy, mean or median or constant and then
+you can call the method transform and that imputes missing
+values.
 
 ---
 
@@ -112,6 +226,21 @@ np.mean(scores)
 ]
 
 ???
+Here is a graphical illustration of what does this. So the
+iris dataset is four-dimensional, and I'm plotting it in two
+dimensions in which I added missing values. So, there are
+two other dimensions which had no missing values, which you
+can't see. The original data set is basically blue points
+here, orange points here, green points here, and it's
+relatively easy to separate. But here you can see that the
+green points they have a lot of missingness, so they were
+replaced by the mean of the whole dataset.
+
+So there are two things about this. One, I kind of lost the
+class information a lot. Two, the data is now in places
+where there was no data before, which is not so great. You
+could do smart things like doing the mean per class, but
+that's actually not something that I've seen a lot. 
 
 
 ---
@@ -138,6 +267,11 @@ np.mean(scores)
 0.729
 
 ???
+Here's the comparison of dropping the columns versus doing
+the mean amputation. We actually see that the mean
+imputation is worse. In general, if you have very few
+missing values, it might actually not be so bad and putting
+in the mean might work.
 
 
 ---
@@ -151,6 +285,13 @@ neighbors.
 - PR in scikit-learn: https://github.com/scikit-learn/scikit-learn/pull/9212
 
 ???
+In terms of complexity is using Nearest Neighbors. So the
+idea is for each data point, we find the kNearest neighbors
+and then fill in the missing values as the average of the
+features of these neighbors. The difficulty here is
+measuring distances if there are missing values. If there
+are missing values, I can't just compute Euclidean
+distances. 
 
 ---
 
@@ -181,6 +322,40 @@ for feature in range(X_train.shape[1]):
 ]
 
 ???
+So first for nearest neighbors, I need to compute all the
+distances between all the data points in a training set. The
+way I do this is I compute element wise differences and
+square them, then I look at only the ones that are not
+missing and I compute the sum of all the ones that are not
+missing divided by the number of the ones that are not
+missing and multiply it by the number of total features.
+This is sort of like a mean Euclidean distance. So I
+re-weighted based on how many features were missing. If
+there's only one feature that's not missing, I'm just going
+to take the distance in this feature and multiply it by the
+number of features. It’s kind of heuristic to make all of
+them be on sort of the same scale. That seems to work pretty
+well in practice. Otherwise, if you have fewer features in
+common, the distances would be smaller, which doesn't really
+make sense. 
+
+Now, you have computed some distances between all the data
+points in the training set. Now I look at the neighbors for
+each data point and I look at the 3 closest neighbors. I’ll
+look at all the data points that have missing values,
+iterate over all features, overall samples and if I have a
+missing value, I compute the nearest neighbors and when I
+compute the nearest neighbors, I want to look only at those
+data points that have the feature not missing because I need
+to complete a feature, I only need to look at the data
+points that have the feature that I want to fill in not
+missing. In this case, 3 nearest neighbors that have the
+feature not missing and take their average. Important thing
+is to look at the neighbors that have the feature and then
+take the K closest ones and complete with the mean. It's a
+little bit slow because you need to compute all distances
+between all data points. The question is, am I subtracting
+nans? I just mask out everything that's not a nans.
 
 ---
 .smaller[
@@ -209,7 +384,17 @@ class: spacious
 - Very flexible!
 
 ???
-
+The next step up in complexity is using an arbitrary
+regression model for imputation. I mean, arguably, the kNN
+is also a regression model, but there's like some
+intricacies that make it a little bit different. So the idea
+with using a regression model is you do the first pass and
+impute data using the mean. And then you try to predict the
+missing features using a regression model trained on the
+non-missing features and then you iterate this until stuff
+doesn't change anymore. You can use any model you like, and
+this is very flexible, and it can be fast if you have a fast
+model. 
 ---
 class: smaller
 
@@ -242,7 +427,26 @@ np.mean(scores)
 ]
 
 ???
-Assumes we did some imputation on X_train before, like mean.
+In the example, my regression model is Random Forest, I
+expect that need to be at most 10 iterations. For each
+feature that I want to complete, I look at all the other
+features, suppose it’s feature three and so I'm going to
+look at the features 0, 1, and 2. I'm going to look at the
+ones that have feature three not missing, I built the model
+on the ones that are not missing and I take all the features
+that are not the feature I want to complete, as my dataset.
+And as a target, obviously the feature I want to complete.
+Basically, I just take the subset of the data where I
+observed the feature and try to predict that feature that I
+observed from all the rest. Then I can use the prediction of
+the regression model to fill in these missing values. In the
+first iteration, I fill them in with the mean and now in
+each iteration, I built a better model of it, and I try to
+fill it in a better way using, for example, a random forest.
+If it doesn't change anymore, or if it doesn't change by
+much anymore then I stop. This works even better than the
+nearest neighbors.
+
 ---
 class: spacious
 
@@ -253,6 +457,8 @@ class: spacious
 ]
 
 ???
+Here's a comparison against the iris dataset.
+
 
 ---
 class: spacious
@@ -267,6 +473,30 @@ paradigm
 - Try different things in practice, MICE might be best
 
 ???
+If you want to use any of these or other imputation methods,
+I think the best solution in Python right now is Fancy
+Impute. Fancy Impute has a couple of the probabilistic
+modeling techniques. The problem with this is it doesn't
+have a fit transform paradigm. And so what I mean by this is
+it takes a training data, it just fills in the training
+data. That's a little bit problematic because in Fancy
+Impute it’s not possible to build the model on the training
+data and apply the same data on the test data. What you
+could do is take your whole dataset before you split it into
+training and test and then use fancy impute on the whole
+data set. But if you do that you’re cheating and leaking
+information from the test set into your imputation model,
+which is not great for evaluation.
+
+In particular, it has two models. MICE and soft impute, both
+are probabilistic models. MICE is the thing that works most
+often in practice. So that's probably a good default value.
+It's based on some Bayesian regression model. So it’s
+similar to the regression model but it takes care of
+uncertainty and propagates uncertainty during all the
+iterations and does everything like Bayesian inference. Even
+though it’s a more complicated model to use, it performs
+pretty well in practice. 
 
 ---
 
@@ -275,6 +505,36 @@ paradigm
 ]
 
 ???
+Soft impute basically does matrix factorization, it does SVD
+and then uses the matrix factorization to impute missing
+values, similar to what you would do in recommender systems.
+The question was, what if the missing values are
+informative. I usually expect it to be informative. So one
+way to encode the data is to basically add a separate
+feature for each feature it has a missing value and it says
+if the is a feature missing or not. The question is, is this
+more prune to Huber fitting or do you think it’s more prune
+to Huber fitting?  Possibly, it depends on what model you
+use for imputation. You mean the imputation model or the
+model that you apply afterward? The comment was this might
+create collinearities in the data because you use some
+features to impute the other features and that’s definitely
+true. The approach of soft impute is it does a low range
+approximation basically. This definitely might add
+dependencies in data that were not before, if you use a
+non-linear model there’s not going to be collinearities, but
+there will be dependencies. Will this make your model
+overfit more? From a machine learning perspective, you
+should be able to deal with collinearities and you should
+regularize the model and you should be fine. With feature
+selection, you should probably do a model selection on your
+whole pipeline. So you should do a model selection on your
+imputation strategy together with your model. So it might be
+but I don't think there's a general answer. So you should
+just like do cross-validation search over it. And that's
+usually the answer. The question is when can you use fancy
+impute? The answer is when you don't care about leaking
+information from the test set during imputation.
 
 ---
 class: spacious
@@ -290,8 +550,31 @@ scores.mean()
 ```
 0.866
 ???
-- Again, cheating with the imputation :(
-- This is allowed for the homework because the current tools make it hard to do the right thing.
+Using MICE from fancy impute is a pretty good strategy but
+you might introduce some biased value information from the
+test set. Here, in this case, doing MICE works pretty well.
+But you can also see that I did the completion of the whole
+training data set and then did cross-validation on it
+afterward. I did the same thing for the others, but for the
+others, I could actually fix this. If I use fancy impute I
+can't really fix this because I don't have a transformer, I
+can put in the pipeline. If you use scikit-learn imputer,
+you could put it in a pipeline easily and then you can have
+no issues with leaking information. The question is, can I
+spot what they're missing this is informative and there
+might be tests. I'm actually not quite sure. But I think
+there are tests to show whether it's missing completely
+random, but the thing that I would always add the features
+that encode this and then you can look into your model and
+see does your model use that feature? Like if you have a
+linear model, and the coefficient for this feature is big,
+then probably means it was informative. If yours random
+forest and it relies on this feature, then at least for this
+model it was informative, that's probably the way I would
+approach it.
+
+- This is allowed for the homework because the current tools
+make it hard to do the right thing.
 
 
 ---
@@ -301,7 +584,10 @@ class: center, middle
 # Feature Selection
 
 ???
-
+Alright, so let's talk about automatic feature selection. I
+want to talk about what methods are there to determine what
+features are important for your dataset, what features are
+important for a particular model. 
 ---
 
 class: spacious
@@ -314,6 +600,29 @@ class: spacious
 - More interpretable model
 
 ???
+There's a couple of reasons why you might want to feature
+selection. One is to avoid overfitting and get a better
+model. In practice, I have rarely seen that happen. It's not
+usually what I would try to do to increase performance. If
+I’m only interested in performance I probably would not try
+to do automatic feature selection unless I think only a very
+small subset of my feature is actually important. There's a
+lot of increasing performance just by selecting only
+important features. 
+
+What I think is more commonly, the reason to do automatic
+feature selection is you want to shrink your model to make
+faster predictions, to train your model faster, to store
+fewer data and possibly to collect fewer data. If you're
+collecting the data or to feature from some online process,
+maybe it means you need fewer features, you need to store
+less information. I think actually the top reason to do
+feature selection is to have a more interpretable model. If
+your model is smaller, if your model has 5 features instead
+of 500, it's probably much easier for you to grasp what the
+model does. If you can have a model that is as good with way
+fewer features, it will be much easier to explain and most
+people will be happy with it. 
 
 ---
 
@@ -326,7 +635,15 @@ class: spacious
 - Model based or not
 
 ???
-
+There's a couple of different types of feature selection
+that I want to talk about. You can have supervised and
+unsupervised feature selection. Depending on whether you
+consider the target or not. You can have Univariate versus
+Multivariate feature selection. Whereas Univariate looks at
+each feature at a time and determines if it’s important.
+Multivariate looks at interactions as well. And you can have
+a feature selection based on a particular machine learning
+model or not. 
 ---
 class: spacious
 
@@ -338,6 +655,32 @@ class: spacious
 - PCA: remove linear subspaces
 
 ???
+So the simpler thing that you might try is to do
+unsupervised feature selection which means just discard some
+features based on the statistics. For example, you could
+remove features that are mostly constant or that have zero
+variance. Like if they're always constant, then definitely
+they're not going to help you and you can remove them. If
+they have very small variance, on the other hand, that might
+only mean the scale of the features is small and you should
+just re-scale the feature. So just because it has a small
+variance, it doesn't really mean anything. People often
+discard covariance features. But maybe just the difference
+between these two correlated features was the thing that's
+important for prediction. If you use any unsupervised
+method, then you don't know what are the things that are
+actually important are. Similarly, with PCA, it’s not really
+feature selection, because it doesn't select subsets of the
+original feature. PCA will always use all original features.
+But it will remove linear subspaces of the feature space.
+And again, a lot of people like this to reduce the
+dimensionality and you will get the same things like a
+smaller model, maybe not more interpretable. It might be
+that the information you discarded is just the information
+that's important. In a covariance sense, just because the
+data doesn't extend a lot in a particular direction doesn't
+mean that this direction isn't the most important one for
+your prediction problem.
 
 
 ---
@@ -361,7 +704,12 @@ cov = np.cov(X_train_scaled, rowvar=False)
 ]
 
 ???
-
+Here's what the covariance matrix looks like for the Boston
+housing data set. The way you could do covariance based
+feature selection is you look at the features that have the
+highest covariance and just drop one of them or you could
+sum over all the features and look at which features most
+correlated with the other ones and drop that.
 ---
 
 ```python
@@ -376,8 +724,22 @@ order = np.array(hierarchy.dendrogram(
 
 ???
 
-- Can use this to iteratively remove most correlated pairs.
-- Beware: might discard important information !
+So if you look at covariance, it should probably try to sort
+your features using some clustering. Here I'm using
+hierarchical clustering from scipy. On the right, it’s the
+covariance matrix and on the left, it's also the covariance
+matrix where I reordered the columns and rows. You can see
+that there are three correlated blocks. You could do this
+automatically, or you could look at it and see what you
+think how many features are there, and how many of them are
+correlated. I really urge you, whenever you look at
+correlation, never look at correlation without resorting the
+columns. On the right-hand side here, maybe I can see that
+these two are correlated, but I can't see anything else.
+Whereas on the left hand I can see much more clearly what
+the structure of the data is. What it did just was, it did
+clustering on the rows and columns to resort them. 
+
 
 ---
 
@@ -405,6 +767,29 @@ f_values, p_values = f_regression(X, y)
 ]
 
 ???
+So the simplest way is univariate features selection without
+models. The most classical one is to use statistical test
+and see the ones that are significantly related to the
+target. Depending on whether you look through classification
+or regression, you can add a t-test, f-test or chi-squared
+test and you can say which are the features that are
+significantly related with a target and I'm just going to
+select these. 
+
+So this is again here for the Boston housing dataset, using
+F regression and F test. You can see here F values and the P
+values and you could use either of them to select a subset
+of the features. So for example, the number of rooms and
+LSTAT had very high F values, very small P values. These are
+certainly the most important features. While this one here
+doesn't seem very important. One reason why this is not very
+important is because this is the binary variable and so this
+assumes linear regression model and the linear regression
+model is not very good at exploiting the binary variable.
+
+This is a super quick test to do. It's very fast, it's
+probably something you want to look at. But it assumes a
+linear model, which you might not want to assume. 
 
 ---
 
@@ -442,6 +827,33 @@ np.mean(cross_val_score(select_2, X_train, y_train, cv=10))
 ]
 
 ???
+If you want to use these univariate statistics in
+scikit-learn there’s a couple of tools to select features
+based on this. In feature selection, there's a whole bunch
+of them. There select k best which selects the K best
+feature, you can specify the number of features you want.
+Select percentile, which selects a percentile that you want
+and then there's select FPR, it controls for the false
+positive rate, it basically does the multiple hypothesis
+testing adjustments to make sure that you false discovery
+rate of thinking the features are significantly important is
+low. These are scikit-learn transformers, you can
+instantiate them. By default, the parameter they all use a
+score function for classification. So if you want to do
+regression, you need to set the score function to F
+regression because you need different tests for regression
+classification. I said linear regression is not for binary
+features, maybe I shouldn't have formulated in that way.
+Linear regression doesn't allow you to do interactions,
+which is if you have multiple binary features would be the
+only issue. It's more sort of that this linear test will not
+put a lot of emphasis on a binary feature because the way
+the test works. I can obviously also put this in a pipeline.
+Here, I’ve used a centered scale for ridge in a pipeline for
+a Boston housing data set and here, I’ve used two best
+features. You can see it actually got much worse because two
+features are not enough to select or to express all the
+information.
 
 ---
 
@@ -458,8 +870,25 @@ scores = mutual_info_regression(X_train, y_train,
 
 ???
 
-- Mutual information (as implemented here) is also univariate, but doesn’t assume a linear model (like the F statistics do)
-- Can be used with SelectKBest etc
+Another univariate statistics that you can use which is a
+little bit more complicated, which is called Mutual
+Information. There's a version for regression classification
+in scikit-learn. This doesn't use a linear model. It uses a
+non-parametric model using nearest neighbors. So basically,
+this also works if the interaction is nonlinear and it works
+on discrete and continuous features, but you have to tell us
+which features are discrete. So here, in this case, I tell
+it the feature number three is discrete and then this gives
+me some scores telling me what's the mutual information
+between this feature in the target. Here I'm comparing the F
+values off the standard regression tests with the mutual
+information and they are sort of similar, but not entirely.
+If you think there are nonlinear interactions, and you have
+a model that can capture nonlinear interactions, then doing
+feature selection like taking these nonlinear features into
+account is good. This is much more computationally intensive
+than doing the F statistics. But this is still Univariate,
+looking at one feature at a time. 
 
 
 ---
@@ -475,6 +904,24 @@ issues)
 - Use heuristics in practice.
 
 ???
+So now let's look at multiple features at a time. Most of
+the things that look at multiple features at a time are
+model-based. Usually, model-based feature selection finds
+the subset of features on which this model performs best. So
+giving them a particular model like a linear model, or
+random forest, I want to find a subset of features for which
+this model performs best in terms of cross-validation
+performance. Ideally, to do that, I would do an exhaustive
+search over all possible subsets of the features. But that's
+like exponentially many. Also, if I do so many models fits I
+might overfit. So instead, there are several heuristics you
+can use to basically shrink or grow the sets of features
+that you're using. 
+
+So first you fix the model. For models that give you some
+measure of feature importance, there's a very simple
+technique which just looks at how important the models
+feature is.
 
 ---
 
@@ -500,6 +947,31 @@ print(lasso.coef_)
 ]
 
 ???
+Using, say, a linear model, you fit the single model, and
+you discard all the features that the model doesn't think
+are important. So this works for linear models really well
+and for tree-based models. This allows you to take linear
+interactions into account and with trees it allows you to
+take arbitrary interactions into account. So for example, I
+can use lasso, I can fit the lasso on my model, and I can
+look at the coefficients and the things that have small
+coefficients are less important in some sense, and so I
+could discard some of them. Here again, I plot the F values
+versus the coefficients of lasso. For example, here you can
+see for this variable, Lasso thinks its way less important
+than Univariate selection. Maybe because it was explained
+already by a combination of the other features. So if you
+have very co-related features Univariate selection will give
+all of them the same importance whereas lasso will usually
+pick only one of them. If you have many co-related features
+lasso picks only one of them at random. So it doesn't mean
+that other features are not important. Question is what does
+this purple don't represent? It represents that both the
+points are overlapping entirely. 
+	
+Here I use lassoCV which means it adjusted the
+regularization parameter in Lasso to make the optimum
+predictions. 
 
 ---
 
@@ -521,6 +993,14 @@ print(lasso.coef_)
 ]
 
 ???
+If I look at the different alpha, it might be quite
+different. For example here with a default alpha of one, a
+lot of the coefficients are exactly zero and you can see it
+would only select five. How to select the alpha in lasso is
+important for the feature selection and so you might want to
+grid search. Now, let’s say we want to use this and so we
+want a scikit-learn estimator that does this. So we can put
+it in a pipeline. 
 
 ---
 class: smaller
@@ -558,7 +1038,25 @@ np.mean(cross_val_score(pipe_lasso, X_train, y_train, cv=10))
 
 ???
 
-Vinay - Included output in same cell due to size limit
+The way to do this SelectFromModel. SelectFromModel is a
+meta-estimator model that gives you feature importance. So
+that’s any linear model or tree based model. It uses this to
+select the features. So this will fit lasso and then if you
+call transform, it will discard all the features that lasso
+thought are not important. And you can change the threshold
+here, for example, so in this case, here I want to discard
+everything that lasso put to zero so I put a very small
+threshold in there. I could also set the threshold to be the
+median which selects 50% of the features. Here we are
+possibly discarding multiple features at once.
+SelectFromModel fits a single model, gets the feature
+importance was from this model and then drops according to
+the feature importance. And so here is how it looks in the
+pipeline, for example, you can see here that lasso with
+these parameters, drop two of the features and 11 after 13
+remains. If I put it in a pipeline the performance is about
+the same. 
+
 
 ---
 class: spacious
@@ -569,6 +1067,15 @@ class: spacious
 - Or: Start with single feature, find most important feature, add, iterate.
 
 ???
+But maybe dropping multiple features at once is not a good
+idea because the importance of the features might change
+once we dropped some of them. What we can do is, we can
+iteratively build models. And we could either start with a
+single feature then add more important ones or we could
+start with all features and discard some. 
+
+We'll talk about these two strategies which are slightly
+different. 
 
 ---
 class: spacious
@@ -580,6 +1087,24 @@ class: spacious
 - Runtime: (n_features - n_feature_to_keep) / stepsize
 
 ???
+So the next step from what we just saw would be recursive
+feature elimination. So if we use SelectFromModel it will
+drop all the unimportant features at once, in a recursive
+feature elimination usually drops one feature at a time or
+as a parameter step size it drops step size features at a
+time. So you fit the model, you discard the least important
+feature, you fit the model, you discard the important
+feature and so on until you have as many features left as
+you want again. Again, this needs the model to meet some
+measure of feature importance so you can use this with the
+linear model or tree-based model. An example where you
+cannot use this is, at least not in scikit-learn is Kernel
+SVM or neural networks, because they don't really give you a
+measure of feature importance easily. For each step feature
+that we remove, we need to train a new model. So this is
+much more expensive because we need to retrain the model
+many times, but we're sort of being more careful in how we
+remove the features. 
 
 ---
 
@@ -603,6 +1128,22 @@ array([ 9,  8, 13, 11,  5,  2, 12,  4,  7,  6,  3, 10,  1])
 
 
 ???
+This is implemented in RFE, for recursive feature
+elimination, it works similar to SelectFromModel. To do RFE,
+then the model that you want to use and then you can specify
+how many features you want to select. Here I'm comparing the
+ranking according to RFE. So when it dropped out the
+features to the linear regression coefficients, which is
+basically what I would use if I drop them off all at once,
+and you can see that they're sort of similar. So there's
+probably not a whole lot of difference, at least in this
+case. You need to specify how many features you want to
+select. But if you want to select only one feature, you have
+to build many models and drop all the other features and so
+on the way you tried out the model for keeping five features
+and so on. So if you want a grid search this, doing this
+independently would be a whole waste of time because they
+would do the same thing over and over again. 
 
 ---
 
@@ -631,8 +1172,17 @@ np.mean(cross_val_score(pipe_rfe_ridgecv, X_train, y_train, cv=10))
 ```
 ]
 ???
-Efficient CV for n_features_to_keep
-If we want to predict with the same model as used for selection, RFECV can be used as the prediction step. Could also use RFECV as transformer and use any other model!
+So there's a thing called RFECV that allows you to do
+efficient grid search for the number of features to keep.
+This basically has built-in cross-validation, provides the
+number of features to keep.
+
+I’ve done RFECVC with linear regression and set it to do 10
+fold cross-validation and then it will do the recursive
+feature elimination inside cross-validation and so it goes
+down from all features to just having one feature and with
+cross-validation, it will select the best number. 
+
 ---
 .smaller[
 ```python
@@ -654,7 +1204,9 @@ np.mean(cross_val_score(pipe_rfe_ridgecv, X_train, y_train, cv=10))
 ```
 ]
 ???
-If we want to predict with the same model as used for selection, RFECV can be used as the prediction step. Could also use RFECV as transformer and use any other model!
+If we want to predict with the same model as used for
+selection, RFECV can be used as the prediction step. Could
+also use RFECV as transformer and use any other model!
 ---
 class: spacious
 
@@ -668,6 +1220,40 @@ class: spacious
 - Implemented in mlxtend
 
 ???
+
+So as I set recourse to each elimination. So this is more
+careful and it requires the model that gives you feature
+importance. There's sort of more general reprimand sets that
+are, in a sense, even more careful, but also more expensive,
+but it can be applied to any model. These are sequential
+feature selection. The idea is to either start with zero
+features, and add the most important feature, or start with
+all features and remove the least important feature at a
+time. And you do this by not using a feature importance by
+the model. But actually each step you basically do like one
+step looking at search. So let's say I started with all the
+features, I leave out the first feature, build the model and
+but I don't only build a model, I do cross-validation of the
+model on the subset so I get some accuracy or R squared
+value. And I do this for every single feature. So I leave
+each feature out and look at the cross-validate accuracy.
+And I dropped the one that gives me the highest
+cost-validated accuracy. 
+	
+So now basically, this is even more expensive than doing the
+recursive feature elimination because I do a one step, look
+ahead. So now the runtime is quadratic in the number of
+features. Also for each iteration, I not only need to train
+a single model, I need to do cross-validation. 
+
+This is like a pretty standard method, because it's like
+very general, and you can apply it to any model. It's like a
+brute force search. Right now it's not in scikit-learn, but
+it's in a package called mlxtend which has a couple other
+tools. 
+
+Mlxtend is luckily fully scikit-learn compatible, so you can
+put it in a pipeline and everything's fine. 
 
 ---
 
@@ -700,6 +1286,32 @@ sfs.k_score_
 ]
 
 ???
+So from mlxtend, you get feature selection, sequential
+feature selector, you put into the model, you tell it
+whether you want to do forward or backward. Forward equal to
+false means I started with all and I prune features one by
+one. Forward equal to true means I start with zero features
+and I use the one that gives me highest accuracy and then I
+add one by one. As I said with sequential feature selector,
+you need to specify the number of features and it does
+internally cross-validation and it optimizes accuracy for
+classification models and r square for regression models and
+does this stepwise selection. One thing I should have
+mentioned if you do feature selection this way,
+theoretically, you can have a model for feature selection
+that's different from the model for prediction. In here, if
+you look at the top for the recursive feature elimination, I
+use linear regression. But actually, the model I fit in the
+end was a ridge model. So I could also use, let's say, a
+tree-based model for feature selection and then the linear
+model for prediction if I wanted to. It's not entirely clear
+if that helps or makes sense, but it's sort of an additional
+degree of freedom. And for example, if I want a very
+interpretable model, I want my model that does the
+predictions to be linear so I can explain to my boss what it
+means. But I can also still do the feature selection using a
+more complicated model and just tell my boss “Oh, only these
+features are important and here's how I make the prediction”
 
 ---
 
@@ -707,6 +1319,15 @@ sfs.k_score_
 class: center, middle
 
 # Questions ?
+???
+The question is if I do forward method or backward method
+with the same number of features will the same happen? They
+both are sort of one step look ahead approximations to
+trying out all subsets and there's no guarantee we would get
+the same thing.
+
+
+---
 
     </textarea>
     <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>

@@ -24,9 +24,10 @@ class: center, middle
 Andreas C. Müller
 
 ???
-Today we're going to talk about linear models for classification, and in addition to that
-some general principles and advanced topics surrounding general models, both for classification
-and regression.
+Today we're going to talk about linear models for
+classification, and in addition to that some general
+principles and advanced topics surrounding general models,
+both for classification and regression.
 
 FIXME: in regularizing SVM, long vs short normal vectors.
 
@@ -36,8 +37,9 @@ class: center, middle
 # Linear models for <strong>binary</strong> classfication
 
 ???
-We'll first start with linear models for binary classification, so if there are only two classes.
-That makes the models much easier to understand.
+We'll first start with linear models for binary
+classification, so if there are only two classes. That makes
+the models much easier to understand.
 
 ---
 .center[
@@ -47,32 +49,45 @@ That makes the models much easier to understand.
 $$\hat{y} = \text{sign}(w^T \textbf{x} + b) = \text{sign}\left(\sum\limits_{i}w_ix_i + b\right)$$
 
 ???
-Similar to the regression case, basically all linear models for classification have the same way
-to make predictions. As with regression, they compute an inner product of a weight vector w with
-the feature vector x, and add some bias b. The result of that is a real number, as in regression.
-For classification, however, we only look at the sign of the result, so whether it is negative
-or positive. If it's positive, we predict one class, usually called +1, if it's negative,
-we predict the other class, usually called -1. If the result is 0, by convention
-the positive class is predicted, but because it's a floating point number that doesn't really
-happen in practice. You'll see that sometimes in my notation I will not have a $b$. That's because
-you can always add a constant feature to x to achieve the same effect (thought you would then need
-to leave that feature out of the regularization). So when I write $w^Tx$ without a $b$ assume
-that there is a constant feature added that is not part of any regularization.
+Similar to the regression case, basically all linear models
+for classification have the same way to make predictions. As
+with regression, they compute an inner product of a weight
+vector w with the feature vector x, and add some bias b. The
+result of that is a real number, as in regression. For
+classification, however, we only look at the sign of the
+result, so whether it is negative or positive. If it's
+positive, we predict one class, usually called +1, if it's
+negative, we predict the other class, usually called -1. If
+the result is 0, by convention the positive class is
+predicted, but because it's a floating point number that
+doesn't really happen in practice. You'll see that sometimes
+in my notation I will not have a $b$. That's because you can
+always add a constant feature to x to achieve the same
+effect (thought you would then need to leave that feature
+out of the regularization). So when I write $w^Tx$ without a
+$b$ assume that there is a constant feature added that is
+not part of any regularization.
 
-Geometrially, what the formula means is that the decision boundary of a linear
-classifier will be a hyperplane in the feature space, where w is the normal vector of that plane.
-In the 2d example here, it's just a line separating red and blue. Everything on the right hand side
-would be classified as blue by this classifier, and everything on the left-hand side as red.
+Geometrially, what the formula means is that the decision
+boundary of a linear classifier will be a hyperplane in the
+feature space, where w is the normal vector of that plane.
+In the 2d example here, it's just a line separating red and
+blue. Everything on the right hand side would be classified
+as blue by this classifier, and everything on the left-hand
+side as red.
 
-Questions?
-So again, the learning here consists of finding parameters w and b based on the training set,
-and that is where the different algorithms differ. There are quite a lot of algorithms out
-there, and there are also quite a lot in scikit-learn, but we'll only discuss the most common ones.
+Questions? So again, the learning here consists of finding
+parameters w and b based on the training set, and that is
+where the different algorithms differ. There are quite a lot
+of algorithms out there, and there are also quite a lot in
+scikit-learn, but we'll only discuss the most common ones.
 
-The most straight-forward way to approach finding w and b is to use the framework
-of empirical risk minimization that we talked about last time, so finding parameters that
-minimize some loss o the training set. Where classification differs quite a bit from
-regression is on how we want to measure misclassifications.
+The most straight-forward way to approach finding w and b is
+to use the framework of empirical risk minimization that we
+talked about last time, so finding parameters that minimize
+some loss o the training set. Where classification differs
+quite a bit from regression is on how we want to measure
+misclassifications.
 
 
 ---
@@ -88,21 +103,31 @@ $$\hat{y} = \text{sign}(w^T \textbf{x} + b)$$
 ]
 
 ???
-So we need to define a loss function for given w and b that tell us how well they fit the training set.
-Obvious Idea: Minimize number of misclassifications aka 0-1 loss
-but this loss is non-convex, not continuous and minimizing it is NP-hard.
-So we need to relax it, which basically means we want to find a convex upper bound for this loss.
-This is not done on the actual prediction, but on the inner product $w^T x$, which is also called the decision function.
-So this graph here has the inner product on the x axis, and shows what the loss would be for class 1.
-The 0-1 loss is zero if the decision function is positive, and one if it's negative.
-Because a positive decision function means a positive predition, means correct classification in the case of y=1.
-A negative prediction means a wrong classification, which is penalized by the 0-1 loss with a loss of 1, i.e. one mistake.
+So we need to define a loss function for given w and b that
+tell us how well they fit the training set. Obvious Idea:
+Minimize number of misclassifications aka 0-1 loss but this
+loss is non-convex, not continuous and minimizing it is
+NP-hard. So we need to relax it, which basically means we
+want to find a convex upper bound for this loss. This is not
+done on the actual prediction, but on the inner product $w^T
+x$, which is also called the decision function. So this
+graph here has the inner product on the x axis, and shows
+what the loss would be for class 1. The 0-1 loss is zero if
+the decision function is positive, and one if it's negative.
+Because a positive decision function means a positive
+predition, means correct classification in the case of y=1.
+A negative prediction means a wrong classification, which is
+penalized by the 0-1 loss with a loss of 1, i.e. one
+mistake.
 
-The other losses we'll talk about are mostly the hinge loss and the log loss. You can see they are both upper bounds on the
-0-1 loss but they are convex and continuous.
-Both of these losses care not only that you make a correct prediction, but also "how correct" your prediction is, i.e.
-how positive or negative your decision function is.
-We'll talk a bit more about the motivation of these two losses, starting with the logistic loss.
+The other losses we'll talk about are mostly the hinge loss
+and the log loss. You can see they are both upper bounds on
+the 0-1 loss but they are convex and continuous. Both of
+these losses care not only that you make a correct
+prediction, but also "how correct" your prediction is, i.e.
+how positive or negative your decision function is. We'll
+talk a bit more about the motivation of these two losses,
+starting with the logistic loss.
 
 
 ---
@@ -125,27 +150,40 @@ $$\hat{y} = \text{sign}(w^T\textbf{x} + b)$$
 
 
 ???
-Logistic regression is probably the most commonly used linear classifier, maybe the most commonly used classifier overall.
-The idea is to model the log-odds, which is log p(y=1|x) - log p(y=0|x) as a linear function, as shown here.
-Rearranging the formula, you get a model of p(y=1|x) as 1 over 1 + ...
-This function is called the logistic sigmoid, and is drawn to the right here. Basically it squashed the linear function $w^Tx$
-between 0 and 1, so that it can model a probability.
+Logistic regression is probably the most commonly used
+linear classifier, maybe the most commonly used classifier
+overall. The idea is to model the log-odds, which is log
+p(y=1|x) - log p(y=0|x) as a linear function, as shown here.
+Rearranging the formula, you get a model of p(y=1|x) as 1
+over 1 + ... This function is called the logistic sigmoid,
+and is drawn to the right here. Basically it squashed the
+linear function $w^Tx$ between 0 and 1, so that it can model
+a probability.
 
-Given this equation for p(y|x), what we want to do is maximize the probability of the training set under this model.
-This approach is known as maximum likelihood. Basically you want to find w and b such that they assign maximum
-probability to the labels observed in the training data. You can rearrange that a bit and end up with this equation here,
-which contains the log-loss as seen on the last slide.
+Given this equation for p(y|x), what we want to do is
+maximize the probability of the training set under this
+model. This approach is known as maximum likelihood.
+Basically you want to find w and b such that they assign
+maximum probability to the labels observed in the training
+data. You can rearrange that a bit and end up with this
+equation here, which contains the log-loss as seen on the
+last slide.
 
-The prediction is the class with the higher probability. In the binary case, that's the same as asking whether
-the probability of class 1 is bigger or smaller than .5.
-And as you can see from the plot of the logistic sigmoid, the probability of the class +1 is greater than .5
-exactly if the decision function $w^T x$ is greater than 0.
-So predicting the class with maximum probability is the same as predicting which side of the hyperplane
-given by w we are on.
+The prediction is the class with the higher probability. In
+the binary case, that's the same as asking whether the
+probability of class 1 is bigger or smaller than .5. And as
+you can see from the plot of the logistic sigmoid, the
+probability of the class +1 is greater than .5 exactly if
+the decision function $w^T x$ is greater than 0. So
+predicting the class with maximum probability is the same as
+predicting which side of the hyperplane given by w we are
+on.
 
-Ok so this is logistic regression. We minimize this loss and get a w which defines a hyper plane.
-But if you think back to last time, this is only part of what we want. This formulation
-tries to fit the training data, but it doesn't care about finding a simple solution.
+Ok so this is logistic regression. We minimize this loss and
+get a w which defines a hyper plane. But if you think back
+to last time, this is only part of what we want. This
+formulation tries to fit the training data, but it doesn't
+care about finding a simple solution.
 
 ---
 
@@ -164,30 +202,43 @@ tries to fit the training data, but it doesn't care about finding a simple solut
 
 ???
 
-So we can do the same we did for regression: we can add regularization terms using the L1 and L2 norm.
-The effects are the same as for regression: both push the coefficients towards zero, but the l1 norm
-encourages coefficients to be exactly zero, for the same reasons we discussed last time.
+So we can do the same we did for regression: we can add
+regularization terms using the L1 and L2 norm. The effects
+are the same as for regression: both push the coefficients
+towards zero, but the l1 norm encourages coefficients to be
+exactly zero, for the same reasons we discussed last time.
 
-You could also use a mixed penalty to get something like the elasticnet. That's not implemented
-in the logisticregression class in scikit-learn right now, but it's certainly a sensible thing to do.
+You could also use a mixed penalty to get something like the
+elasticnet. That's not implemented in the logisticregression
+class in scikit-learn right now, but it's certainly a
+sensible thing to do.
 
-Here I used a slightly different notation as last time, though. I'm not using alpha to multiply the
-regularizer, instead I'm using C to multiply the loss. That's mostly because that's how it's done
-in scikit-learn and it has only historic reasons. The idea is exactly the same, only now C is 1 over alpha.
-So large C means heavy weight to the loss, means little regularization, while small C means less weight on the
-loss, means strong regularization.
+Here I used a slightly different notation as last time,
+though. I'm not using alpha to multiply the regularizer,
+instead I'm using C to multiply the loss. That's mostly
+because that's how it's done in scikit-learn and it has only
+historic reasons. The idea is exactly the same, only now C
+is 1 over alpha. So large C means heavy weight to the loss,
+means little regularization, while small C means less weight
+on the loss, means strong regularization.
 
-Depending on the model, there might be a factor of n_samples in there somewhere. Usually we try to make
-the objective as independent of the number of samples as possible in scikit-learn, but that might
-lead to surprises if you're not aware of it.
+Depending on the model, there might be a factor of n_samples
+in there somewhere. Usually we try to make the objective as
+independent of the number of samples as possible in
+scikit-learn, but that might lead to surprises if you're not
+aware of it.
 
-Some side-notes on the optimization problem: here, as in regression, having more regularization
-makes the optimization problem easier. You might have seen this in your homework already, if
-you decrease C, meaning you add more regularization, your model fits more quickly.
+Some side-notes on the optimization problem: here, as in
+regression, having more regularization makes the
+optimization problem easier. You might have seen this in
+your homework already, if you decrease C, meaning you add
+more regularization, your model fits more quickly.
 
-One particular property of the logistic loss, compared to the hinge loss we'll discuss next is that
-each data point contributes to the loss, so each data point has an effect on the solution.
-That's also true for all the regression models we saw last time.
+One particular property of the logistic loss, compared to
+the hinge loss we'll discuss next is that each data point
+contributes to the loss, so each data point has an effect on
+the solution. That's also true for all the regression models
+we saw last time.
 
 ---
 
@@ -205,23 +256,30 @@ That's also true for all the regression models we saw last time.
 - Only some points contribute (the support vectors) to $w$ (sparse solution to dual).
 
 ???
-Moving from logistic regression to linear SVMs is just a matter of changing the loss
-from the log loss to the hinge loss. The hinge-loss is defined as ...
-And we can penalize using either l1 or l2 norm, or again, in principle also elastic net.
-This formulation with the hinge loss doesn't really make sense without the penalty,
-because of the formulation of the hinge loss.
-What this loss says is basically "if you predict the right class with a margin of 1, there is no loss".
-Otherwise the loss is linear in the decision function. So you need to be on the right side
-of the hyperplane by a given amount, and then there is no more loss.
-That's the reason you need the penalty, for the 1 to make sense. Otherwise you could just scale up
-$w$ to make it far enough on the right side. But the regularization penalizes growing $w$.
+Moving from logistic regression to linear SVMs is just a
+matter of changing the loss from the log loss to the hinge
+loss. The hinge-loss is defined as ... And we can penalize
+using either l1 or l2 norm, or again, in principle also
+elastic net. This formulation with the hinge loss doesn't
+really make sense without the penalty, because of the
+formulation of the hinge loss. What this loss says is
+basically "if you predict the right class with a margin of
+1, there is no loss". Otherwise the loss is linear in the
+decision function. So you need to be on the right side of
+the hyperplane by a given amount, and then there is no more
+loss. That's the reason you need the penalty, for the 1 to
+make sense. Otherwise you could just scale up $w$ to make it
+far enough on the right side. But the regularization
+penalizes growing $w$.
 
-The hinge loss has a kink, same as the l1 norm, and so it's not a smooth optimization problem
-any more, but that's not really a big deal. What's interesting is that all the points
-that are classified correctly with a margin of at least 1 have a loss of zero, and so they
-don't influence the solution any more.
-All the point that are not classified correctly by this margin are the ones
-that do influence the solution and they are called the support vectors.
+The hinge loss has a kink, same as the l1 norm, and so it's
+not a smooth optimization problem any more, but that's not
+really a big deal. What's interesting is that all the points
+that are classified correctly with a margin of at least 1
+have a loss of zero, and so they don't influence the
+solution any more. All the point that are not classified
+correctly by this margin are the ones that do influence the
+solution and they are called the support vectors.
 
 FIXME graph of not influencing the solution?
 
@@ -238,8 +296,9 @@ class: center
 ]
 ???
 
-So this is the main difference between logistic regression and linear SVMs:
-Does it penalize misclassifications according to the green line, or according to the blue line?
+So this is the main difference between logistic regression
+and linear SVMs: Does it penalize misclassifications
+according to the green line, or according to the blue line?
 In practice it doesn't make a big difference.
 
 ---
@@ -254,11 +313,15 @@ In practice it doesn't make a big difference.
 - Need compact model or believe solution is sparse? Use L1
 
 ???
-So which one of them should you use? If you need probability estimates,
-you should use logistic regression. If you don't, you can pick either, and it doesn't really matter.
-Logistic regression can be a bit faster to optimize in theory.
-If you're in a setting where there's many more feature than samples, it might make sense to use linear SVMs and solve the dual,
-but you can actually solve either of the problems in the dual, and we'll talk about what that means in practice in a little bit.
+So which one of them should you use? If you need probability
+estimates, you should use logistic regression. If you don't,
+you can pick either, and it doesn't really matter. Logistic
+regression can be a bit faster to optimize in theory. If
+you're in a setting where there's many more feature than
+samples, it might make sense to use linear SVMs and solve
+the dual, but you can actually solve either of the problems
+in the dual, and we'll talk about what that means in
+practice in a little bit.
 
 ---
 
@@ -273,16 +336,25 @@ but you can actually solve either of the problems in the dual, and we'll talk ab
 
 ???
 
-So I spared you with coefficient plots, because they looks the same as for regression. All the things I said about model
-complexity and dependency on the number of features and samples is as true for classification as it is for regression.
+So I spared you with coefficient plots, because they looks
+the same as for regression. All the things I said about
+model complexity and dependency on the number of features
+and samples is as true for classification as it is for
+regression.
 
-There is another interesting way to thing about regularization that I found helpful, though.
-I'm not going to walk through the math for this, but you can reformulate the optimization problem and find that what the C
-parameter does is actually limit the influence of individual data points. With very large C, we said we have no regularization.
-It also means individual data points can have basically unlimited influence, as you can see here. There are two outliers
-here, which basically completely tilt the decision boundary.
-But if we decrease C, and therefore increase the regularization, what happens is that the influence of these outlier points
-becomes limited, and the other points get more influence.
+There is another interesting way to thing about
+regularization that I found helpful, though. I'm not going
+to walk through the math for this, but you can reformulate
+the optimization problem and find that what the C parameter
+does is actually limit the influence of individual data
+points. With very large C, we said we have no
+regularization. It also means individual data points can
+have basically unlimited influence, as you can see here.
+There are two outliers here, which basically completely tilt
+the decision boundary. But if we decrease C, and therefore
+increase the regularization, what happens is that the
+influence of these outlier points becomes limited, and the
+other points get more influence.
 
 FIXME illustration for support vectors?
 
@@ -295,11 +367,15 @@ class: center, middle
 
 ???
 
-Ok, so I think that's enough on the two loss functions and regularization, and hopefully you have a bit of a feel for
-how these two classifiers work, and also an understanding that they are in fact quite similar in practice.
+Ok, so I think that's enough on the two loss functions and
+regularization, and hopefully you have a bit of a feel for
+how these two classifiers work, and also an understanding
+that they are in fact quite similar in practice.
 
-Next I want to look at how to go from binary classification to multi-class classification.
-Basically there is a simple but hacky way, and there's a slightly more complicated but theoretically sound way.
+Next I want to look at how to go from binary classification
+to multi-class classification. Basically there is a simple
+but hacky way, and there's a slightly more complicated but
+theoretically sound way.
 
 ---
 class: center
@@ -316,13 +392,15 @@ class: center
 ]
 ???
 The slightly hacky way is using what's known as a reduction.
-We're doing a reduction like in math: reducing one problem to another.
-In this case we're reducing the problem of multi-class classification into
-several instances of the binary classification problem.
-And we already know how to deal with binary classification.
+We're doing a reduction like in math: reducing one problem
+to another. In this case we're reducing the problem of
+multi-class classification into several instances of the
+binary classification problem. And we already know how to
+deal with binary classification.
 
-There are two straight-forward ways to reduce multi-class to binary classification.
-the first is called one vs rest, the second one is called one-vs-one.
+There are two straight-forward ways to reduce multi-class to
+binary classification. the first is called one vs rest, the
+second one is called one-vs-one.
 
 ---
 class: spacious
@@ -338,12 +416,13 @@ In general:
 n binary classifiers - each on all data
 
 ???
-Let's start with One vs Rest.
-here, we learn one binary classifier for each class against the remaining
-classes. So let's say we have 4 classes, called 1 to 4.  First we learn a
-binary classifier of the points in class 1 vs the points in the classes 2, 3
-and 4.  Then, we do the same for class 2, and so on.
-The way we end up building as many classifiers as we have classes.
+Let's start with One vs Rest. here, we learn one binary
+classifier for each class against the remaining classes. So
+let's say we have 4 classes, called 1 to 4.  First we learn
+a binary classifier of the points in class 1 vs the points
+in the classes 2, 3 and 4.  Then, we do the same for class
+2, and so on. The way we end up building as many classifiers
+as we have classes.
 
 ---
 
@@ -360,14 +439,16 @@ Unclear why it works, but work well.
 
 
 ???
-To make a prediction, we compute the decision function of all classifiers,
-say 4 in the example, on a new data point. The one with the highest score for the positive
-class, the single class, wins, and that class is predicted.
+To make a prediction, we compute the decision function of
+all classifiers, say 4 in the example, on a new data point.
+The one with the highest score for the positive class, the
+single class, wins, and that class is predicted.
 
-It's a little bit unclear why this works as well as it does. Maybe there's some papers
-about that now, but I'm not 
+It's a little bit unclear why this works as well as it does.
+Maybe there's some papers about that now, but I'm not 
 
-So in this case we have one coefficient vector w and one bias b for each class.
+So in this case we have one coefficient vector w and one
+bias b for each class.
 
 ---
 
@@ -379,10 +460,12 @@ So in this case we have one coefficient vector w and one bias b for each class.
 
 
 ???
-Here is an illustration of what that looks like. Unfortunately it's a bit hard
-to draw 4 classes in general position in 2 dimensions, so I only used 3 classes here.
-So each class has an associated coefficient vector and bias, corresponding to a line.
-The line tries to separate this class from the other two classes.
+Here is an illustration of what that looks like.
+Unfortunately it's a bit hard to draw 4 classes in general
+position in 2 dimensions, so I only used 3 classes here. So
+each class has an associated coefficient vector and bias,
+corresponding to a line. The line tries to separate this
+class from the other two classes.
 # Fixme draw ws?
 
 ---
@@ -396,11 +479,14 @@ The line tries to separate this class from the other two classes.
 
 ???
 
-Here are the decision boundaries resulting from the these three binary classifiers.
-Basically what they say is that the line that is closest decides the class.
-What you can not see here is that each of the lines also have a magnitude associated with them.
-It's not only the direction of the normal vector that matters, but also the length.
-You can think of that as some form of uncertainty attached to the line.
+Here are the decision boundaries resulting from the these
+three binary classifiers. Basically what they say is that
+the line that is closest decides the class. What you can not
+see here is that each of the lines also have a magnitude
+associated with them. It's not only the direction of the
+normal vector that matters, but also the length. You can
+think of that as some form of uncertainty attached to the
+line.
 
 ---
 
@@ -421,18 +507,20 @@ class: some-space
 
 ???
 
-The other method of reduction is called one vs one.
-In one vs one, we build one binary model for each pair of classes. In the
-example of having four classes that is one for 1 vs 2, one for 1v3 and so on.
-So we end up with n * (n - 1) /2 binary classifiers. And each is trained only
-on the subset of the data that belongs to these classes.
+The other method of reduction is called one vs one. In one
+vs one, we build one binary model for each pair of classes.
+In the example of having four classes that is one for 1 vs
+2, one for 1v3 and so on. So we end up with n * (n - 1) /2
+binary classifiers. And each is trained only on the subset
+of the data that belongs to these classes.
 
-To make a prediction, we again apply all of the classifiers. For each class
-we count how often one of the classifiers predicted that class, and we
-predict the class with the most votes.
+To make a prediction, we again apply all of the classifiers.
+For each class we count how often one of the classifiers
+predicted that class, and we predict the class with the most
+votes.
 
-Again, this is just a heuristic and there's not really a good theoretical explanation
-why this should work.
+Again, this is just a heuristic and there's not really a
+good theoretical explanation why this should work.
 
 ---
 
@@ -444,13 +532,16 @@ class: center
 
 
 ???
-Here is an example for predicting on three classes in 2d using the one-vs-one heuristic.
-In the case of three classes, there's also three pairs. Three is a bit of a special case,
-with any more classes there would be more classifiers than classes.
+Here is an example for predicting on three classes in 2d
+using the one-vs-one heuristic. In the case of three
+classes, there's also three pairs. Three is a bit of a
+special case, with any more classes there would be more
+classifiers than classes.
 
-The dashed lines are colored according to the pair of classes they separate. So the green
-and blue line separates the green and blue classes. The data points belonging to the grey
-class were not used in building this model at all.
+The dashed lines are colored according to the pair of
+classes they separate. So the green and blue line separates
+the green and blue classes. The data points belonging to the
+grey class were not used in building this model at all.
 ---
 
 class: center
@@ -462,26 +553,31 @@ class: center
 
 ???
 
-Looking at the predictions made by the one vs one classifier the correspondence to the binary
-decision boundaries is a bit more clear than for the one vs rest heuristic, because
-it only takes the actual boundaries into account, not the length of the normal vectors.
-That makes it easier to visualize the geometry, but it's also a bit of a downside
-of the method because it means it discards any notion of uncertainty that was
-present in the binary classifiers.
-The decision boundary for each class is given by the two lines that this class is involved in.
-So the grey class is bounded by the green and grey line and the blue and grey line.
+Looking at the predictions made by the one vs one classifier
+the correspondence to the binary decision boundaries is a
+bit more clear than for the one vs rest heuristic, because
+it only takes the actual boundaries into account, not the
+length of the normal vectors. That makes it easier to
+visualize the geometry, but it's also a bit of a downside of
+the method because it means it discards any notion of
+uncertainty that was present in the binary classifiers. The
+decision boundary for each class is given by the two lines
+that this class is involved in. So the grey class is bounded
+by the green and grey line and the blue and grey line.
 
-There is a triangle in the center in which there is one vote for each of the
-classes.  In this implemenatation the tie is broken to just always predict the
-first class, which is the green one.
-That might not be the best tie breaking strategy, but this is a relatively rare case, in particular
-if there's more than three classes.
+There is a triangle in the center in which there is one vote
+for each of the classes.  In this implemenatation the tie is
+broken to just always predict the first class, which is the
+green one. That might not be the best tie breaking strategy,
+but this is a relatively rare case, in particular if there's
+more than three classes.
 
-OVR and OVO are general heuristics not restricted to linear models.
-They can be used whenever a binary model for classification needs to be extended to the multi-class
-case.
-For logistic regression, there is actually a natural extension of the formulation, and we don't
-have to resort to these hacks.
+OVR and OVO are general heuristics not restricted to linear
+models. They can be used whenever a binary model for
+classification needs to be extended to the multi-class case.
+For logistic regression, there is actually a natural
+extension of the formulation, and we don't have to resort to
+these hacks.
 
 ---
 class: spacious
@@ -518,10 +614,14 @@ $$\hat{y} = \text{arg} \max_{i \in Y} \textbf{w}_i\textbf{x}$$
 - Same prediction rule as OvR !
 
 ???
-The binary logistic regression case can be generalized to multinomial logistic regression, in which
-we model the probability that i is one of the classes using this formula, which is also known as softmax.
-The probability is proportional to e to the minus $w^t x$ which is the same as in the binary case.
-But now we need to normalize it so that the sum over all classes is one. So we just divide it by this sum.
+The binary logistic regression case can be generalized to
+multinomial logistic regression, in which we model the
+probability that i is one of the classes using this formula,
+which is also known as softmax. The probability is
+proportional to e to the minus $w^t x$ which is the same as
+in the binary case. But now we need to normalize it so that
+the sum over all classes is one. So we just divide it by
+this sum.
 
 ---
 
@@ -538,13 +638,39 @@ class: some-space
 
 
 ???
-All the models in scikit-learn have multi-class built-in and most of them use One versus Rest. There's only one model that uses One versus One which is SVC. The Kernel SVM uses One versus One because of the authors of the SVM like that.
-For historical reasons, logistic regression also uses One versus Rest by default in scikit-learn. That's probably not a good idea, but we can’t really change the default easily. Usually, if you do multiclass you probably want to use multinomial logistic regression and so you set multinomial to true and then it does multinomial logistic regression.
-Question: Does that make it run faster?
-Answer: Its unlikely to make it run faster, but it makes it more theoretically sound and gives you better probabilities. The probabilities that come out of it, if you do OvR, are a complete hack in the multi-class case but in the binary case, it’s the same.
-Logistic regression also has a predict_prob method. This method gives the probability estimates, so you get a vector of length number of classes for each data point.
-You might be tempted to do SVC (probability) equal to true. That is something we're going to talk about in a couple of weeks. This is is running calibration. Basically, this does the One versus One SVM and then it builds a second model on top that tries to estimate probabilities using built-in cross-validation. This will take forever and the outcome will probably be not that great. Don't do this unless you're really sure this is what you want to do. If you want probabilities just use logistic regression.
-predict_proba gives you the probabilities. If you call predict_proba, it will give you an array that has number of samples times number of classes and these entries will sum to one. And the prediction is just the arg max of these. You can call predict which will give you arg max while predict_proba will give you the probabilities as given by the model. 
+All the models in scikit-learn have multi-class built-in and
+most of them use One versus Rest. There's only one model
+that uses One versus One which is SVC. The Kernel SVM uses
+One versus One because of the authors of the SVM like that.
+For historical reasons, logistic regression also uses One
+versus Rest by default in scikit-learn. That's probably not
+a good idea, but we can’t really change the default easily.
+Usually, if you do multiclass you probably want to use
+multinomial logistic regression and so you set multinomial
+to true and then it does multinomial logistic regression.
+Question: Does that make it run faster? Answer: Its unlikely
+to make it run faster, but it makes it more theoretically
+sound and gives you better probabilities. The probabilities
+that come out of it, if you do OvR, are a complete hack in
+the multi-class case but in the binary case, it’s the same.
+Logistic regression also has a predict_prob method. This
+method gives the probability estimates, so you get a vector
+of length number of classes for each data point. You might
+be tempted to do SVC (probability) equal to true. That is
+something we're going to talk about in a couple of weeks.
+This is is running calibration. Basically, this does the One
+versus One SVM and then it builds a second model on top that
+tries to estimate probabilities using built-in
+cross-validation. This will take forever and the outcome
+will probably be not that great. Don't do this unless you're
+really sure this is what you want to do. If you want
+probabilities just use logistic regression. predict_proba
+gives you the probabilities. If you call predict_proba, it
+will give you an array that has number of samples times
+number of classes and these entries will sum to one. And the
+prediction is just the arg max of these. You can call
+predict which will give you arg max while predict_proba will
+give you the probabilities as given by the model. 
 
 ---
 
@@ -561,10 +687,18 @@ SVC would produce the same shape, but with different semantics!
 
 
 ???
-In practice, I'm using logistic regression on the iris dataset. We have 50 data points, 4 features, 3 classes, each class has 50 samples, and we’re trying to classify different kinds of irises.
-Here, I'm looking at logistic regression and linear SVM, I built the model. So the coefficient W is stored in coef on this score.
-Everything in scikit-learn that's estimated from the data ends with an underscore. If it doesn't, it wasn't learned from the data. 
-So coef_ are the coefficient that is learned by the model. They’re for logistic regression and linear Support Vector Machine, they're the same shape, three classes times four features but they have different semantics 
+In practice, I'm using logistic regression on the iris
+dataset. We have 50 data points, 4 features, 3 classes, each
+class has 50 samples, and we’re trying to classify different
+kinds of irises. Here, I'm looking at logistic regression
+and linear SVM, I built the model. So the coefficient W is
+stored in coef on this score. Everything in scikit-learn
+that's estimated from the data ends with an underscore. If
+it doesn't, it wasn't learned from the data. So coef_ are
+the coefficient that is learned by the model. They’re for
+logistic regression and linear Support Vector Machine,
+they're the same shape, three classes times four features
+but they have different semantics 
 
 ---
 
@@ -578,8 +712,18 @@ class: center
 
 
 ???
-Here I’ve interpreted them. You can see the four features, for each feature and for each class, you have a coefficient. If the sepal width is big, then the setosa classifier is happy. If the sepal with is small then versicolor will have a large response. If the petal width is big then virginica will have a large response. This is a bar plot after coefficient vector here. This tells you what the classifier has learned.
-This is maybe for a very simple problem this is little much to look at but it's still way less to look at for any other model. If you used a random forest or something like that, there would be no way to visualize what's happening. 
+Here I’ve interpreted them. You can see the four features,
+for each feature and for each class, you have a coefficient.
+If the sepal width is big, then the setosa classifier is
+happy. If the sepal with is small then versicolor will have
+a large response. If the petal width is big then virginica
+will have a large response. This is a bar plot after
+coefficient vector here. This tells you what the classifier
+has learned. This is maybe for a very simple problem this is
+little much to look at but it's still way less to look at
+for any other model. If you used a random forest or
+something like that, there would be no way to visualize
+what's happening. 
 
 ---
 
@@ -591,7 +735,9 @@ class: center, middle
 
 
 ???
-Now I want to talk about more general things, how to make your homework run faster, also called Computational Considerations. 
+Now I want to talk about more general things, how to make
+your homework run faster, also called Computational
+Considerations. 
 ---
 
 class: some-space
@@ -608,12 +754,41 @@ large
 
 
 ???
-Some of the things here are specific to scikit-learn and some are not. Scikit-learn has SVC and the linear SVC, and they're both support vector machines. SVC uses One versus One while linear SVC uses one versus rest. SVC uses the hinged loss while linear SVC uses squared hinge loss. Linear SVC will provide faster results than SVC.
-If you want to do regression with a large number of features, you should probably use Lars or LassoLars, which allows you to do feature selection much more quickly than Lasso. Generally, if you have a few samples, don't worry, any model will find and everything will be sparse. If you have, let's say 10,000 samples all linear models will be fast all the time. Otherwise, use this for regression.
-For classification, if the number of samples is much greater than the number of features use dual=false. Basically, solving a dual problem means solving something where there are as many variables as the number of samples, that's the default. Whereas solving the primal problem, so dual=false means solving something that's with the number of variables as the same number of features. If the number of features is big, dual should be true, and if the number of samples is big dual should be false.
-If you have really a whole lot of samples you can use a recent solver called sag. This works really for really large samples. So LogisticRegression(solver=”sag”) that can use L1 or L2 penalties or whatever you want. 
-Then finally, if you have an extremely large amount of data you can use Stochastic Gradient Descent. It has the STD classifier, STD regressor, and hopefully, we'll have enough time to talk about these today. But generally often setting dual to false will help you a lot and setting the solver to something else might help you. All of these basically give you the same solution but only at different speeds. 
-I want to talk about some tips for getting cross-validation. There are some built-in tools for doing quicker cross-validation for linear models. 
+Some of the things here are specific to scikit-learn and
+some are not. Scikit-learn has SVC and the linear SVC, and
+they're both support vector machines. SVC uses One versus
+One while linear SVC uses one versus rest. SVC uses the
+hinged loss while linear SVC uses squared hinge loss. Linear
+SVC will provide faster results than SVC. If you want to do
+regression with a large number of features, you should
+probably use Lars or LassoLars, which allows you to do
+feature selection much more quickly than Lasso. Generally,
+if you have a few samples, don't worry, any model will find
+and everything will be sparse. If you have, let's say 10,000
+samples all linear models will be fast all the time.
+Otherwise, use this for regression. For classification, if
+the number of samples is much greater than the number of
+features use dual=false. Basically, solving a dual problem
+means solving something where there are as many variables as
+the number of samples, that's the default. Whereas solving
+the primal problem, so dual=false means solving something
+that's with the number of variables as the same number of
+features. If the number of features is big, dual should be
+true, and if the number of samples is big dual should be
+false. If you have really a whole lot of samples you can use
+a recent solver called sag. This works really for really
+large samples. So LogisticRegression(solver=”sag”) that can
+use L1 or L2 penalties or whatever you want. Then finally,
+if you have an extremely large amount of data you can use
+Stochastic Gradient Descent. It has the STD classifier, STD
+regressor, and hopefully, we'll have enough time to talk
+about these today. But generally often setting dual to false
+will help you a lot and setting the solver to something else
+might help you. All of these basically give you the same
+solution but only at different speeds. I want to talk about
+some tips for getting cross-validation. There are some
+built-in tools for doing quicker cross-validation for linear
+models. 
 
 ---
 
@@ -624,7 +799,8 @@ class: middle
 
 
 ???
-The idea is that we can exploit the model in doing cross-validation. 
+The idea is that we can exploit the model in doing
+cross-validation. 
 ---
 class: spacious
 
@@ -638,12 +814,42 @@ So you can’t pick the “cv”!
 
 
 ???
-There’s a couple of models that have that. Lars, LassoLars, Elastic Net, Logistic Regression and Ridge have a thing called named “the model name”+ “CV”. It means it has built-in cross-validation to adjust the parameters. They do different things behind the scenes and they always make things much faster. 
-For the Lars, Lasso Lars, Elastic Net they compute this coefficient passes that we looked at. They compute the solution for all possible values of the parameter by computing the whole path and that means it's much faster to fit this than trying for each parameter setting to fit it individually.
-For Logistic Regression that uses warm-starts which means it starts with one parameter setting like C equal to very small with a lot of regularization that’s fast to compute. Then once it has a solution it'll use the solution as a starting point for the solution for the next biggest C. But that only works with some of us solvers. All of them have sort of reasonable built-in parameter grids so you don't need to actually worry too much about how to set the parameters.
-RidgeCV actually works differently. For the discussed four, you can tell it what cross-validation to use and it will use that cross-validation but it will use something like a path algorithm to compute the solution for many of the regularization parameters at once. On the contrary, RidgeCV independently solves each regularization parameter, but it has a trick to make the cross-validation go faster. 
-You can actually approximate Leave One Out Cross-Validation in Ridge in closed form. Leave One Out cross-validation is basically Leave One Out at one point at a time and built a model. So to compute these exactly, usually, I need to build the number of samples, many models. Also, it has a very high variance.
-For Ridge, I can actually compute exactly in closed form, given the model. So you can’t pick the CV, it will always do something that's equivalent to Leave One Out but you can pick any grid because it'll just evaluate the grid using a for loop.
+There’s a couple of models that have that. Lars, LassoLars,
+Elastic Net, Logistic Regression and Ridge have a thing
+called named “the model name”+ “CV”. It means it has
+built-in cross-validation to adjust the parameters. They do
+different things behind the scenes and they always make
+things much faster. For the Lars, Lasso Lars, Elastic Net
+they compute this coefficient passes that we looked at. They
+compute the solution for all possible values of the
+parameter by computing the whole path and that means it's
+much faster to fit this than trying for each parameter
+setting to fit it individually. For Logistic Regression that
+uses warm-starts which means it starts with one parameter
+setting like C equal to very small with a lot of
+regularization that’s fast to compute. Then once it has a
+solution it'll use the solution as a starting point for the
+solution for the next biggest C. But that only works with
+some of us solvers. All of them have sort of reasonable
+built-in parameter grids so you don't need to actually worry
+too much about how to set the parameters. RidgeCV actually
+works differently. For the discussed four, you can tell it
+what cross-validation to use and it will use that
+cross-validation but it will use something like a path
+algorithm to compute the solution for many of the
+regularization parameters at once. On the contrary, RidgeCV
+independently solves each regularization parameter, but it
+has a trick to make the cross-validation go faster. You can
+actually approximate Leave One Out Cross-Validation in Ridge
+in closed form. Leave One Out cross-validation is basically
+Leave One Out at one point at a time and built a model. So
+to compute these exactly, usually, I need to build the
+number of samples, many models. Also, it has a very high
+variance. For Ridge, I can actually compute exactly in
+closed form, given the model. So you can’t pick the CV, it
+will always do something that's equivalent to Leave One Out
+but you can pick any grid because it'll just evaluate the
+grid using a for loop.
 
 ---
 
@@ -656,9 +862,22 @@ class: center
 ]
 
 ???
-Here's a very small example of how this would look like. Here I use GridSearchCV with Ridge with like. It does 10 fold cross-validation. This builds 10 models times 10 parameter settings.
-RidgeCV by default has the same parameter settings but instead of doing 10 times 10 models, we only do 10 models because we get the Leave One Out cross-validation for free and they come up with the same result. They both have the same tested score and they have the same alpha that is selected. Only the second one is 10 times faster.
-This is pretty helpful. It's a little bit tricky if you have multiple pre-processing steps, and we'll talk about this later in the course. The problem here is that if you have pre-processing, you want to pre-process to be inside the cross-validation and if you use something like RidgeCV or LassoCV, you can really put any preprocessing inside this cross-validation and that's not so great. 
+Here's a very small example of how this would look like.
+Here I use GridSearchCV with Ridge with like. It does 10
+fold cross-validation. This builds 10 models times 10
+parameter settings. RidgeCV by default has the same
+parameter settings but instead of doing 10 times 10 models,
+we only do 10 models because we get the Leave One Out
+cross-validation for free and they come up with the same
+result. They both have the same tested score and they have
+the same alpha that is selected. Only the second one is 10
+times faster. This is pretty helpful. It's a little bit
+tricky if you have multiple pre-processing steps, and we'll
+talk about this later in the course. The problem here is
+that if you have pre-processing, you want to pre-process to
+be inside the cross-validation and if you use something like
+RidgeCV or LassoCV, you can really put any preprocessing
+inside this cross-validation and that's not so great. 
 
 ---
 class: center, middle
@@ -670,7 +889,11 @@ and http://leon.bottou.org/papers/bottou-bousquet-2008
 and http://scikit-learn.org/stable/modules/scaling_strategies.html )
 
 ???
-The last thing I want to talk about today is Stochastic Gradient Descent. This is just another solver to solve linear models or neural networks. But it's good to understand a little bit more in detail because it comes up a lot in particular with very large data sets.
+The last thing I want to talk about today is Stochastic
+Gradient Descent. This is just another solver to solve
+linear models or neural networks. But it's good to
+understand a little bit more in detail because it comes up a
+lot in particular with very large data sets.
 
 ---
 class: right
@@ -684,9 +907,26 @@ class: right
 Bottou et. al.
 
 ???
-The idea here is that if you have a lot of data, maybe solving the problem exactly isn't as important as looking at all of the data. 
-Let's say I want to find a good function that generalizes well over to test dataset and I have a budget of how many data points I can look at it and I want to approximate the best possible function on the training set with an accuracy of epsilon. 
-What we want is a model of generalized as well, what we do in practice is we pick a family of functions, like the linear functions, we estimate the best function using the training set, we want one that's the best on the true distribution, but instead we're using the training set and then we need to have some numeric optimization procedure that optimizes it until the error is smaller than epsilon for whatever loss, the loss could be regularized or anything but still we need to minimize optimization problem to some precision and we can only use at most as much data points as their dataset. And we've only a particular budget of time that it can use. So these are sort of the restrictions we have. And we want to find the best model.
+The idea here is that if you have a lot of data, maybe
+solving the problem exactly isn't as important as looking at
+all of the data. Let's say I want to find a good function
+that generalizes well over to test dataset and I have a
+budget of how many data points I can look at it and I want
+to approximate the best possible function on the training
+set with an accuracy of epsilon. What we want is a model of
+generalized as well, what we do in practice is we pick a
+family of functions, like the linear functions, we estimate
+the best function using the training set, we want one that's
+the best on the true distribution, but instead we're using
+the training set and then we need to have some numeric
+optimization procedure that optimizes it until the error is
+smaller than epsilon for whatever loss, the loss could be
+regularized or anything but still we need to minimize
+optimization problem to some precision and we can only use
+at most as much data points as their dataset. And we've only
+a particular budget of time that it can use. So these are
+sort of the restrictions we have. And we want to find the
+best model.
 
 ---
 class: center, middle
@@ -696,10 +936,26 @@ class: center, middle
 ]
 
 ???
-So now let's look at what happens to these three errors in the time if we increase different parts. 
-If we make the family of functions bigger, so let's say we use from linear function to neural networks or we go to a high dimensional space, the approximation error, that’s the error that we get by restricting ourselves to do class goes down because we have a richer class. The estimation error which means the error we get by using the training set, instead of having access to the true distribution gets larger because we have more flexibility in our model, so the distance between what the ideal will be on the true distribution and the training data set becomes bigger. And if we have a larger family of functions obviously it's going to take longer.
-If you have more data points, the estimation error will go down. So our optimization will be closer to what is the true distribution, but it will take more time.
-The final row represents the precision to which I want to optimize, the epsilon in which I want to stop optimizing the problem that I'm optimizing. The optimization error will go up, but the time will go down. It's faster if I optimize less strongly.
+So now let's look at what happens to these three errors in
+the time if we increase different parts. If we make the
+family of functions bigger, so let's say we use from linear
+function to neural networks or we go to a high dimensional
+space, the approximation error, that’s the error that we get
+by restricting ourselves to do class goes down because we
+have a richer class. The estimation error which means the
+error we get by using the training set, instead of having
+access to the true distribution gets larger because we have
+more flexibility in our model, so the distance between what
+the ideal will be on the true distribution and the training
+data set becomes bigger. And if we have a larger family of
+functions obviously it's going to take longer. If you have
+more data points, the estimation error will go down. So our
+optimization will be closer to what is the true
+distribution, but it will take more time. The final row
+represents the precision to which I want to optimize, the
+epsilon in which I want to stop optimizing the problem that
+I'm optimizing. The optimization error will go up, but the
+time will go down. It's faster if I optimize less strongly.
 
 
 ---
@@ -714,9 +970,21 @@ class: spacious
 
 
 ???
-If the number of data points is really large, the thing that we really constraint is by the runtime.  If constrained by the runtime, can't we just subsample the data? Yes, you could. Then you would run faster. 
-But the point that he's making is it's better to look at all of the data and so we're decreasing estimation error but we don't find a precise solution. So now we say it's more important to minimize the estimation error, which we can do by looking at a lot of data than actually optimizing it very precisely because the thing that we are optimizing is a training set error, which is not really the thing that we're interested in the first place. So we look at the algorithm that does worst in terms of optimization, but it's much faster.
-This is the algorithm that’s most commonly used and the algorithm is Stochastic Gradient Descent.
+If the number of data points is really large, the thing that
+we really constraint is by the runtime.  If constrained by
+the runtime, can't we just subsample the data? Yes, you
+could. Then you would run faster. But the point that he's
+making is it's better to look at all of the data and so
+we're decreasing estimation error but we don't find a
+precise solution. So now we say it's more important to
+minimize the estimation error, which we can do by looking at
+a lot of data than actually optimizing it very precisely
+because the thing that we are optimizing is a training set
+error, which is not really the thing that we're interested
+in the first place. So we look at the algorithm that does
+worst in terms of optimization, but it's much faster. This
+is the algorithm that’s most commonly used and the algorithm
+is Stochastic Gradient Descent.
 
 ---
 # Reminder: Gradient Descent
@@ -732,9 +1000,17 @@ $$w^{(i+1)} \leftarrow w^{(i)} - \eta_i\frac{d}{dw}F(w^{(i)})$$
 Converges to local minimum
 
 ???
-First, let's talk about Gradient Descent. So we have some function we want to minimize here the function is Lasso training data set plus the regularizer. F is the objective of the model and I want to find the best parameter setting w. 
-The way gradient descent works are that we initialize it with some W and then we compute a gradient then we walk down the gradient by a small step. This converges to a local minimum in the function. 
-For linear models, there's only one global minimum. Basically, any optimization algorithm you can think of will always converge to the same solution, they only converge at different speeds.
+First, let's talk about Gradient Descent. So we have some
+function we want to minimize here the function is Lasso
+training data set plus the regularizer. F is the objective
+of the model and I want to find the best parameter setting
+w. The way gradient descent works are that we initialize it
+with some W and then we compute a gradient then we walk down
+the gradient by a small step. This converges to a local
+minimum in the function. For linear models, there's only one
+global minimum. Basically, any optimization algorithm you
+can think of will always converge to the same solution, they
+only converge at different speeds.
 
 ---
 
@@ -761,8 +1037,17 @@ $$w^{(i+1)} \leftarrow w^{(i)} - \eta_i\frac{d}{dw}F(w^{(i)})$$
 $$w^{(i+1)} \leftarrow w^{(i)} - \eta_i\frac{d}{dw}F(w^{(i)})$$
 
 ???
-A little bit of an issue here is picking a learning rate which is how big a step are you making. If you make too small a step, then you're going to get stuck wherever you're started. If you pick the right step size, you can make very quick progress. If you pick too a big step size, you're going to be missing the target and just jumping around the target. 
-This is a very simple optimizer. But it's not great and it’s not very fast because you need to compute gradients over the whole dataset. What you can do instead is you can approximate a gradient by looking only a single data point at a time. 
+A little bit of an issue here is picking a learning rate
+which is how big a step are you making. If you make too
+small a step, then you're going to get stuck wherever you're
+started. If you pick the right step size, you can make very
+quick progress. If you pick too a big step size, you're
+going to be missing the target and just jumping around the
+target. This is a very simple optimizer. But it's not great
+and it’s not very fast because you need to compute gradients
+over the whole dataset. What you can do instead is you can
+approximate a gradient by looking only a single data point
+at a time. 
 
 ---
 
@@ -781,8 +1066,16 @@ This is a very simple optimizer. But it's not great and it’s not very fast bec
 
 
 ???
-Looking at the Logistic Regression, the functional Logistic Regression we want to minimize is the log loss plus the regularizer. Instead of looking at the gradient for the whole sum here, we can get a stochastic approximation of the gradient by looking at only one of the sums at a time.
-In practice, we iterate over the dataset and go one by one through all the data points. We make sure we shuffle them before. Then we do small gradient steps. This is a very bad optimizer compared to the SAG but it can go very quickly over a lot of data. 
+Looking at the Logistic Regression, the functional Logistic
+Regression we want to minimize is the log loss plus the
+regularizer. Instead of looking at the gradient for the
+whole sum here, we can get a stochastic approximation of the
+gradient by looking at only one of the sums at a time. In
+practice, we iterate over the dataset and go one by one
+through all the data points. We make sure we shuffle them
+before. Then we do small gradient steps. This is a very bad
+optimizer compared to the SAG but it can go very quickly
+over a lot of data. 
 
 ---
 class: spacious
@@ -795,11 +1088,30 @@ class: spacious
 
 
 ???
-This is implemented in SGD classifier, and SGD regressor and you can use it in very large data sets. It's a little bit tricky to tune the learning rate and so you can either pick as constant learning rate, or you can pick an exponentially decreasing learning rate. There's one that's called optimal. If you scale your data to standard division 1, then the optimal one will often work well but it's not actually optimal on any sense. 
-This will allow you to give you something quickly on a big data set. 
-There's also another thing you can do, there's a method called partial_fit that these models have which allows you to iteratively fit feed it data. If you have like streaming data coming in and you having infinite data, you can just keep giving it more and more data called partial_fit. This method will update the model.
-In scikit-learn, if you call fit multiple times it will always forget whatever it saw before. Each fit resets the model while partial fit will remember what it saw before and keeps fitting the model.
-SGDClassifier() and SGDRegressor both have a whole bunch of different loss function penalties so they both can do elastic net penalty and the classifier can do logistic loss and hinge loss and squared hinge loss and the regressor can do Huber loss and squared error and absolute error. So there are many, many different choices for different loss functions. 
+This is implemented in SGD classifier, and SGD regressor and
+you can use it in very large data sets. It's a little bit
+tricky to tune the learning rate and so you can either pick
+as constant learning rate, or you can pick an exponentially
+decreasing learning rate. There's one that's called optimal.
+If you scale your data to standard division 1, then the
+optimal one will often work well but it's not actually
+optimal on any sense. This will allow you to give you
+something quickly on a big data set. There's also another
+thing you can do, there's a method called partial_fit that
+these models have which allows you to iteratively fit feed
+it data. If you have like streaming data coming in and you
+having infinite data, you can just keep giving it more and
+more data called partial_fit. This method will update the
+model. In scikit-learn, if you call fit multiple times it
+will always forget whatever it saw before. Each fit resets
+the model while partial fit will remember what it saw before
+and keeps fitting the model. SGDClassifier() and
+SGDRegressor both have a whole bunch of different loss
+function penalties so they both can do elastic net penalty
+and the classifier can do logistic loss and hinge loss and
+squared hinge loss and the regressor can do Huber loss and
+squared error and absolute error. So there are many, many
+different choices for different loss functions. 
 
 
 ---
@@ -812,9 +1124,21 @@ class: center, spacious
 
 
 ???
-Fit works just like everywhere else. Partial fit you can call it with different batches of data and this will keep fitting the model. One thing that you should keep in mind for the classifier is that you need to give it the classes at the beginning because it doesn't know how many classes there are and at the first time, not all the classes might be present in the data you give it to. So you need to specify how many classes there are. 
-Partial fit doesn't do loops over a dataset. So if you want to use a partial fit, and you want to loop over dataset multiple times, you have to set the loop yourself. If you loop over a dataset, if you do more of gradient descent, then you get better results.
-This code is the same code for all combinations of losses and regularizers because it’s very simple to write this down.
+Fit works just like everywhere else. Partial fit you can
+call it with different batches of data and this will keep
+fitting the model. One thing that you should keep in mind
+for the classifier is that you need to give it the classes
+at the beginning because it doesn't know how many classes
+there are and at the first time, not all the classes might
+be present in the data you give it to. So you need to
+specify how many classes there are. Partial fit doesn't do
+loops over a dataset. So if you want to use a partial fit,
+and you want to loop over dataset multiple times, you have
+to set the loop yourself. If you loop over a dataset, if you
+do more of gradient descent, then you get better results.
+This code is the same code for all combinations of losses
+and regularizers because it’s very simple to write this
+down.
 
 ---
 class: center, middle
