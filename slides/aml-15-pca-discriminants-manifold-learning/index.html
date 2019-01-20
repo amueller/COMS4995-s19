@@ -26,6 +26,17 @@ class: center, middle
 Andreas C. Müller
 
 ???
+Today we're going to talk about dimensionality reduction,
+mostly about principal component analysis. We're also going
+to talk about discriminant analysis and manifold learning. 
+
+These all slightly different sets of goals. But the main
+idea here is to take a high dimensional input dataset and
+produce the dimensionality for processing. It can be either
+before the machine learning pipeline or often for
+visualization. 
+
+
 FIXME: switch LDA and T-SNE
 animations for T-SNE?
 ---
@@ -38,6 +49,63 @@ class: centre,middle
 ]
 
 ???
+Here, we have a 2D input space, there's some point scattered
+here. The color is supposed to show you where the data goes
+in the transformations. PCA finds the directions of the
+maximum variant in the data. 
+
+So starting with this blob of data, you look at the
+direction that is the most elongated. And then you look for
+the next opponent that captures the second most various,
+that's orthogonal to the first component. Here in
+2-dimensions, there's only one possibility to be orthogonal
+to the first component and so that's our second component. 
+
+If you're in higher dimensions, there are obviously
+infinitely many different directions that could be
+orthogonal, and so then you would iterate. 
+
+What PCA returns is basically an orthogonal basis of the
+space where the components are ordered by how much variance
+of the data they cover and so we get a new basis of the
+original space. So we can do this until like N dimensions
+many times. In this example, I could do two times, after
+that there are no orthogonal vectors left. 
+
+And so this new basis corresponds to rotating the input
+space, I can rotate the input space so that the first
+component is my X-axis and the second component is my Y-axis
+and this is the transformation that PCA learns.
+
+This doesn't do any dimensionality reduction as of yet, this
+is just a rotation of the input space. If I want to use it
+for dimensionality reduction, I can now start dropping some
+of these dimensions. So they are ordered by decreasing
+variance, I could in this example drop, for example, the
+second component only to regain the first component.
+
+So basically, I dropped the Y-axis and projected everything
+to the X line. And this would be dimensionality reduction
+with the PCA going from two dimensions to one dimension. And
+the idea is that if your data lives on a lower dimensional
+space, or essentially lives on lower dimensional space,
+embedded in high dimensional space, you could think of this
+is mostly aligned or Gaussian blob along this direction and
+there's a little bit of noise in this direction. The most
+information about the data is sort of along this line. 
+
+The idea is that does one-dimensional projection now covers
+as much as possible of this data set. 
+
+You can also look at PCA as being sort of a de-noising
+algorithm, by taking this reduced representation in the
+rotated space and rotating it back to the original space. So
+this is basically transforming the data using PCA, the
+rotation dropping one dimension rotating back, you end up
+with this. And so this is through information that is
+retained in this projection, basically. And so, arguably,
+you still have a lot of information from this dataset.
+
 ---
 # PCA objective(s)
 `$$\large\min_{X', \text{rank}(X') = r}\|X-X'\|$$`
@@ -45,6 +113,31 @@ class: centre,middle
 ![:scale 45%](images/pca-intuition.png)
 ]
 ???
+The maximum variance view can be formalized like this. So
+basically, you look at the variance of a projection. So you
+look over all possible vectors, U1 that have norm 1 and you
+look at what's the variance of projecting the data X along
+this axis and then the maximum of this will be the maximum
+variance of the data.
+
+You can also rewrite this in this way.
+
+Once you compute U1, you subtract the projection onto U1
+from the data. Then you get everything orthogonal to U1. And
+then with this dataset where you subtracted the component
+along U1, you can again find the direction of maximum
+variance, and then you get U2 and so on iterate this….
+
+One thing that you should keep in mind here is that the
+direction of U1 or the PCA component doesn't matter. 
+
+These two definitions of the first principle component, if
+you set U1 to –U1 it would be the same maximum. It only
+depends on the direction of U1, not the sign. So whenever
+you look at principal components, the sign is completely
+meaningless. 
+
+
 Restricted rank reconstruction
 ---
 class:split-40
@@ -59,8 +152,28 @@ class:split-40
 ]
 ]
 ???
-Find directions of maximum variance.
-(Find projection (onto one vector) that maximizes the variance observed in the data.)
+So second way to describe PCA is using Reconstruction Error.
+I can look at how well this reconstruction here matches the
+input space. And if I want a reconstruction X’, that is the
+best possible in the least squares sense, so that is the
+square norm. If I look at the square norm of X – X’, then
+this is minimized exactly when I'm using X’, X’ is the PCA
+reduction. 
+
+This is like written in a slightly different way. Because if
+you solve this minimization problem, then you don't get the
+rotation back, you get the data back. But this problem is
+exactly solved by basically rotating using PCA direction,
+dropping the data and then rotating back. 
+
+Maximizing the variance is the same thing as minimizing the
+Reconstruction Error, given a fixed number of dimensions. 
+
+
+
+Find directions of maximum variance. (Find projection (onto
+one vector) that maximizes the variance observed in the
+data.)
 
 Subtract projection onto u1, iterate to find more components. 
 Only well-defined up to sign / direction of arrow!
@@ -71,12 +184,68 @@ Only well-defined up to sign / direction of arrow!
 - Compute singular value decomposition:
 ![:scale 100%](images/pca-computation.png)
 ???
+If I want to apply PCA to my dataset, the first thing I have
+to do, which is sort of part of the algorithm subtracts the
+mean. Any package will subtract the mean for you before it
+does the SVD. What you should probably also do in practice
+is to scale the data to unit variance. 
+
+And then the PCA algorithm just computes the singular level
+decomposition.
+
+We decompose the data X into an orthogonal, a diagonal, and
+an orthogonal. V^T is number of features, U is number of
+samples times number of samples, D is diagonal containing
+singular values. Singular values correspond to the variance
+of each of these directions. Usually, in SVD you sort them
+by singular values. So the largest singular value
+corresponds to the first principle components.
+
+There's an additional processing step that you can do which
+is the most basic form of PCA. You can also use these
+entries of the diagonal to really scale the data in the
+rotated space so that the variance is the same across each
+of the new dimensions. 
+
+
 ---
 class: center
 # Whitening
 ![:scale 100%](images/whitening.png)
 ???
-Same as using PCA without whitening, then doing StandardScaler.
+So I take my original data, I rotate it, and then I scale
+each of the dimension so that they have standard deviation
+one. It’s basically the same as doing PCA and then doing
+standard scaler. 
+
+You can see now the variance, visually looks like a ball, it
+was a Gaussian before. In the context of signal processing,
+in general, this is called whitening. 
+
+And if you want to use PCA as a feature transformation, to
+extract features you might want to do that, because
+otherwise, the magnitude of the first principle component
+will be much bigger than the magnitude of the other
+components since you just rotated it. So the small variance
+directions will have only very small variance because that's
+how you define them.
+
+The question here is do you think the principal components
+are of similar importance? Or do you think the original
+feature is of similar importance?
+
+And if you think the principal components are of similar
+important then you should do this. So if you want to go on
+and put this in a classifier, this might be helpful. But I
+don't think I can actually give you a clear rule when you
+would want to do this or when not to. But it kind of makes
+senses if you think of it as being centered scaler in a
+transformed space that seems like something that might be
+helpful for a classifier.
+
+
+Same as using PCA without whitening, then doing
+StandardScaler.
 ---
 class: split-40
 # PCA for Visualization
@@ -99,6 +268,40 @@ plt.colorbar()
 .right-column[
 ![:scale 90%](images/pca-for-visualization-components-color-bar.png)]
 ???
+I want to show you an example on real data set. So the first
+data set I'm going to use it on is the breast cancer data
+set. 
+
+The way I use PCA most often is probably for visualization.
+I often do PCA with two components, because my monitor has
+two dimensions. 
+
+I fit, transform the data and I scatter it and then I get
+the scatter plot of the first principle component versus
+second principal component. So this is the binary
+classification problem, PCA obviously is a completely
+unsupervised method, so it doesn't know what the class
+labels but I could look whether this is a hard problem to
+solve or is it an easy problem to solve. If I look at this
+plot, maybe it looks like it's a relatively easy problem to
+solve with the points being relatively well separated.
+
+Now I look at the principal component vectors. So there are
+two principal components, each of them has number of
+features many dimensions. So this is shown here as a heat
+map. And you can see that there are basically two features
+that dominate the principal components, which is mean area
+and worst area. And all the rest of the entries are
+approximately zero. So actually, I didn't rotate my data at
+all, I just looked at two features.
+
+So I didn't scale my data, if I don't scale my data and a
+particular feature has a much larger magnitude, this feature
+will basically be the first principle component because if I
+multiply a feature by 10,000, this feature will have the
+largest variance of everything. There will be no direction
+that has a larger variance than that. 
+
 ---
 class:spacious
 # Scaling!
@@ -111,7 +314,22 @@ plt.ylabel("second principal component")
 ```]
 .center[![:scale 45%](images/scaled-pca-for-visualization-cancer-data.png)]
 ???
-Imagine one feature with very large scale. Without scaling, it’s guaranteed to be the first principal component!
+So now I scale the data. And then I get two components on
+the cancer data set. And now actually the data looks even
+better separated. Even with this unsupervised methods it
+very clearly shows me what separation of the classes is, I
+can also see things like the yellow class looks much denser
+than the purple class, maybe there are some outliers here,
+but this definitely gives me a good idea of this dataset.
+
+So this is much more compact than looking at a 30x30 scatter
+matrix, which I couldn't comprehend. So we can look at the
+components again. 
+
+
+
+Imagine one feature with very large scale. Without scaling,
+it’s guaranteed to be the first principal component!
 ---
 class:split-40
 # Inspecting components
@@ -129,6 +347,33 @@ plt.colorbar()
 ![:scale 100%](images/inspecting-pca-scaled-components-2.png)]
 
 ???
+So components are stored in the components attribute of the
+PCA class. And you can see now all of the features
+contribute to the principal components. 
+
+And if you're an expert in the area, and you know what these
+features mean, sometimes it's possible to read something in
+this. It's definitely helpful often to look at these
+component vectors. 
+
+Another way to visualize the component vectors is to do a
+scatter plot. But that only works basically for the first
+two principal components. So you can basically look at the
+positions of the original features, each dot here is one of
+the original features, and you can look at how much does
+this feature contribute to principal component one versus
+principal component two. And so I can see that the second
+principal component is dominated by mean fractal dimension
+and the first personal component is dominated by the worst
+perimeter. And worse perimeter negatively contributes to the
+second principal component. And worst case point is also
+very strong in the first principle component but has zero in
+the second principal component.
+
+This was sort of the first approach trying to use PCA for
+2-dimensional visualization and trying to understand what
+the components mean. 
+
 Direction (sign) of component is meaningless!
 ---
 # PCA for regularization
@@ -156,6 +401,38 @@ print(pca_lr.score(X_test, y_test))
 ```
 ]
 ???
+One thing that PCA is often used for, in particular for
+statistics oriented people, is using it for regularizing a
+model. You can use PCA to reduce the dimensionality of your
+data set and then you can do a model on the on the reduced
+dimensional data set. Since it has fewer features, this will
+have less complexity, less power so you can avoid
+overfitting by reducing the dimensionality.
+
+I’ve given an example here on the same data set. I'm using
+logistic regression, and I basically turn off
+regularization. Instead of using L2 regularization in linear
+regression, I'm trying to do reduce the input space. 
+
+So you can see that, if I do that, I basically overfit the
+data perfectly. So on the training dataset, I have 99.3%
+accuracy, and on test dataset I have 44.4% accuracy. 
+
+Now if I use PCA with two dimensions, I reduce this down to
+just two features. I basically reduce overfitting a lot so I
+get a lower training score but I also get a lower test
+score. 
+
+Generally, if you find that you only need 2-dimension to
+solve a problem, then that’s a very simple problem. But if
+you're shooting for accuracy, clearly you’ve regularized too
+much, you're restricted to the model too much by just using
+two components. One way to figure out a good number of
+components, obviously, doing grid search with
+cross-validation. Another way is to look at the variance
+that it is covered by each of the components, so this is
+basically the singular values.
+
 ---
 # Variance covered
 .center[
@@ -173,6 +450,34 @@ print(pca_lr.score(X_test, y_test))
 ```]
 
 ???
+So here are for the singular values. Here is the explained
+variance ratio, basically how much of the variance in the
+data is explained by each of the components. The components
+are sorted by decreasing variance so obviously, this always
+goes down. But now I can sort of look for kinks in this
+variance that's covered and I can see how many components it
+makes sense to keep for this dataset maybe if you don't want
+to do a grid search. 
+
+Looking at the top plot, it looks like the six components
+are enough. And if I actually use six components, I overfit
+slightly less in the training dataset, I get a better result
+than I did without using PCA. 
+
+People from statistics like this better than regularization
+since this doesn't bias to coefficients. I like it slightly
+less because the PCA is completely unsupervised and it might
+discard important information. But it's definitely a valid
+approach to regularize linear model. 
+
+If you're using a linear model, what's nice is that you can
+still interpret the coefficients afterward. The linear model
+is just the dot product with the weights and PCA is just a
+rotation. And so it can take the coefficients and rotate
+them back into the original space.
+
+
+
 Could obviously also do cross-validation + grid-search
 ---
 class:split-40
@@ -189,8 +494,32 @@ coef_pca = pca.inverse_transform(lr.coef_)```]
 .right-column[
 ![:scale 100%](images/logreg+noPCA.png)
 ]
-???
-Rotating coefficients back into input space. Makes sense because model is linear! Otherwise more tricky.
+??? 
+So that's what I'm doing here. I use the logistic
+regression coefficients in the PCA space, I think this was
+six components. And so then I can scatter them and look at
+them, what do these components mean, in terms of the
+original features. 
+
+Here, I’m looking at with no PCA, which is just the logistic
+regression on the original data set, versus doing PCA, doing
+logistic regression on the six-dimensional data set, and
+then rotating the six coefficients back into the input
+space. Even though I did this transformation of the data, I
+can still see how this model in the reduced feature space
+uses these features. 
+
+In the left plot, I basically plot the back rotated versus
+the coefficients without PCA. And you can see that they're
+sort of related. They're not going to be perfectly related
+because I reduced the dimensionality of this space and also
+the model with PCA did better in this case. So clearly
+they’re different.
+
+
+
+Rotating coefficients back into input space. Makes sense
+because model is linear! Otherwise more tricky.
 ---
 class:split-40
 # PCA is Unsupervised!
@@ -202,8 +531,32 @@ class:split-40
 ![:scale 100%](images/pca-is-unsupervised-2.png)
 ]
 ???
-Dropping the first two principal components will result in random model!
-All information is in the smallest principal component!
+Look at this dataset. It's a very fabricated data set. This
+is a 3d classification problem in two dimensions. This looks
+very unstructured. 
+
+So if I do a PCA, I get this. And so if I now look at the
+first two principal components, the problem is actually
+completely random, because that's how I synthetically
+constructed it. And if I look at the third principal
+component, the third component perfectly classifies the
+dataset. Even though I constructed to be like that, there's
+nothing that prevents the data set in reality not to look
+like that. Just because the data is very small, or has small
+variance in a particular direction doesn't mean this
+direction is not important for classification. So basically,
+if you’re dropping components with small variance, basically
+what you're doing is you're doing feature selection in the
+PCA space based on the variance of the principal components.
+And so that's not necessarily a good thing. Because small
+variance in principal component doesn't necessarily mean
+uninformative. 
+
+
+Dropping the first two principal components will result in
+random model! 
+All information is in the smallest principal
+component!
 
 ---
 # PCA for feature extraction
@@ -211,6 +564,51 @@ All information is in the smallest principal component!
 ![:scale 85%](images/pca-for-feature-extraction.png)
 ]
 ???
+Next, I want to give an example of where PCA has been used,
+at least historically, for faces. This is a data set
+collected in the 90s.
+
+The idea is you have a face detector, given the face, you
+want to identify who this person is. Working on the original
+pixel space kind of seems like a pretty bad idea. 
+
+The images here have about 6000 pixels, they're relatively
+low resolution but still has like 5000 features, just
+looking at the pixel values, which means very high
+dimensional. 
+
+You can do a PCA and this is sort of the components that you
+get from this. You can see here, for example, here, from
+which direction does light come from, how much eyebrows do
+you have and do you have a mustache. These are the PCA
+components constructed on this data set. 
+
+The idea is that these PCA components can be better features
+for doing classification than the original pixels. And this
+is an application where whitening helps. Rescaling the
+feature components so that they all have the same variance
+actually helps classification. 
+
+One different way to think about these components instead of
+thinking about the mass rotations is you can think about
+equivalently that each point is a linear combination of all
+the components because the components form a basis of the
+input space. You can think that each picture, for example,
+Winona Ryder here, is a linear combination of all the
+components and these coefficients of linear combinations are
+the projection in the PCA space. I mean, these are the
+coefficients in the PCA bases after rotation. To me, this
+makes it more interpretable what these components might
+mean. 
+
+So if I have, light from the person's right, then I would
+expect X1 want to be high, because then this component
+becomes active. If the light comes from a different
+direction, I would expect X1 to be negative. If there's no
+left or right gradient, I would expect the component to be
+about zero. 
+
+
 ---
 # 1-NN and Eigenfaces
 .tiny-code[
@@ -251,6 +649,39 @@ knn.score(X_test_pca, y_test))
 ```
 ]
 ???
+Alright, so now let's look at what it does. So here, on this
+dataset, I’m doing one nearest neighbor classifier. The
+reason I'm using one nearest neighbor classifier is that
+that's often used if people want to demonstrate what a good
+representation of the data is. The idea is that one nearest
+neighbor classifier just looks at your nearest neighbor and
+so it only relies on your representation of the data. So if
+1NN classifier does well, your representation of the data is
+good. That’s the intuition behind this.
+
+If I use a linear model that's penalized, PCA will probably
+not make a lot of difference actually.
+
+Here with the nearest neighbor equal to one, you get about
+23% accuracy. And you can see that the data set is very
+wide. So there are a lot more features than there are
+samples.  
+
+If there are more features than in samples. PCA can only do
+as many components as there is the minimum of features and
+samples. So in this case, I could project a maximum of up to
+1547 directions because this is the rank of the matrix and I
+can only get so many Eigenvectors. 
+
+If I do the same thing with PCA, I go down from 5600
+dimensions to only 100 dimensions and then the 1NN
+classifier actually does quite a bit better. Now it's 31%
+accurate. 
+
+You could do a grid search to find the number of components
+or you could look at the explained variance ratio.
+
+
 ---
 
 # Reconstruction
@@ -258,6 +689,44 @@ knn.score(X_test_pca, y_test))
 ![:scale 70%](images/reconstruction.png)
 ]
 ???
+Another way to select how many components you want for
+classification instead of looking at the explained various
+ratios is looking at the reconstructions. That is most
+useful if you can look at the data points in some meaningful
+way. 
+
+So for example, here, the bottom right image in my
+illustration is what happens if I rotate to 10 dimensions
+and then I rotate back to the original space. For example,
+you can see here if I use only 10 components, these people
+are not recognizable at all. So I wouldn't expect 10
+components to make to make a lot of sense. On the other
+hand, if I look at 500 components, even though there’s
+high-frequency noise the person is recognizable. Using 500,
+I'm probably not going to lose anything here.
+
+This is also one way to see how many components you might
+need for a particular result. And so if I just use two
+components, you would see probably nothing.
+
+And yet, if I used as many components as there are samples
+in this case, if I used like 1500 components, it would be
+completely perfect, because I would basically rotate in
+space, not drop any dimensions and rotate back.
+
+Another thing that's interesting when you’re doing
+reconstructions is there’s a different application for PCA
+called outlier detection. 
+
+You can think of PCA as a density model in the sense, you're
+fitting a big Gaussian and then you dropping directions of
+small variance. And so you can look at what are the faces
+that are reconstructed well versus those that are not
+reconstructed well. And so if they're not reconstructed as
+well, that means they are quite different from most of the
+data. 
+
+
 ---
 class:split-40
 # PCA for outlier detection
@@ -277,13 +746,74 @@ Best reconstructions
 Worst reconstructions
 ]
 ???
+So here, I used 100 components. And now I can look at what's
+the reconstruction error of rotating the data, dropping some
+components and rotating back, and the ones with good
+reconstructions are the ones that look like most of the
+data. And the ones that have bad reconstructions are the
+ones that are sort of outliers. 
+
+If something looks a lot like the data, that's probably
+something the principal component will cover. Whereas if
+something looks very different than the data, that's
+something that principal component will not cover. 
+
+If you look at these images, what is an outlier and what is
+not an outlier has nothing to do with the person in it but
+has only to do with the cropping of the image. So these
+images are all not very well aligned, they have like tilted
+head, wearing glasses, cropped too wide, cropped not wide
+enough, wearing caps and so on. Since they look very
+different from most of the images, and that's why they're
+outliers.
+
+But you can use this in general, as a density model,
+basically, looking at how well can the data point be
+reconstructed with PCA. 
+
+There are more uses of PCA. These are like a couple of
+different applications of PCA that all have sort of quite
+different goals and quite different ways of setting
+dimensionality. 
+
+The next thing I want to talk about is manifold learning. So
+PCA as I said, is a very simple transformation of the data,
+that is just a rotation and sort of subtracting the mean.
+
+
 ---
 class: centre,middle
 # Manifold Learning
 ???
+Manifold learning is basically a class of algorithms that
+are the much more complicated transformation of the data. A
+manifold is a geometric structure in higher dimensions.
+
+So the idea is that you have low dimensional space, and sort
+of embedded into a high dimensional space. The classical
+example is this Swiss roll.
+
+
 ---
 ![:scale 90%](images/manifold-learning-structure.png)
 ???
+Here, this is sort of a two-dimensional data set that was
+embedded in a weird way in the three-dimensional data set.
+And you hope to recover the structure of the data. And the
+structure of the data here would be the 2D structure of the
+layouts with Swiss roll. So PCA can't do that, because PCA
+is only linear. So if you would project this down with two
+dimensions, it's going to smooch all of these together and
+the blue points will be very close to the red points, if it
+projects down this axis, for example. And that's sort of not
+really what the geometry of the data is like. 
+
+So for this, you would need nonlinear transformations of the
+input space that can sort of try to capture the structure in
+the data. 
+
+
+
 Learn underlying “manifold” structure, use for dimensionality reduction.
 # FIXME white padding on image?!
 ---
@@ -293,6 +823,16 @@ Learn underlying “manifold” structure, use for dimensionality reduction.
 - Often can’t transform new data. 
 - Pretty pictures!
 ???
+Manifold learning is for visualization purposes only. One of
+the problems is the axis don't correspond to anything,
+mostly. And often you can’t transform your data, but you can
+get pretty pictures for your publications or to show your
+boss. 
+
+These are mostly used for exploratory data analysis and less
+in a machine learning pipeline. But they’re still sort of
+useful. 
+
 ---
 # Algorithms in sklearn
 - KernelPCA – does PCA, but with kernels! 
@@ -303,6 +843,30 @@ Learn underlying “manifold” structure, use for dimensionality reduction.
 - Isomap “kernel PCA on manifold”
 - t-SNE (t-distributed stochastic neighbor embedding)
 ???
+So some of the most commonly used algorithms which are in
+scikit-learn are…
+
+KernelPCA, which is just PCA but with kernels. So you set up
+the covariance matrix, you look at the kernel matrix.
+
+Spectral embedding, which looks at the eigenvalues of the
+graph Laplacian. It's somewhat similar to kernel methods but
+you compute the eigenvectors off like a similarity matrix.
+
+There’s locally linear embedding.
+
+There's Isomap.
+
+Finally, t-SNE.
+
+t-SNE stands for t-distribution stochastic neighbor
+embedding, this is sort of the one that maybe has the least
+strong theory behind it. But they're all kind of heuristics
+and a little bit of hacky.
+
+t-SNE is something that people found quite useful in
+practice for inspecting datasets. 
+
 ---
 # t-SNE
 
@@ -320,6 +884,59 @@ Learn underlying “manifold” structure, use for dimensionality reduction.
 `$$KL(P||Q) = \sum_{i \neq j} p_{ij} \log \frac{p_{ij}}{q_{ij}}$$`
 
 ???
+The main idea of t-SNE is that you define a probability
+distribution over your data points, given one data point,
+you want to say, “If I'm going to pick one of my neighbors
+at random, and I'm going to do this weighted by distance,
+how likely is it I'm going to pick neighbor I?”
+
+This is just a Gaussian distribution with a particular sigma
+that's dependent on the data point. 
+
+So around each data point, you look at the density of their
+neighbors and you make it symmetric.
+
+Assuming, we have embedded our data into some Yi and now it
+can look at the distance between two of these Ys but we're
+not using Gaussian, we’re using t-distributions. 
+
+So what you're doing then is, you initialize the Yi’s
+randomly, and then you do gradient descent to basically make
+these two distributions similar. This is quite different
+from other embedding methods. Here, we're not learning
+transformation at all, we’re just assigning these Yi’s
+randomly in our target space, and then move them around so
+that the distances are similar to the distances in the
+original space. 
+
+What this means is basically things that were similar in
+your original space should be similar in the new space as
+well.
+
+The reasons that they use a student-t here instead of a
+Gaussian is because they didn't want to focus too much on
+things that are too far away. You only want to focus on the
+points that are pretty close to you. 
+
+This is used for embedding into two and three-dimensional
+spaces. So 99% of the time you're using this with the Yi
+being in two-dimensional space and the Xi being the original
+data points. 
+
+The sigma is adjusted locally depending on how dense the
+data is in a particular region. But there's the overall
+parameter which is called the perplexity which basically
+regulates how the local sigmas are set. So perplexity is
+some transformation of the entropy of the distribution. So
+you set the Sigma such that the entropy of the distribution
+is the parameter you're setting. 
+
+If you set perplexity parametric low, you going to look at
+only the close neighbors. If you set it large, you're going
+to look at a lot of neighbors. This will indirectly
+influence the sigma. 
+
+
 
 - Starts with a random embedding
 - Iteratively updates points to make “close” points close.
@@ -332,6 +949,34 @@ Learn underlying “manifold” structure, use for dimensionality reduction.
 class:center
 ![:scale 63%](images/tsne-embeddings-digits.png)
 ???
+(Read the next slide and come to this)
+So one way it can help me understand the data, this is
+actually with different random seats so look slightly
+different. Here, I show some of the images, so you can get
+an idea of what's happening. 
+
+You can see that if the one is more angled and has like a
+bar at the bottom, it's grouped over here. And if the one is
+more straight and doesn't have a bar, that group over here.
+The nines got actually split up into three groups. These are
+actually pretty natural cluster, so it found out that there
+are different ways to write nine with a bar in the bottom
+and without a bar at the bottom.
+
+Writing the code for this is a little bit of a hassle. But
+often I find it quite helpful to look at these t-SNE
+embedding and looking at outliers, helps me understand my
+dataset.
+
+One of the downsides of this is, I didn't write anything on
+the axis, because there's nothing on the axis. These are
+randomly initialized data points that have been moved around
+to have similar distances. This is completely rotationally
+variant. So if I rotated this picture or flipped it, it
+would still mean the same thing.  So there's no possible
+interpretation for the axis.
+
+
 ---
 class:split-40
 .smaller[```python
@@ -346,6 +991,28 @@ X_pca = PCA(n_components=2).fit_transform(X)
 --
 .right-column[![:scale 95%](images/tsne-digits.png)]
 ???
+Now I want to show you some of the outcomes. This is a PCA
+visualization of digit dataset, so both PCA and peacenik are
+completely unsupervised. This is just doing PCA with two
+components, first principle, and second principal component,
+and then I color it by the class labels. 
+
+PCA obviously doesn’t anything about the class labels, I
+just put them in here so we can see what's happening. You
+can see that sort of some of these classes is pretty well
+separated, others are like, kind of smooshed together.
+
+This is in t-SNE, when I first saw this I thought this was
+pretty impressive, because this Algorithm is completely
+unsupervised, but it still manages to mostly group nearly
+all of these classes in very compact clusters. 
+
+In this completely unsupervised method, I could sort of draw
+boundaries by hand in 2D from the original 64-dimensional
+space and I could group the data. This 2D view can help me
+understand the data.
+
+
 ---
 class:split-40
 # Tuning t-SNE perplexity
@@ -356,6 +1023,26 @@ class:split-40
 ![:scale 70%](images/tsne-tuning-30.png)
 ![:scale 70%](images/tsne-tuning-300.png)]
 ???
+The one parameter I mentioned, is perplexity. I want to give
+a couple of illustrations of the influence of this
+perplexity parameter. This is again the digit dataset.
+
+The results will be slightly different for each run because
+of the randomness. The author suggests perplexity equal to
+30 and says it always works.
+
+Here it’s set to 2, 5, 30 and 300. And you can see that 30
+actually does produce the most compact clusters. What will
+give you the best results depends on the dataset. 
+
+Generally, for small data sets, I think people found lower
+perplexity works better while for larger data sets, larger
+perplexity works better. And again, there’s sort of a
+tradeoff between looking at very close neighbors and looking
+at neighbors further away. 
+
+
+
 - Important parameter: perplexity
 - Intuitively: bandwidth of neighbors to consider 
 - (low perplexity: only close neighbors)
@@ -366,23 +1053,76 @@ class:split-40
 class:spacious
 ![:scale 25%](images/tsne-moons.png) ![:scale 55%](images/tsne-perplexity.png)
 ???
+Here's the same for a very small two dimensional data set. I
+wanted to see how well t-SNE can separate these out. Again,
+perplexity equal to 30, probably looks the best to me. 
 ---
 class: center, middle, spacious
 # Play around online
 
 http://distill.pub/2016/misread-tsne/
 ???
-interactive javascript un
+There's a really cool article in this link.
+
+The question was how do we reconcile categorical data with
+this? 
+
+So this indeed, this seems to be continuous data. You can
+apply it after one hot encoding. Sometimes the results will
+look strange.
+
+You might probably be able to come up with something that
+more specifically uses the discrete distributions. But all
+the things I talked about are really for continuous data. 
+
+Is s-SNE more computationally expensive than PCA?
+
+Yes, by a lot. PCA is computing an SPD, which is like a very
+centered linear algebra thing, which is very fast. And a lot
+of people spent like 50 years optimizing it. Still, there's
+a bunch of things to speed t-SNE.
+
+
 ---
 class: middle
 # Discriminant Analysis
 ???
+So the last thing I want to talk about is discriminate
+analysis. In particular, linear discriminate analysis. This
+is also a classifier, but it also can do dimensionality
+reduction. 
 ---
 class: spacious
 # Linear Discriminant Analysis aka Fisher Discriminant
 
 `$$    P(y=k | X) = \frac{P(X | y=k) P(y=k)}{P(X)} = \frac{P(X | y=k) P(y = k)}{ \sum_{l} P(X | y=l) \cdot P(y=l)}$$`
 ???
+Linear Discriminant Analysis is also called LDA, but never
+call it LDA because LDA also means Latent Dirichlet
+Allocation and so it might be confusing.
+
+Linear Discriminant Analysis is a linear classifier that
+builds on Bayes rule, in that, it assumes the density model
+for each of the classes, if you have a density model for
+each of the classes, you can build a classifier using Bayes
+rule. 
+
+This is Bayes rule of having a joint distribution of X and
+Y. If you then look at the conditional probability of X, you
+can say that the probability of Y being a particular class
+given X is the probability of X given Y is class, times
+probability of being in this class divided by P(X).
+
+And so you can expand this now here, the P(x) as a sum over
+all classes. And so the only thing you really need is a
+probability distribution of P(X) given a particular class.
+So if you fix any possibilities distribution for particular
+class Bayes rule gives you like a classifier. Linear
+Discriminant Analysis does basically one particular
+distribution, which is the Gaussian distribution. 
+
+
+
 - Generative model: assumes each class has Gaussian distribution
 - Covariances are the same for all classes.
 - Very fast: only compute means and invert covariance matrix (works well if n_features << n_samples)
@@ -391,14 +1131,40 @@ class: spacious
 - No parameters to tune!
 - Don’t confuse with Latent Dirichlet Allocation (LDA)
 
---
+---
 
 `$$ p(X | y=k) = \frac{1}{(2\pi)^n |\Sigma|^{1/2}}\exp\left(-\frac{1}{2} (X-\mu_k)^t \Sigma^{-1} (X-\mu_k)\right) $$`
+???
+So what we're doing is basically, we're fitting a Gaussian
+to each of the classes, but we're sharing the covariance
+matrix. So for each class, we estimate the mean of the
+class, and then we estimate the joint covariance matrix, so
+we subtract the mean of the class from all the data points,
+and then we compute the covariance matrix of that. 
 
---
+So now we have fitted Gaussian into each class, they all
+have the same covariance matrix and then we can apply this
+rule. And this gives us a classifier.
+
+---
 
 `$$    \log\left(\frac{P(y=k|X)}{P(y=l | X)}\right) = 0 \Leftrightarrow (\mu_k-\mu_l)\Sigma^{-1} X = \frac{1}{2} (\mu_k^t \Sigma^{-1} \mu_k - \mu_l^t \Sigma^{-1} \mu_l) $$`
 
+???
+You can actually write this in a slightly different way. The
+decision boundary between the two classes is the same as
+this formula on the right.
+
+What this is basically, the single data point lies on the
+decision boundary, if inverse square matrix times x is some
+constant. This is actually just a nearest centroid
+classifier in the space that was rotated by this joint
+covariance matrix or rotated and stretched by the joint
+covariance matrix.
+
+So basically, I compute the joint covariance matrix and then
+I look at what's the closest mean and I adjust it based on
+the prior probabilities of the class.
 
 ---
 class: spacious
@@ -411,10 +1177,35 @@ class: spacious
 - More flexible (quadratic decision boundary), but less robust: have less points per covariance matrix.
 - Can’t think of it as transformation of the space.
 ???
+Quadratic Discriminate Analysis is exactly the same thing,
+only that you have a separate covariance matrix for each of
+the classes. This makes a more flexible classifier, but
+also, you have fewer points to estimate each of the various
+matrices. So you have many more parameters, which makes it a
+little bit harder to fit. 
+
 ---
 class:center
 ![:scale 55%](images/linear-vs-quadratic-discriminant-analysis.png)
 ???
+If your data points are actually Gaussian, then obviously,
+this works well because it assumes each class is a Gaussian.
+
+
+If they have the same covariance matrix, Linear Discriminant
+Analysis obviously finds the perfect boundary. If they have
+different covariance matrix, then Quadratic Discriminant
+Analysis does better.
+
+What does this all have to do with dimensionality reduction?
+
+So we can use it as a classifier. Linear Discriminant
+Analysis is just a linear classifier with a particular
+probabilistic model. If I want a linear classifier, I’ll
+probably use a logistic regression instead. But what’s nice
+about this is the joint covariance function.
+
+
 ---
 # Discriminants and PCA
 - Both fit Gaussian model
@@ -423,16 +1214,60 @@ class:center
 - Can use LDA to transform space!
 - At most as many components as there are classes (needs between class variance)
 ???
+Linear Discriminant Analysis compared to PCA, they both fit
+a Gaussian to the data. The PCA basically fits a Gaussian to
+the whole dataset while Linear Discriminant Analysis fits
+multiple Gaussian with a shared covariance structure. So
+that means we can use this covariance structure to rotate
+our space or stretch our space using Linear Discriminant
+Analysis. 
+
+Because of the way it's defined, we can get as many
+components as there are classes minus one because you
+basically look at the vector that connects the means of the
+classes in the rotated space. So you rotate the space, and
+then you look at the space spend by the means.
+
 ---
 class:center
 # PCA vs Linear Discriminants
 ![:scale 100%](images/pca-lda.png)
 ???
+Here's an example of doing Linear Discriminant Analysis
+versus PCA on a synthetic dataset where I have three classes
+and they all share a covariance matrix. 
+
+Obviously, that's the case Linear Discriminant Analysis was
+designed for. If I do a PCA, PCA can’t really do a lot here
+because it flips the x-axis because jointly all three of
+this kind of looked like Gaussian and PCA is completely
+unsupervised so it can't distinguish between these three.
+
+If I used Linear Discriminant Analysis, it will a give me
+this. And basically, the first discriminant that I mentioned
+here will be the one that perfectly separates all the means.
+So it gets out the interesting dimensions that helped me
+classify. 
 ---
 class:center
 # Data where PCA failed
 ![:scale 100%](images/pca-fail.png)
 ???
+So if I look at the data set that I created so that PCA
+failed. So here, this was the original data set, all the
+information was in the third principal component, if I do
+Linear Discriminant Analysis I will get only one component.
+The one component that was found by Linear Discriminant
+Analysis, it's just the one that perfectly separates the
+data. 
+
+So this is a supervised transformation of the data that
+tries to find the features that best separate the data. I
+find this very helpful for visualizing classification data
+sets in a way that's nearly as simple as PCA but can take
+the class information into account. 
+
+
 ---
 # Summary
 - PCA good for visualization, exploring correlations
@@ -440,6 +1275,22 @@ class:center
 - Manifold learning makes nice pictures.
 - LDA is a supervised alternative to PCA.
 ???
+PCA, I really like for visualization and for exploring
+correlations, you can use it together with a classification
+for regularization if you have lots of features. Often, I
+find that regularization of the classifier works better. 
+
+Manifold learning is really just for making nice pictures.
+
+T-SNE probably makes the nicest pictures of the bunch. 
+
+And if you want a linear transformation of your data in a
+supervised setting Linear Discriminant Analysis is a good
+alternative to PCA.
+
+
+
+
 LDA also  also yields a rotation of the input spacA
 ---
 class: center, middle

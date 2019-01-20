@@ -24,10 +24,12 @@ class: center, middle
 Andreas C. Müller
 
 ???
-FIXME add AP for all evaluations, add more roc / pr curves
-FIXME better illustration for sampling
-FIXME better motivation for sampling / why we want to change things
-FIXME TOO SHORT
+Today we’ll talk about working with imbalanced data. We
+already talked about how accuracy is a bad measure and what
+are the other measures we can use. FIXME add AP for all
+evaluations, add more roc / pr curves FIXME better
+illustration for sampling FIXME better motivation for
+sampling / why we want to change things FIXME TOO SHORT
 FIXME Add estimators minimizing loss directly?
 ---
 class: center, middle
@@ -45,6 +47,15 @@ class: spacious
 - Asymmetric data
 
 ???
+In general, there's are two ways in which a classification
+task can be imbalanced. First one is asymmetric costs. Even
+if the probability of class 0 and class 1 are the same, they
+might be different like in business costs, or health costs,
+or any other kind of cost or benefit associated with making
+different kinds of mistakes. The second one is having
+asymmetrical data. Meaning that one class is much more
+common than the other class. 
+
 
 ---
 
@@ -57,6 +68,24 @@ class: spacious
 - Detect rare events
 
 ???
+One of these two is true in basically all real world
+applications. Usually, both of them are true. There's no
+reason why a false positive and a false negative should have
+the same business cost, they’re usually very, very different
+things, no matter whether you do ad-click prediction or
+whether you do health, the two kinds of mistakes are usually
+quite different, and have quite different real world
+consequences. 
+
+Also, data is always imbalanced, and often very drastically.
+In particular if you do diagnosis, or if you do ad clicks-or
+marketing….For ad-clicks, I think it's like below 0.01% of
+ads I clicked on, depending on how good doing with your
+targeting. So very often, we have very few positives. And so
+this is really a topic that is basically all of
+classification. So balance classification with balance
+costs, is not really something that happens a lot in the
+real world. 
 
 ---
 
@@ -94,6 +123,23 @@ avg/total      0.94     0.93      0.93      143
 ]
 
 ???
+So apart from evaluation we talked about one way we could’ve
+changed the outcome to take into account which was changing
+the threshold of greater probability. So not only taking
+into account the predicted class. Assume I have a logistic
+regression model and I can either use the predict method
+which basically makes the cut off at 0.5 probability of the
+positive class, then I can look at the classification
+report, which will tell me precision and recall for both the
+positive and the negative class. But if I want to increase
+recall for class 0 or increase precision for class 1, I can
+say only predict things as class 1 where the estimated
+probability of class 1 is 0.85. And then I will have only
+the ones that I'm very certain predicted as class 1.
+
+If you have given actual a cost function of how much each
+mistake costs, you can optimize this threshold.
+
 
 ---
 
@@ -104,7 +150,10 @@ avg/total      0.94     0.93      0.93      143
 ]
 
 ???
-
+We also looked at ROC curves, which basically look at all
+possible thresholds as you can apply. Either for
+probabilistic prediction, or for any sort of continuous
+uncertainty estimate.
 ---
 
 class: center, middle
@@ -112,7 +161,10 @@ class: center, middle
 ## Remedies for the model
 
 ???
-
+Today, I really want to talk about more, how we can change
+the model more than just changing the threshold. So how can
+we change the building of the model so that it takes into
+account the asymmetric costs, or asymmetric data.
 ---
 # Mammography Data
 
@@ -139,6 +191,18 @@ array([10923,   260])
 ]
 ]
 ???
+I use this mammography data set, which is very imbalanced.
+This is a data set that has many samples, only six features
+and it's very imbalanced. 
+
+The datasets are about mammography data, and whether there
+are calcium deposits in the breast. They are often mistaken
+for cancer, which is why it's good to detect them. Since its
+rigidly low dimensional, we can do a scatter plot. And we
+can see that these are much skewed distributions and there's
+really a lot more of one class than the other. 
+
+
 Note: Split one slide to two due to size constraints.
 
 ---
@@ -175,6 +239,25 @@ scores['test_roc_auc'].mean(), scores['test_average_precision'].mean()
 ]
 
 ???
+So as a baseline here is just evaluating logistic regression
+and the random forest on this. Actually, I ran it under ROC
+curve and average precision. I’ve used a cross-validate
+function model selection that allows you to specify multiple
+metrics. So I only need to train the model once but I can
+look at multiple metrics.
+
+I do a 10 fold cross-validation on the data set and I split
+into training and test and so I can look at the scores here.
+The scores are dictionary, they give me training and test
+scores for all the metrics I specified. And so you can look
+at the mean test drug score and the mean test average
+precision score. This gives a high AUC and a quite low
+average precision.
+
+Here is a second baseline with a random forest doing the
+same evaluation with ROC AUC and average precision. We get
+slightly higher AUC and quite a bit higher average
+precision. 
 
 ---
 
@@ -194,7 +277,14 @@ Change the training procedure
 ]
 
 ???
-
+Now we want to change these basic training methods to be
+better adapted to this imbalanced dataset. There are
+generally two approaches. One is changing the data. And the
+other is change the training procedure and how you built the
+model. The easier one is to change the data. We can either
+add samples to the data, we can remove samples to the data,
+or we can do both. Resampling is not possible in
+scikit-learn because of some API issues.
 ---
 class: center, spacious
 
@@ -203,6 +293,12 @@ class: center, spacious
 ![:scale 55%](images/pipeline.png)
 
 ???
+The problem with pipelines, as they're in scikit-learn right
+now is, if you create a pipeline, and you call fit, it'll
+always use the original y and the output of a transformer is
+always a transformed x. So we can't change y. So we can
+re-sample the data.
+
 - The transform method only transforms X
 - Pipelines work by chaining transforms
 - To resample the data, we need to also change y
@@ -218,7 +314,10 @@ pip install -U imbalanced-learn
 ```
 
 Extends `sklearn` API
-
+???
+So we're going to use imbalance learn, which is an extension
+of the scikit-learn API that basically allows us to
+resample. 
 ---
 
 ### Sampler
@@ -238,6 +337,20 @@ In Pipelines:
 Sampling only done in `fit`!
 
 ???
+This extends sampler objects in scikit-learn. The sampler
+objects have a sample method which returns resample data and
+resample targets.
+
+There’s also pipelines in imbalance learn.  The important
+part here is the sampling is only done in fit. So only your
+training data will be resampled. But when you do
+predictions, you want predictions to be made on the whole
+test set, and on the original test set. So you don't want to
+mess with the test set in your evaluation. So resampling is
+only done when you're building a model. 
+
+
+
 - Imbalance-learn extends scikit-learn interface with a
 “sample” method.
 - Imbalance-learn has a custom pipeline that allows
@@ -266,6 +379,25 @@ print(np.bincount(y_train_subsample))
 
 
 ???
+The easiest strategy is randomly undersampling. The default
+strategy is to undersample the majority class so that it has
+the same size as the minority class, that's implemented in
+the random under sampler. Here, I instantiate to random
+under sampler, I set replacement equal to false, which means
+sampling without replacement and then I can do fit sample on
+the training set. And so the original training set was 8387
+samples, the subsample data set is only 390 samples. And you
+can see now in the bin count here, the data set is balanced.
+
+
+Basically, I reduced the majority class randomly to a very
+much smaller dataset, which made the majority class the same
+size as the minority class. And you can see that the dataset
+is 20 times smaller because the dataset was imbalanced. So
+building anything on this dataset will be much much faster.
+But also keep in mind, we threw away 98% of our data in
+doing that.
+
 
 - Drop data from the majority class randomly
 - Often untill balanced
@@ -307,6 +439,32 @@ scores['test_roc_auc'].mean(), scores['test_average_precision'].mean()
 ]
 
 ???
+Looking at the result, ROC AUC actually improved a little
+bit while the average precision decreased a little bit.
+Given that we threw away 98% of our data, I think the fact
+that the ROC AUC improved is quite remarkable. So this is
+clearly still a reasonable model, given one particular
+measure, it’s even a better model even though we threw away
+most of the data. 
+
+Even though it's very simplistic, it's actually a viable
+strategy that people often use in practice. In particular,
+if you have a very big data set, you might not have enough
+compute to actually do something on the whole dataset or you
+might only do something simple on the whole dataset. But
+after you resampled it, you can maybe train a much more
+complicated model. 
+
+Here by default, this random under simpler makes it balanced
+but of course, you could be slightly less extreme, so that
+you throw away a little bit fewer data.
+
+We can do the same thing with random forest.  After
+computing, the area under the ROC curve actually went up
+substantially. Again, it's quite surprising given that we
+used much less data, but the average precision went down
+quite a bit. 
+
 
 - As accurate with fraction of samples!
 - Really good for large datasets
@@ -360,6 +518,40 @@ scores['test_roc_auc'].mean(), scores['test_average_precision'].mean()
 ]
 
 ???
+The complement of doing random sampling of the data is
+random oversampling of data. So in random oversampling, we
+do the opposite. We basically resample the training dataset
+so that the minority class has the same number of samples as
+the majority class.
+
+Given that this dataset was very imbalanced, we nearly
+doubled the size of the training dataset. So now everything
+will be actually much slower because we have many more
+samples. We nearly doubled the dataset size because we
+reproduced many copies of the minority class and then we
+have a balanced dataset again. 
+
+Here, what we did is we just sampled with replacement. We
+sampled with replacement about 8000 times from this pool of
+195 samples. 
+
+Q: Does that mean there are repeat records?
+
+Yeah, most of them are repeated like 40 times on average. 
+
+Q: What distribution you’re sampling from? 
+
+We're not sampling IID from the original distribution
+because in the original distribution there was a strongly
+imbalanced. So we now sample from the traditional
+distributions basically where we sample first the label and
+then we sample from this class. And we do this for the two
+labels independently in the same amount of time. It's
+slightly weird because we have a lot of copies of the
+sample.
+
+
+
 Logreg the same, Random Forest much worse than undersampling (about same as doing nothing)
 
 ---
@@ -371,7 +563,11 @@ Logreg the same, Random Forest much worse than undersampling (about same as doin
 ]
 
 ???
-
+Here, I’m making a pipeline with logistic aggression random
+forest and you can see that the area under the ROC curve is
+actually lower, while the average precision is higher than
+with undersampling but slightly lower than the original
+dataset. 
 ---
 
 # Curves for Random Forest
@@ -381,6 +577,30 @@ Logreg the same, Random Forest much worse than undersampling (about same as doin
 ]
 
 ???
+We can also look at the curves. We have on the left, the ROC
+curve for logistic regression with the original data set,
+the oversample, and the under-sample dataset. On the
+right-hand side, we have the recall curve.
+
+These are the same for random forest. If you look at these
+curves from afar, they give you the exact opposite ideas. On
+the left, under sample seems to be best and oversample is
+the worst while under sample is clearly the worst and under
+sample is not so bad on the curve in the right.
+
+If I look at the precision-recall curve, the original data
+set did best. Looking at these two curves you get quite
+different ideas. The TPR axis is the same as the recall
+axis.
+
+The idea is since we have the cost function, we know which
+could be the area under one of these curves, or could be a
+particular recall or position value or particular cost
+matrix we want to achieve and we want to optimize this. And
+we hope that by taking into account the imbalance of the
+classes, we can optimize this cost better than just
+basically using the IID data set. But precision and false
+positive rate measure quite different things. 
 
 ---
 # ROC or PR?
@@ -392,6 +612,19 @@ FPR or Precision?
 `$$ \large\text{Precision} = \frac{\text{TP}}{\text{TP}+\text{FP}}$$`
 
 ???
+The false positive rate is how many false positives are
+there among the negatives. If you have a very imbalanced
+problem, the FPR is not very interesting because usually,
+the true negatives are much bigger than anything else which
+will end up distorting the curve. 
+
+If you're looking at a high precision model, so high
+precision for the minority class, then looking at the
+precision-recall curve is much more informative. Because for
+the high precision you can see that the blue and orange
+model are really very much better than the green model.
+
+
 fIXME think of better explanation
 ---
 class: spacious
@@ -403,7 +636,16 @@ class: spacious
 - Same effect as over-sampling (though not random), but not as expensive (dataset size the same).
 
 ???
-
+One way we can make the resampling more efficient is by
+using class weights instead of actually resampling. So we
+can change our loss function to do the same thing as if you
+would resample but under sampling case, we don't actually
+throw away any data and in the oversampling case, we don't
+actually make our computational problem harder by repeating
+some of the samples. This works for most models and it's
+pretty simple to do in scikit-learn. Basically, it's the
+same as oversampling in a sense because you're not throwing
+away any data. 
 ---
 class: spacious
 
@@ -416,6 +658,23 @@ class: spacious
 Similar for linear and non-linear SVM
 
 ???
+So for the linear model, for example, let's say we do
+logistic regression. Instead of minimizing this problem, for
+each class, we have a class weight c_(y_i )  and so the loss
+for each sample gets multiplied by this class weight and
+usually, they sum to one. This is similar to having a
+different penalty C for all of the different classes. 
+
+You can see that this is the same as if I repeat each sample
+x_i c_(y_i ) many times in each class. So if I set the cost
+weight of one class to 2, that would be the same as
+repeating each sample in this class twice, only now I don't
+actually have to duplicate any sampling. So this is cheaper
+than over sampling but has the same effect. 
+
+You can do this for hinge loss and SVMs by just changing the
+loss.
+
 
 ---
 
@@ -432,6 +691,15 @@ Prediction:
 Weighted vote
 
 ???
+For trees and all trees based models, you can just change
+the splitting criteria. For example, if you have a Gini
+index here, and you compute the Gini index for each class or
+the cross-entropy for each class, and you have the class
+weights in here.
+
+And again, you can see this is the same as replicating the
+data points c_k many times. If you want to make predictions,
+you can do a weighted vote.
 
 ---
 
@@ -453,6 +721,18 @@ scores['test_roc_auc'].mean(), scores['test_average_precision'].mean()
 ]
 
 ???
+In scikit-learn, all the classifier has a class weight
+parameter. You can set them to anything you want, basically,
+giving arbitrary integers to the particular classes, there
+is normalized sum to one.
+
+Balanced setting means do the same as oversampling so that
+the populations have the same size for all the classes. You
+can see this has a somewhat similar effect to the
+oversampling for only half the computational price. 
+
+This is a pretty simple way to try to change the model
+towards a positive class. 
 
 ---
 class: spacious
@@ -465,7 +745,13 @@ an ensemble!
 - Not in sklearn (yet)
 - Easy with imblearn
 ???
-
+There’s something a little bit better that’s called easy
+ensembles or resampling within an ensemble. So the idea is
+you build an ensemble like bagging classifier, but instead
+of doing a bootstrap sample, you can do a random
+undersampling into a balance dataset separately for each
+classifier in ensemble. Right now, you can only do this with
+imbalance learn. 
 ---
 
 # Easy Ensemble with imblearn
@@ -488,6 +774,28 @@ scores['test_roc_auc'].mean(), scores['test_average_precision'].mean()
 ]
 
 ???
+For example, I can do a balanced random forest, I’m using a
+decision tree as a base classifier with max features as
+auto. For classifier, this is the square root of number of
+features. 
+
+And so this will build 100 estimators. Each estimator will
+be basically trained on the random undersample of the data
+set. So I do a random under a sample of the data set 100
+times and I build a tree on each of them. So this is exactly
+as expensive as building a random forest on the undersample
+data set, which is pretty cheap because under sampling
+throws away most of the data. In fact, we're not throwing
+away as much data, we're keeping a lot of the data but only
+in different trees in the ensemble. 
+
+Of all the models that we looked at today, this is the best
+one in terms of area under the curve. It’s cheap to do and
+it allows you to use a lot of your data in a pretty nice
+way. This has been shown to be like pretty competitive in a
+bunch of benchmarks. 
+
+
 
 -As cheap as undersampling, but much better results than anything else! </br>
 -Didn't do anything for Logistic Regression.
@@ -496,6 +804,33 @@ scores['test_roc_auc'].mean(), scores['test_average_precision'].mean()
 class: center, middle
 
 ![:scale 100%](images/roc_vs_pr.png)
+???
+Looking at the curves again, comparing the easy ensemble.
+You can see that in the higher recall area, it does quite
+well and in the high precision area, it does better than
+just undersampling. So remember, this is much much cheaper
+than the oversampling by a large amount. And so if we are
+anywhere in this area here, it seems to be like a pretty
+decent solution. 
+
+To explain the difference between easy ensemble and under
+sample….In undersampling, I randomly under sample the
+dataset once. So then I have a balance dataset 195-195 and I
+built a model on this. And in this case, I build a random
+forest model. And in the easy ensemble, what I do is for
+each tree in the random forest I separately do an
+undersampling in 295-95. So they will all have the same
+minority class samples, but they all will have different
+majority class samples. So in total, I'm looking at more
+than 195 samples from the majority class since I under
+sample for each tree in a different way. That makes it quite
+a bit better.
+
+These are all the randomly sample methods that I want to
+talk about. You can see that here, they make quite a big
+difference. Depending on where you want to be on this
+precision-recall curve, you would choose quite different
+methods. 
 
 ---
 class: center, middle
@@ -504,7 +839,15 @@ class: center, middle
 ## (based on nearest neighbour heuristics from the 70's)
 
 ???
-
+Now I want to talk about some other resampling strategies
+called smart resampling strategies. They're based on
+heuristics for nearest neighbor classification from the 70s.
+In the 70s, they came up with a bunch of ways to basically
+prune the dataset to make a better and faster prediction on
+nearest neighbors. So now some people use the same methods
+to basically prune the majority class, instead of randomly
+undersampling the majority class, it strategically removes
+samples from the majority class. 
 ---
 class: spacious
 
@@ -517,7 +860,12 @@ from other class as neighbor (all).
 - “Cleans up” outliers and boundaries.
 
 ???
-
+One is the edited nearest neighbors. This is the originally
+used as a heuristic for reducing dataset for KNN. And it
+removes all samples that are misclassified by KNN from the
+training data. Or if they have any of the K neighbors is
+from the other class at all. So basically, what you're doing
+here is you clean up outliers and boundaries.
 ---
 
 .center[
@@ -525,7 +873,13 @@ from other class as neighbor (all).
 ]
 
 ???
-
+This is a synthetic data set. You have a minority class of
+blue and majority class of green. Basically, all the samples
+of the class of the majority class that are impinging on the
+territory of the minority class here are removed. This will
+clearly give you more recall on class one (the minority
+class) because a bigger area will be classified as blue in
+this case.
 ---
 
 # Edited Nearest Neighbours
@@ -545,6 +899,21 @@ X_train_enn_mode, y_train_enn_mode = enn_mode.fit_sample(X_train, y_train)
 ]
 
 ???
+This is for the mammography dataset. The first one is the
+original dataset, the second one is with mode and the third
+is with all. The second one means all the blue points get
+removed if they would be classified by 5 nearest neighbors
+as orange and the third if they have any orange point in
+their neighborhood. 
+
+This picture doesn't really make this clear, because it's in
+six dimensions. So you would think many more points are
+removed but actually, in the six dimensions, only very few
+of the points got removed, because most of the points are
+not along the boundary. 
+
+So definitely, in terms of computation, this doesn't really
+help as much. It might help us in terms of accuracy. 
 
 ---
 
@@ -585,7 +954,18 @@ print(np.bincount(y_train_cnn))
 [361 195]
 
 ???
-
+Interestingly, there's another approach called condensed
+nearest neighbor, which does exactly the opposite. This also
+was proposed to prune nearest neighbors and it focuses on
+the boundaries. It'll focus on the outliers in the
+boundaries and remove data points that are in the center of
+the class. This iteratively adds points to the majority
+class that is misclassified by K nearest neighbor. So
+basically, you look at all the misclassified, you pick a
+random one as misclassified, and then you add it to your
+dataset. This really prunes down the dataset a lot. So here,
+you can see that it prune down the majority class to 361
+samples, so it's nearly balanced now.
 ---
 
 .center[
@@ -593,6 +973,15 @@ print(np.bincount(y_train_cnn))
 ]
 
 ???
+Here's an illustration on the synthetic dataset. So
+basically, the edited nearest neighbors took away all these
+points here, while condensed nearest neighbors do exactly
+the opposite. It doesn’t exactly keep the closest points
+because the misclassified ones are sampled at random. 
+
+This is kind of nice because it reduces the dataset a lot.
+Also, this uses KNN, so if you have a very big data set,
+this might not be computationally feasible.
 
 ---
 
@@ -612,14 +1001,21 @@ np.mean(scores)
 0.948
 ]
 ???
+If you’re unlucky doing this condensing might actually be
+more expensive than your classifier. 
 
+These strategies are usually not used by themselves as much,
+but they're used together with the method we're going to
+talk about next, which is basically a way to do synthetic
+sample generation.
 ---
 class: center, middle
 
 ## Synthetic Sample Generation
 
 ???
-
+There are many methods, but the only method that your
+interviewer will expect you to know is SMOTE. 
 ---
 
 # Synthetic Minority Oversampling Technique
@@ -633,6 +1029,25 @@ class: center, middle
 
 
 ???
+I don't think it's actually used commonly in practice like
+the random oversampling and random undersampling. In
+particular, the undersample is great because it makes
+everything much faster.
+
+The idea is to add samples to the smaller class. So you
+synthetically want to add samples that kind of looks like
+the smaller class and this way hopefully, bias the
+classifier more towards the smaller class. It's also
+neighbor space so again if you have a very big dataset or if
+you’re in a very high dimension this might be slow. So in
+very high dimensions not even work that well.
+
+So what we're doing here is for each sample on the minority
+class you pick a random neighbor among the K nearest
+neighbors and then you pick a point on the line between the
+two.  
+
+
 - Leads to very large datasets (oversampling)
 - Can be combined with undersampling strategies
 
@@ -643,7 +1058,7 @@ class: center, middle
 ]
 
 ???
-
+So you oversample basically until the classes are balanced. 
 ---
 
 class: center, middle
@@ -654,6 +1069,17 @@ class: center, middle
 
 
 ???
+This is feature three and feature four from the mammography
+dataset. You can see basically that for this dataset it’s
+pretty far away, K is three and so these neighbors were
+picked and then a bunch of times points was randomly picked
+on the line between the two. So basically, you get something
+that is sort of connecting all two data points. 
+
+This might set of make more sense than just repeating the
+sample over and over again. But also, if you're in high
+dimensions, it's not entirely clear how well this will work.
+
 
 ---
 
@@ -678,6 +1104,9 @@ search.fit(X_train, y_train)
 ]
 
 ???
+The results are pretty similar to either the original
+dataset or the random sampling.
+Performing nearest neighbors, I found 11 to be best. 
 
 ---
 
@@ -686,6 +1115,14 @@ search.fit(X_train, y_train)
 ]
 
 ???
+Also here in these plots, it looks now, there are more
+yellow points than purple points that's because I followed
+the purple points first and then the yellow points. Because
+if I didn't, then in the original data, you wouldn't see any
+yellow points.
+
+Again, if you look at the metrics, this doesn't really make
+a big difference. 
 
 ---
 
@@ -710,9 +1147,43 @@ works well in practice
 - More advanced variants of SMOTE available
 
 ???
+Always check the ROC AUC and the average precision and look
+at the curves. You’ve seen that the different strategies and
+different parts of the curves, they behave quite
+differently. Undersampling is really fast, and it can
+sometimes make things better. So I would always try under
+sampling just because maybe your model is slightly worse but
+if you get 100 times to speed up, it's still worth it.
+
+Using undersampling with easy ensembles is as fast as
+undersampling, but often gives better results. 
+
+There are many variants of SMOTE and people often combined
+SMOTE with the pruning strategies. So they prune data
+points, and they add more data points and then remove them
+and add more points and so on. SMOTE seems to be the only
+strategy that kind of works in practice, apart from the
+under-sampling and easy ensembles. 
+
+The methods that people actually use are kind of limited and
+unfortunately, also the benchmarks are kind of limited.
+
+People in machine learning research like balance datasets,
+but in the real world data sets are never balanced.
+Unfortunately, most of the datasets we have come from
+machine learning researchers. And so there's really not a
+lot of interesting data sets that are very balanced.
+
+The other thing I should have covered is you can directly
+optimize particular metrics. So you can train a model to
+optimize precision at K or area under the curve or something
+like that, at least for linear model, that's relatively
+straightforward. I'm not sure what the outcome was if
+someone tried it with trees. But I think the most common is
+just reweighting to samples. 
 
 
-
+---
     </textarea>
     <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>

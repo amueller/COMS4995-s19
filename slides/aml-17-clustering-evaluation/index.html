@@ -23,10 +23,11 @@ class: center, middle
 
 Andreas C. Müller
 ???
-Last time we talked about clustering, and an obvious question is:
-Which algorithm do we use, and how do we set the parameters?
-That's a bit more of an art than a science, unfortunately.
-But I want to give you some tools to do better than just guessing.
+Last time we talked about clustering, and an obvious
+question is: Which algorithm do we use, and how do we set
+the parameters? That's a bit more of an art than a science,
+unfortunately. But I want to give you some tools to do
+better than just guessing.
 
 FIXME illustration of clustering picking up on different concepts?
 FIXME talk about http://datamining.rutgers.edu/publication/internalmeasures.pdf
@@ -175,25 +176,28 @@ For clusterings `$X_i$` and `$Y_j$`, `$n_{ij}=|X_i \cap Y_j|$`
 
 
 ???
-The most basic way to compare two different clustering results, say yours
-and the ground truth, or two different algorithms, is the contingency matrix.
-You might know contingency matrices from statistics, where they are used
-to relate discrete probability distributions.
-The Contingency matrix is quite similar to a confusion matrix, in that it
-counts how often a datapoint was given label i in one clustering and label j
-in the other clustering.
-So rows correspond to one clustering, and columns correspond to the other.
-However, because labels don't mean anything,
-the diagonal has no meaning, and both of these contingency matrices here
-mean that the two clusterings produce the same partition, i.e. they are identical.
+The most basic way to compare two different clustering
+results, say yours and the ground truth, or two different
+algorithms, is the contingency matrix. You might know
+contingency matrices from statistics, where they are used to
+relate discrete probability distributions. The Contingency
+matrix is quite similar to a confusion matrix, in that it
+counts how often a datapoint was given label i in one
+clustering and label j in the other clustering. So rows
+correspond to one clustering, and columns correspond to the
+other. However, because labels don't mean anything, the
+diagonal has no meaning, and both of these contingency
+matrices here mean that the two clusterings produce the same
+partition, i.e. they are identical.
 
-Also, contingency matrices do not need to be square. If you run clustering
-on a dataset, you don't usually know the number of clusters so you want
-to compare different clusterings with different numbers of clusters.
-FIXME needs example
+Also, contingency matrices do not need to be square. If you
+run clustering on a dataset, you don't usually know the
+number of clusters so you want to compare different
+clusterings with different numbers of clusters. FIXME needs
+example
 
-Now that we have this basic representation of cluster overlap, we can
-define derived metrics 
+Now that we have this basic representation of cluster
+overlap, we can define derived metrics 
 ---
 # Contingency Matrix
 - Both of these mean identical partitions:
@@ -213,22 +217,27 @@ define derived metrics
 ???
 - Between 0 and 1 but not normalized or adjusted. If V is subpartition of U still = 1
 
-A very common metric is mutual information. which is the mutual information
-of the discrete distributions given by the partitions (or the contingency table).
+A very common metric is mutual information. which is the
+mutual information of the discrete distributions given by
+the partitions (or the contingency table).
 
 FIXME unify notation (second equation only?)
 FIXME define P(i), P(i, j)
-Mutual information is a standard information theoretic measure for relating
-two distributions, providing a measure of how interdependent they are.
-There we just create distributions corresponding to the partitions and compare those.
+Mutual information is a standard information theoretic
+measure for relating two distributions, providing a measure
+of how interdependent they are.
+There we just create distributions corresponding to the
+partitions and compare those.
 
-We can rewrite this uing the contingency matrix, the probability P(i, j) is
-just the the entry n_ij divided by the number of samples, and P(i) and P(j) are the
-row and column sums divided by the number of samples.
+We can rewrite this uing the contingency matrix, the
+probability P(i, j) is just the the entry n_ij divided by
+the number of samples, and P(i) and P(j) are the row and
+column sums divided by the number of samples.
 
-Mutual information is also always between zero and one, with one being
-perfect information. However, if one partition is a sub-partitioning of
-the other partition, the mutual information is still one.
+Mutual information is also always between zero and one, with
+one being perfect information. However, if one partition is
+a sub-partitioning of the other partition, the mutual
+information is still one.
 
 ---
 #NMI and AMI
@@ -238,18 +247,21 @@ the other partition, the mutual information is still one.
 `$$ AMI = \frac{MI - E[MI]}{\max(H(U),H(V))-E[MI]} $$`
 
 ???
-Similar to the rand index, the mutual information depends on the number
-of samples and size of the clusters, and it's common to adjust it for chance,
-to give it a more universal scale.
-Two common normalizations are the normalized mutual information NMI, which divides the mutual information
-by the squareroot of the products of the entropy of the marginal distributions,
-and the adjusted mutual information AMI, which has an adjustment for chance.
+Similar to the rand index, the mutual information depends on
+the number of samples and size of the clusters, and it's
+common to adjust it for chance, to give it a more universal
+scale. Two common normalizations are the normalized mutual
+information NMI, which divides the mutual information by the
+squareroot of the products of the entropy of the marginal
+distributions, and the adjusted mutual information AMI,
+which has an adjustment for chance.
 FIXME definition of entropy?
 
-Both use the entropy to penalize overpartitioning, but only AMI is adjusted for chance,
-so zero on expecation.
-These two usually behave pretty similarly. There is other variants of NMI,
-for example dividing by the maximum, as I did here for AMI.
+Both use the entropy to penalize overpartitioning, but only
+AMI is adjusted for chance, so zero on expecation. These two
+usually behave pretty similarly. There is other variants of
+NMI, for example dividing by the maximum, as I did here for
+AMI.
 
 
 - Penalizes overpartitioning (via entropy)
@@ -273,34 +285,42 @@ FIXME explain expectation better!
 
 - Between 0 and 1
 ???
-One of the most useful one is the Rand Index.
-For two partitions C1 and C2, it computes the number of pairs points that are in
-the same set in C1 and in the same set in C2, called "a" here, and the number of pairs of
-points that are in different sets in both C1 and C2, called "b" here.
-This is divided by n choose 2, so the number of all possible pairs of points.
-This is always between zero and one, though the actual possible minimum and
-maximum depend on the number of clusters and the number of points.
+One of the most useful one is the Rand Index. For two
+partitions C1 and C2, it computes the number of pairs points
+that are in the same set in C1 and in the same set in C2,
+called "a" here, and the number of pairs of points that are
+in different sets in both C1 and C2, called "b" here. This
+is divided by n choose 2, so the number of all possible
+pairs of points. This is always between zero and one, though
+the actual possible minimum and maximum depend on the number
+of clusters and the number of points.
 
-Let's do an example. We're comparing the labeling 0011 and the labelling 1100.
-They are the same, so hopefully the rand index is going to be 1.
-First, I write these as partitions here. Then I check which pairs of points
-are in the same set in both partitions. The pair 0,1 is in the same set
-in both partitions, so we count that. The pair 2,3 is also in the same set
-in both partitions, so we count that as well. No other pairs are in the same
-set in either partition, so we're done counting for "a".
-Now we count the pairs of points that are in different sets. Zero and 2 are in
-different sets in partition one, and also in different sets in partition 2.
-Same for zero and 3, and 1 and 2, and 1 and 3. So that's four pairs in total.
-So the nummerator is 2 + 4 = 6. The denominator is 4 choose 2, which is also six,
-so the rand index is 1, as expected.
+Let's do an example. We're comparing the labeling 0011 and
+the labelling 1100.
+They are the same, so hopefully the rand index is going to
+be 1.
+First, I write these as partitions here. Then I check which
+pairs of points are in the same set in both partitions. The
+pair 0,1 is in the same set in both partitions, so we count
+that. The pair 2,3 is also in the same set in both
+partitions, so we count that as well. No other pairs are in
+the same set in either partition, so we're done counting for
+"a". Now we count the pairs of points that are in different
+sets. Zero and 2 are in different sets in partition one, and
+also in different sets in partition 2. Same for zero and 3,
+and 1 and 2, and 1 and 3. So that's four pairs in total. So
+the nummerator is 2 + 4 = 6. The denominator is 4 choose 2,
+which is also six, so the rand index is 1, as expected.
 
-For a second example, let's look at these two partitions, 0,1,0,1 and 1,2,0,0.
-Here there's no pair of points that is in the same set in both of them.
-There are three pairs of points that are in different sets in both of them,
-(1,2), (2,3) and (0,3). So the rand index is 3/6, so 1/2.
+For a second example, let's look at these two partitions,
+0,1,0,1 and 1,2,0,0. Here there's no pair of points that is
+in the same set in both of them. There are three pairs of
+points that are in different sets in both of them, (1,2),
+(2,3) and (0,3). So the rand index is 3/6, so 1/2.
 
-Alright, so the rand index is about matching pairs of points, which is slightly
-tricky to do in your head, but not that complicated really.
+Alright, so the rand index is about matching pairs of
+points, which is slightly tricky to do in your head, but not
+that complicated really.
 ---
 # Rand Index Example
 
@@ -324,32 +344,56 @@ tricky to do in your head, but not that complicated really.
 - Maximum of 1, 0 on expectation (can become negative!)
 [Don’t learn the formula]
 
-Because the range of the rand index depends on the data, in practice people prefer
-to use the adjusted rand index, which is adjusted for chance. So we take the
-index we just computed, subtract the expected index over this dataset, and divide
-it by the maximum index on this dataset minus the expected index.
-This means the expectation over all cluster assignments is zero, and the maximum
-over cluster assignments is 1. However, it means the adjusted rand index
-can become negative, basically if the partitions are less similar than they
-would be on expectation, or by chance.
-What this works out to is this nice formula here. The n_ij is the entries of
-the continency table we saw before, and the a_i and b_i are the row and columns
-sums of that contingency table.
-I really don't wanna remember that formula, so don't worry, it's not gonna
-be on the test. Just keep in mind that it measures exactly the same thing
-as the rand index, only adjusting for chance.
-You can see all of the normalization terms only depend on the row and column
-sums, so the number of samples in each of the clusters. Only this first part here
-depends on the contingency table.
-The most common use of this is to compare a particular clustering to a ground-truth
-clustering.
+Because the range of the rand index depends on the data, in
+practice people prefer to use the adjusted rand index, which
+is adjusted for chance. So we take the index we just
+computed, subtract the expected index over this dataset, and
+divide it by the maximum index on this dataset minus the
+expected index. This means the expectation over all cluster
+assignments is zero, and the maximum over cluster
+assignments is 1. However, it means the adjusted rand index
+can become negative, basically if the partitions are less
+similar than they would be on expectation, or by chance.
+What this works out to is this nice formula here. The n_ij
+is the entries of the continency table we saw before, and
+the a_i and b_i are the row and columns sums of that
+contingency table. I really don't wanna remember that
+formula, so don't worry, it's not gonna be on the test. Just
+keep in mind that it measures exactly the same thing as the
+rand index, only adjusting for chance. You can see all of
+the normalization terms only depend on the row and column
+sums, so the number of samples in each of the clusters. Only
+this first part here depends on the contingency table. The
+most common use of this is to compare a particular
+clustering to a ground-truth clustering.
 
 ---
 # KMeans on digits dataset
 .center[![:scale 70%](images/ari_nmi_ami_digits.png)]
 
 ???
-- ARI, AMI and NMI for k-Means on “digits” dataset. ARI and AMI penalize too many clusters.
+One of the most common applications is picking a number of
+clusters or tuning a clustering algorithm. So we could try
+to use the supervised methods to figure out what's the good
+number of clusters to cluster the digit dataset with KMeans.
+And here's the results. This is using adjusted rand index,
+adjusted mutual information and normalized mutual
+information. As you can see that they all have basically the
+same peak, interestingly, at 11.
+
+If you are in KMeans with 11, this will give us the best
+mutual information or the best rand index with respect to
+the ground truth labeling of the digits. You can also see
+that for the normalized mutual information, the over
+partitioning wasn't penalize that strongly. So basically, if
+you pick more and more clusters, it doesn't really degrade
+that much. While the adjusted rand index and adjusted mutual
+index, basically degrade more quickly so it’s very clear
+where the maximum is.
+
+Q: What are the two partitions I compare?
+
+One is KMeans and the other one is the class labels.
 
 
 ---
@@ -359,6 +403,11 @@ class:center,middle
 #Unsupervised Evaluation
 
 ???
+Now let's talk about unsupervised evaluation. So these are
+often a bit vaguer because you need to define what is a good
+clustering given the data and the partition. I find them a
+little bit less helpful. But you can actually use them in
+practice. 
 ---
 
 # Silhouette Score
@@ -374,11 +423,42 @@ class:center,middle
 
 - Prefers compact clusters (like k-means) 
 ???
+
+One of the classical ones is the silhouette score. The
+silhouette score for each sample, you compute as the mean
+distance to samples in the nearest cluster minus the mean
+distance of two samples in the same cluster. This score can
+be computed for every data point. If you want to do is for
+the whole partition, you just average this over all the
+samples. 
+
+One of the downsides of this is that it prefers compact
+clusters and not complex cluster shapes. Basically, KMeans
+will do usually pretty good at this whereas DBSCAN will not.
+
+
 ---
 
 .center[
 ![:scale 60%](images/ari_silhoutte.png)]
 ???
+Here, the ARI is comparing to the ground truth where the
+ground truth is one-half moon versus the other half moon,
+they are two different labels. And the silhouette score is
+completely unsupervised and measures the compactness of the
+cluster in a sense. And you can see that they basically
+completely disagree. 
+
+In the top left, since the clusters are quite compact, the
+silhouette score is the highest of the bunch, even though
+there’s one cluster that spans both of the half moons.
+Whereas the one in the bottom right, recovers the ground
+truth and so the ARI is very high. But the silhouette score
+is really low, it says this is the worst clustering.
+Silhouette score will not be able to pick up on these more
+complex cluster shapes, it will always favor more compact
+clusters. Depending on your application that might be okay
+or might not be okay.
 
 ---
 .center[
@@ -386,6 +466,15 @@ class:center,middle
 
 - What's the right number of clusters?
 ???
+This is kind of a very trivial example. But still, in higher
+dimensions, it might not be as obvious. So how many clusters
+are there?
+
+It’s drawn from four Gaussians. And actually, instead of
+just looking at the silhouette score, average over
+everything, I can look at the individual silhouette score of
+the points. 
+
 ---
 
 # Silhouette Plots
@@ -398,6 +487,32 @@ class:center,middle
 - http://scikit-learn.org/stable/auto_examples/cluster/plot_kmeans_silhouette_analysis.html
 
 ???
+Here at the top, I have KMeans which runs with eight
+clusters.
+
+The thing that people often use is these silhouette plots.
+These basically plot the silhouette score for each point in
+each of the clusters. People found these diagrams help them
+to figure out if it's a good clustering or not.
+
+What you're looking for is, you want to have these things
+have like a smooth curve, which basically indicates, most of
+the points have a very high silhouette score and then
+there's some couple that is sort of on the fringes of the
+cluster. If you see something that’s not so smoothly curved
+then it indicates, there's a couple of samples with very
+high silhouette score, then there's a sudden drop, and then
+there are some more points. This might also indicate that
+there are maybe two clusters within one cluster, which is
+actually the case here. 
+
+And if you over partition your data, you might get something
+like the red one in the fourth diagram, where you don't have
+a nice curve, indicating that the red has a very small
+silhouette score compared to the other ones and also, they
+basically fall off very quickly. 
+
+
 ---
 .center[
 ![:scale 60%](images/number_clusters_gaussians.png)
@@ -406,15 +521,32 @@ class:center,middle
 
 
 ???
-What’s the right number of clusters?
-Generated as mixture of 10 Gaussians.
-So what?
+So how does it look like if we have a more complicated
+dataset. So this is generated as a mixture of 10 Gaussians,
+that doesn't mean that 10 is a good clustering. I think
+probably 5 would be my best guess. But it's really there's
+not really a right answer. There's not very clear distinct
+clusters. 
 ---
 .center[
 ![:scale 60%](images/more_silhouette_plots.png)
 ]
 
 ???
+We can also look at the silhouette score for this. Looking
+at these, it's very hard to say, what is a good clustering. 
+
+Q: If the score can’t help us why are we using it?
+
+Because there's no better score.
+
+Question is, is this something that we care about? Is this
+something that's going to happen in practice?
+
+If you say yes, that this is something that you care about
+and you want to recover these 2 moons, then never ever use
+this.
+
 ---
 # Digits Dataset
 
@@ -423,6 +555,13 @@ So what?
 ]
 
 ???
+Here's the same thing for the digit data set. And of the
+ones that I tried, 15 clusters is the best. But again, by
+looking at the diagrams they're not very helpful to me. It
+definitely can show you the density of the cluster, in some
+sense.
+
+
 
 
 ---
@@ -437,6 +576,31 @@ So what?
 https://arxiv.org/abs/1007.1075
 
 ???
+There's one other measure that I want to talk about called
+cluster stability. Cluster stability is not really a simple
+measure of how good is a partition, but it's more of how
+good is a particular parameter setting, or how good is a
+particular algorithm. 
+
+The idea behind cluster stability is that if you changed
+your data a little bit and your clustering is good then it
+should be the same. So basically, you're trying to add some
+noise, the desired method is to do bootstrap sampling or you
+could add like random noise to the data or something like
+that, and ideally, if there are actually good clusters in
+the data, doing bootstrap sampling or adding noise to the
+data, shouldn't really influence how the data is partitioned
+by your clustering. So basically, you're not looking at a
+single partition or comparing two partitions, instead you're
+looking at an algorithm and you're adding noise into the
+algorithm, and you're figuring out are the results stable.
+If the results are stable, it's good, if the results are not
+stable, it's not so good. 
+
+
+
+
+
 - For comparing clustering algorithms / parameters
 (with different number of clusters for example)
 
@@ -453,6 +617,21 @@ result among perturbations is best.
 ]
 
 ???
+If we want to pick the number of clusters, for example. This
+is from the paper that I previously quoted. Let's say, you
+have these four different clusters. The dotted line is
+clustering the algorithm found. And so let's say I tried the
+algorithm trying to find two clusters. It might divide
+horizontally or vertically, so it's not going to be very
+stable. If I pick two large number of clusters, it will
+probably find the four clusters, but then it will randomly
+split up one of them. But it will split up a different one
+every time and so this will also not be stable. 
+
+But if I asked for four clusters, the four clusters will
+always be the same independent of a bootstrap sampling or
+noise that was added to the data.
+
 ---
 .smaller[
 ```python
@@ -483,6 +662,30 @@ def cluster_stability(X, est, n_iter=20, random_state=None):
 ```]
 
 ???
+You need to have your dataset and your model. So you're
+repeatedly fitting the clustering algorithm to do this. I
+want to make sure that I do this in the order of the
+original dataset. So for each original sample, either I have
+minus one, if it wasn't part of the bootstrap, or have the
+cluster labeled if it was a part. 
+
+And then now for each pair of clusters that I did, I look at
+the samples that are both bootstrap samples and the
+intersection of indices. And then I look at, in this case,
+adjusted rand score between the two partitions. And then, in
+the end, I compute the mean over all these pairs of
+partitions. 
+
+So here, I created a bunch of partitions randomly and I
+computed the rand score between all pairs of the partitions
+and then I computed mean.
+
+The idea is, if they are very consistent, then the adjusted
+rand score between all different pairs will be high and so
+the final number will be high. 
+
+
+
 FIXME too complex to show
 ---
 
@@ -491,9 +694,26 @@ FIXME too complex to show
 - This is kmeans++ with n_iter=10
 
 ???
+Here, I look at KMeans with 10 clusters. You can actually
+see that the cluster stability here is 1 for the three in
+the top row because points in each of them are closer
+together than the other points. But then if I do five or
+more clusters it becomes less stable. 
+
+This depends on how I initialized my KMeans. I did the
+KMeans++ initialization and restarted it a bunch of times.
+If I do random initialization and don't do restarts, then
+everything will be slightly less stable because of the
+randomness of KMeans. 
+
 ---
 .center[![:scale 80%](images/cluster_stability_2.png)]
 ???
+You can see that two is basically the stable cluster. But
+this is how data looks like in the real world. And you never
+know what the answer should be. That's why I think it's
+interesting to look at how it behaves for relatively random
+data.
 ---
 
 
@@ -505,24 +725,72 @@ FIXME too complex to show
 ![:scale 70%](images/digits_dataset_ncluster_scan.png)
 ]
 ???
+Here is the digit dataset looking at different scores. You
+can see that for ARI is 12, stability is 8 and for
+silhouette score, it's 16. 
+
+You can see that the silhouette score is pretty noisy. The
+stability goes down pretty rapidly if you add too many
+clusters. ARI is supervised while the other two methods are
+unsupervised.
+
+
 ---
 # Stability on Digits Dataset
 .center[
 ![:scale 70%](images/cluster_stability_different_algos.png
 )
 ]
+???
+Here, I'm looking at stability for different clustering
+algorithms. DBSCAN looks a little bit weird since there's no
+number of clusters in DBSCAN and so what I actually scanned
+was the epsilon. And if you set epsilon very high, say 2,
+then everything will be in the same cluster. If you set it
+to 1.8, there will be only one cluster and a bunch of noise
+points and so on. If I set it to 1.4, it’s starting to be
+two clusters, and so on. If I set it to too small then there
+will be mostly noise points. So if I set it 0.029, there's
+going to be one cluster, and the rest will be labeled as
+noise.
+
+Overall, I probably like KMeans the best. It has the same
+score (10) as agglomerative at its peak, which is a
+reasonable score. DBSCAN doesn't seem to be able to find any
+stable clusters with any of the settings. 
+
 ---
 # Adult Dataset
 .center[
 ![:scale 70%](images/adult_dataset_ncluster_scan.png)
 ]
 ???
+This is the adult dataset stating if adults are making more
+or less than 50k a year. This is not very nice to cluster
+since it has a lot of categorical data. 
+
+I ran KMeans and KMeans probably will not do that well on
+this kind of data. But what I found interesting is that the
+silhouette score is very noisy and goes up with more
+clusters, whereas ARI and stability go down. Here, I like
+the results of stability much more than the results of
+silhouette.
+
+
 ---
 # Labeled Faces in the Wild
 .center[![:scale 70%](images/labfaces_ncluster_scan.png)]
 - With PCA, 100 components. Without whitening: no stable clusters!
 
 ???
+Since this dataset is quite high dimensional, I'm using PCA
+with 100 components and then doing the whitening. If I don't
+do whitening, there is no clustering, basically, that works.
+So if you try to cluster the original input space, there are
+no stable clusters. I mean, this is also something I can
+find out by using the stability score, for example. After
+computing, I can see that the ARI and stability behave
+similarly while the silhouette score is quite different. 
 ---
 class:spacious
 #Qualitative Evaluation(aka eyeballing)
@@ -534,6 +802,22 @@ class:spacious
 - Look at cluster centers (if available)
 
 ???
+Eyeballing the data is the most important thing about
+clustering. 
+
+Supervised and unsupervised scores sometimes can be helpful,
+but I think what you really usually want out of clustering
+is doing explorative data analysis. So if I use my stability
+score and find five is the perfect number for KMeans on a
+dataset, what does that tell me? Probably not that much.
+What I'm interested in is, what are the five clusters in my
+dataset and do they mean something? 
+
+The things that I usually do is look at low dimensional
+visualizations, look at individual points and look at
+cluster centers if you’re doing KMeans. So that's what I
+want to do here.
+
 ---
 # Digits
 
@@ -541,6 +825,20 @@ class:spacious
 ![:scale 100%](images/digits_eyeball.png)
 ]
 ???
+I think here I picked the best parameters, according to the
+graph that I showed you, for DBSCAN, agglomerative
+clustering, and KMeans.
+
+I think this is quite informative, because I can see that
+DBSCAN doesn't find the things that I think would be the
+clusters and there's like a big orange cluster that’s all
+over the place and the PCA is also all over the place while
+agglomerative and KMeans are more localized, both in the PCA
+and in the t-SNE. 
+
+Unlike DBSCAN, Agglomerative and KMeans seem to be doing
+something reasonable, that I can look into more. 
+
 ---
 # K-Means cluster centers
 
@@ -558,6 +856,22 @@ for ax, center in zip(axes.ravel(), km.cluster_centers_):
 fig.suptitle("K-Means cluster centers")
 ```]
 ???
+One of the things I can look for KMeans is to look at the
+cluster centers. So, unfortunately, for the homework, this
+will not be as nice. For the digits, I can just look at the
+centers, I can plot them and therefore, I can visualize
+individual points in a meaningful way. If you have a
+100-dimensional feature vector usually you cannot visualize
+them in a meaningful way. This is not usually what you can
+do. 
+
+But here, in this case, where we have these images, we can
+look at the cluster centers and they actually seem to be
+quite natural. Apart from the two in the last column, the
+rest of them looks pretty clear. So this looks like a
+reasonable clustering. And it seems to have reasonably
+discovered the digits and the data themselves. 
+
 ---
 
 # Agglomerative Clusters
@@ -565,6 +879,18 @@ fig.suptitle("K-Means cluster centers")
 ![:scale 90%](images/agglomerative_clusters.png)
 ]
 ???
+So for agglomerative clustering and DBSCAN, you can't do
+that, because there are no cluster centers. So what I like
+to do instead is just pick random points from the clusters. 
+
+In this example with 10 clusters, each column corresponds to
+a cluster and the rows are just random samples from the
+cluster. And so now I can, again, maybe try to semantically
+identify these clusters.
+
+And most of these look pretty natural to me.
+
+
 - Each column corresponds to one of 10 clusters, “first” 5 samples are shown.
 - Number on top gives clusters size
 ---
@@ -574,6 +900,22 @@ fig.suptitle("K-Means cluster centers")
 ]
 
 ???
+I did the same thing for DBSCAN and I showed the number of
+points in this cluster. 
+
+But here, you can see this is like a very specialized
+clustered, it only has 27 samples on it. This is also a very
+specialized cluster since it has the 7s with the hook on the
+front. The third column, which has nearly 1000 data points,
+clearly has all different digits in it. So this is not very
+satisfactory. 
+
+Basically, I looked at three different algorithms, looked at
+three different parameters, looked at stability scores, and
+looked at 2D visualizations and data points. So now, I have
+a relatively good idea what these three algorithms did. This
+was basically for all for exploratory data analysis. 
+
 ---
 
 #For feature extraction
@@ -596,6 +938,35 @@ grid.fit(X, y_people)
 ]
 
 ???
+If you want to do feature extraction, if you want to use
+clustering in a supervised pipeline, this is much easier. 
+
+So here's an example of using clustering in a supervise
+pipeline on the faces dataset.
+
+Here, I'm trying to classify faces into different people.
+And so what I'm doing is, I use KMeans as a feature
+extractor. So I make a pipeline of KMeans and logistic
+regression and then I can just grid search number of
+clusters on KMeans because since now I have an actual
+evaluation criterion, I want to have an accurate model. I
+don't care about finding semantic clusters, I only care
+about finding an accurate model. 
+
+And so if I actually was going to use KMeans as a part of
+the supervised pipeline, I can throw all these metrics and
+all the introspection out of the window and I can just
+actually measure what I'm interested in. 
+
+This is often what you want to do, often you want to have as
+part of a bigger pipeline and then you can just measure the
+whole pipeline. So here in this case, basically, as soon as
+I use 200 clusters, everything is good. The stability score
+told me that I will get the most stable clustering with like
+40 or 50, but we don't really care about how stable they
+are. We just want a good feature space. And so if I use 200,
+or 500 or 1000 clusters, it's going to be fine.
+
 ---
 class: spacious
 # So what is n_clusters?
@@ -613,6 +984,33 @@ class: spacious
 - For most datasets, there is no “correct” number of
 clusters.
 ???
+The question is, what is the number of clusters, how do you
+set the parameters, how do you pick and it really depends a
+lot on what your ultimate goal is.
+
+The two goals that I talked about, mostly it was for
+exploratory data analysis. And then you should do whatever
+it tells you most about the data. And we have these
+different metrics and different ways to see if it actually
+tells something about the data.
+
+For preprocessing, just fine tune your whole pipeline.
+Usually, the more is better, as you can see here, basically,
+adding more and more clusters, gives me more and more
+features and reasonable better results. And in the end,
+there's usually no correct number of clusters. 
+
+If you want clusters that are interpretable, I think having
+stable clusters is something that makes a lot of sense. If
+you want to introspect them, you would want them to be
+stable. If you ran clustering and you get the results and
+then you go in and do all the manual analysis that I just
+talked about, and you look at the samples and so on, and
+then you run clustering again, and it gives you completely
+different results, then what would the results even mean? So
+I think, looking for stability if you want to interpretable
+clustering is like a reasonable thing to do.
+
 ---
 class:center,middle
 
@@ -622,6 +1020,19 @@ you need manual confirmation.
 Clustering might not pick up
 on what you thought it would.
 ???
+
+
+Finally, if you want any semantics from your clustering, you
+always need to look at the data, even on the digits, I found
+exactly 10 clusters. No one tells me you have to right 10
+clusters. If I want to know if I’ve actually found the
+digits I need to look at the cluster centers and look at the
+data points as I did before and I need to identify what does
+each cluster correspond to and do what do they mean and
+that's the only way to actually extract any semantic
+information.
+
+
 ---
 class: middle
 # Questions ?

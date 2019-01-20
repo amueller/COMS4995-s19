@@ -24,6 +24,8 @@ class: center, middle
 Andreas C. Müller
 
 ???
+Today, we'll talk about working with text data. 
+
 FIXME make all bar-plots uniform style!
 FIXME tfidf before n-grams
 FIXME explain L2 normalization and intuition.
@@ -48,6 +50,25 @@ FIXME is logisticregressionCV efficient here? sag?
 
 
 ???
+So far we talked about data where we have a fixed number of
+features, and where the features are either continuous or
+categorical. And that is most of the data out there and the
+simplest kind of data to work with. 
+
+The rest of the semester, we're going to talk about
+different kinds of data that is opposite to what we already
+worked with.
+
+We'll look at data that has no predefined features. In
+particular, we're going to look at free text and images.
+We’re also going to look at time series, which is a similar
+category of not having a clear way to express it as a
+standard supervised learning task. Another common example in
+this category is audio and video, we're not going to do any
+audio or video in this lecture. But I think text and images
+are the common types of data.
+
+
 * Need to create fixed-length description
 ---
 # Typical Text Data
@@ -68,6 +89,29 @@ FIXME is logisticregressionCV efficient here? sag?
 
 
 ???
+Here's an example of some text dataset that I'm going to use
+later. This is like relatively typical text, its user input
+data from IMDb movie reviews. 
+
+Clearly, they don't have the same length, there's no clear
+way to express this is as like some folding point features
+which we would use for a standard machine learning approach.
+You can also see there are weird things about
+capitalization, some weird words in there like Godzilla that
+you might not see very often, there is some HTML markup,
+there’s punctuation and so on. This is sort of how text
+looks like in the wild very often. You could also do things
+on much longer texts, like whole books, or articles or so
+on.
+
+People also work on text that's much shorter. Tweets are
+still sort of their own domain. Working on tweets is quite
+hard because they are very short.
+
+I’m going to talk about a particular kind of data that you
+see very often because it's often used. But there are other
+kinds of data that is text data. 
+
 ---
 # Other Types of text data
 
@@ -76,6 +120,52 @@ FIXME is logisticregressionCV efficient here? sag?
 ]
 
 ???
+Here is a table of the text data consisting of people
+sitting in the European Parliament. Each person has a
+country, a name, an ID, a party, and a political
+affiliation. The variable country here, you might hope that
+it's categorical but for the European Union, actually, the
+categories are well known. Though, if you have a user input
+a country, they will never input the same country in the
+same way. The UK could be the United Kingdom, or England, or
+Britain, or Great Britain, and all of these might correspond
+in this context to the same entity. 
+
+If you have users input this, they will also make typos.
+This variable is representing a category concept but you
+have to do some cleaning before you can actually convert it
+into a category. This is often a manual thing to do. There
+are things that can help you with this, like duplication or
+an entity recognition but we're not going to talk about
+that. 
+
+The names are strings. They are definitely not categorical,
+and they’re also not words. So it's not really clear if
+there’s like any information in the name and we're going to
+look into this later today. 
+
+But you clearly don't want to treat them the same way as
+words that you find in a dictionary.
+
+We have the political groups and affiliations. Again, these
+are sort of free texts. They're sort of similar to the
+variable country only now there's many more of them, in a
+sense, they try to encode a categorical variable, which
+political group you're from, but they also have more
+information, for example, you could also treat them as texts
+like if there's freedom or democracy or Christianity or
+something in the party title that will probably say
+something. So you could either treat it as categorical or as
+text and both will give you information. And you have the
+same problem, that the same group can be referred with
+different names or different spellings.
+
+So there's this whole area of named entity recognition that
+actually tries to extract from any text the named entities
+and then tries to disambiguate. We're actually going to talk
+about this, but it's also some particular kind of text data
+that I want you to be aware of. 
+
 ---
 
 # Bag of Words
@@ -85,6 +175,41 @@ FIXME is logisticregressionCV efficient here? sag?
 ![:scale 70%](images/bag_of_words.png)
 ]
 ???
+The most common approach that people use for this is bag of
+words, which is a very simple approach. 
+
+We start with a string which would be your whole document.
+The first step is to tokenize it, which is basically
+breaking it up the document into words. And then, you built
+a vocabulary over all documents over all words. 
+
+So you look over all the movie reviews, or all the emails or
+the text you have, and you collect all the tokens which are
+representing the words.
+
+Finally, using the vocabulary, you create a group
+representation. The length of your feature vector will be
+the size of the vocabulary. For each word in the vocabulary,
+you count how often this word appears in the string that you
+want to encode. 
+
+Most of the words in the English language don't appear in a
+sentence. So most of these entries will be 0. But the word
+‘ants’ appears once, so increment the count for ‘ants’ by 1
+and so on. 
+
+So I'll have 6 non-zero entries and all the other entries
+will be 0. So this is what we call like a very sparse vector
+so most entries of this vector are 0. 
+
+When coding this, we’ll use a sparse matrix encoding. The
+idea of sparse matrix encoding is that you only store the
+non-zero entries. 
+
+So basically, we will only store the 1s, so storing the
+string as a bag of word will cost us a nearly 6 floating
+point numbers. 
+
 ---
 # Toy Example
 
@@ -119,6 +244,93 @@ array([[1, 0, 1, 0, 0, 0, 1, 1],
 ]
 
 ???
+Here, I have a corpus. Corpus is what people in NLP called
+datasets. My dataset is 2 strings, “Do you want ants?”,
+“Because that's how you get ants.” 
+
+The bag of word representation is implemented in the count
+vectorizer in scikit-learn, which is a
+sklearn.feature_extraction.text
+
+This is a transformer, it's kind of similar to most
+transformers. The only difference is it takes in lists of
+strings as input, not numeric data. Usually, transformers
+take in a Numpy area as anything in scikit-learn.
+
+But here, count vectorizer takes in a list of strings. I
+gave the list of string and I fit it on my documents and
+this builds the vocabulary. I can get back to vocabulary by
+looking at the feature names using get_feature_names() 
+
+The vocabulary is sorted alphabetically. Vocabulary has 8
+entries from ‘ants’ to ‘you’. So if I use this count
+vectorizer to create like a word representation, then I'll
+get an 8-dimensional feature space. 
+
+I can use this to transform the 2 documents that I have. X
+here, being the outcome of the transform will be a sparse
+matrix. So to print it, I call toarray() on it. So sparse
+matrices are in scipy, and you can easily convert to and
+from numpy arrays.
+
+Usually, it's a very bad idea to convert to sparse matrix
+into Numpy array, since usually, it will not fit into your
+memory. If you have like a vocabulary of size 100,000 and
+100,000 documents, and you make it into Numpy array, then
+your memory will just fill up and your computer will crash
+since you won’t have enough memory to store all the zeros. 
+
+In this toy example, we can easily convert this to a Numpy
+array and you can see that this is the feature
+representation. In this case, we only have 1s and 0s.
+
+Each word appears either once or zero times. So here, in the
+first string, the first feature is ‘ant’, so ‘ant’, ‘do’,
+‘want’ and ‘you ’ appears once, ‘because’, ‘get’, ‘how’, and
+‘that’ doesn't appear. The second string is processed in the
+same way.
+
+Q: What would you do if your document has more unique tokens
+or tokens that are not in the vocabulary?
+
+Usually, you either ignore them, that’s the default thing to
+do. Your test set will have tokens that your training set
+will not have, and so you can’t really learn anything about
+that. One thing you could do is count how many words out of
+the vocabulary there are. 
+
+We going to talk a little bit later about how to restrict
+your vocabulary and you can basically add a new feature,
+that says, “There's X amount of features that are not in the
+vocabulary.” Often, this can be useful for people cascading
+something or miss typing something or using names or
+something like that. 
+
+But usually, you assume that most of the words appear in
+your training data set.
+
+Q: What if there are spelling errors?
+
+You can treat them but by default, if you do that, they're
+just different features. So they're completely unrelated. So
+if there's a new spelling error in your test dataset that
+never appeared in your training dataset, then the word will
+be completely ignored. 
+
+You can use spell correction, I’ll talk about that in a bit.
+
+If you don't do any spell correction, it will be a
+completely distinct feature. Spell correction is also not
+entirely trivial because there are many possible words.
+
+Q: Does the count vectorizer trim the apostrophe in ‘that’s’
+in the second string?
+
+Yes, and as you can see, the question marks and the dots
+also don't appear. And we're going to talk about how exactly
+it works in a little bit.
+
+
 Consider two documents in a dataset "malory"
 
 ---
@@ -141,11 +353,34 @@ print(vect.inverse_transform(X)[1])
 
 
 ???
+The reason why this is called a bag of words is since you're
+completely ignoring the order of words. So you can do
+inverse transform to get back the string representation from
+the numerical representation but if you do that the
+numerical representation doesn't contain the order of the
+words so you will only get back ‘ants’ ‘do’ ‘want’ ‘you’ and
+‘ants’ ‘because’ ‘get’ ‘how’ ‘that’ ‘you’
+
+Basically, you store all the words in a big bag and
+completely lose any context and any order of the words.
+That's why it's called a bag of words. 
+
 ---
 class: center, middle
 
 # Text classification example:
 # IMDB Movie Reviews
+???
+We're going to do a binary classification task on a dataset
+of IMDb movie reviews. You can look on GitHub, I have the
+notebook that runs through all of this if you want to run it
+yourself. 
+
+The idea here is that we want to do sentiment analysis
+basically classifying reviews into either being positive or
+negative. In IMDb, they give stars from 0 to 10. This is
+from a research paper where the author stated 1, 2 and 3 as
+negative while 7, 8, 9 and 10 are positive. 
 
 ---
 
@@ -169,6 +404,25 @@ length of text_trainval: 25000
 class balance: [12500 12500]
 ```
 ???
+Text data is in either it's in a CSV format or if they’re
+longer documents, people in NLP like to have a single text
+file for each data point. 
+
+There's a tool in scikit-learn that allows you to load data,
+method load_files function, which basically iterates over
+all the folders in a given folder. Each folder is supposed
+to correspond to a class and then inside each folder, each
+text document corresponds to a data point, that's a very
+common format that people use for text data.
+
+We can load this, then we get the actual data and the
+targets. 
+
+Text_trainval is used as a training and validation set is
+just a list. The length is 25,000. So there are 25,000
+documents, and this is a balanced dataset meaning there are
+12,500 positive and negative samples.
+
 ---
 
 # Data loading
@@ -197,6 +451,15 @@ better than this one.'
 ```
 ]
 ???
+We can also look at data points. I’m calling decode here to
+print the Unicode characters. 
+
+The word ‘cliché’ can be typed with or without the axon and
+they would be two different words. But also, you need to
+determine if it’s a Unicode character or not. In Python 3,
+by default, everything is a unique code. 
+
+
 all the code is in the github repo.
 ---
 # Vectorization
@@ -215,6 +478,30 @@ X_train
 <18750x66651 sparse matrix of type '<class 'numpy.int64'>'
   with 2580448 stored elements in Compressed Sparse Row format>
 ```
+???
+I removed all the irrelevant HTML formatting. And then I
+split it into training and test set. Then I called the count
+vectorizer. Then I fitted the training set and transform the
+validation set.
+
+Then it returns a 18750x66651 sparse matrix meaning there
+are 18,750 samples and 66,651 features.
+
+So the vocabulary that we built is 66,651. There’s 2.5
+million stored elements (non-zero entries).
+
+This is a much, much smaller number than the product of
+these two numbers. So most of the entries are zero. 
+
+Remember, you need to know whether you are in Python 2 or 3
+and then you need to know the type of text.
+
+There are two different things that you need to keep in
+mind. So the text can be a byte string or Unicode string.
+But if it's a byte string, it also has an encoding attached
+with it. You need to know the encoding to go from the byte
+string to the string. 
+
 
 ---
 # Vocabulary
@@ -247,6 +534,18 @@ print(feature_names[::2000])
 ```
 
 ]
+???
+This is the first thing I do, it’s helpful to see if
+something sensible happened. And you get an idea of the
+data. I'm going to plot the first 10 data points, and I'm
+going to plot some 20 in the middle and I'm going to plot
+every 2000th data point. 
+
+The first couple of ones seem to be pretty boring. But then
+it seems to do something relatively reasonable. 
+
+Now that we have the sparse matrix representation, we can
+just do classification as usual.
 
 ---
 
@@ -271,6 +570,15 @@ lr.score(X_val, y_val)
 ```
 0.882
 ```
+???
+All the models in scikit-learn work directly on the sparse
+matrix representation. Here, I do logistic regression CV so
+it adjusts CR automatically for me. The validation set score
+I get is 88% accuracy, which is pretty good.
+
+Here, accuracy is meaningful because we know it's a balanced
+dataset. The next thing I always like to do is look at the
+coefficients. 
 
 
 ---
@@ -279,6 +587,16 @@ class: middle
 .center[
 ![:scale 100%](images/coefficients.png)
 ]
+???
+So here I'm looking at the 20 most negative and 20 most
+positive coefficients of this logistic regression. It's
+pretty easy to do because it's a binary task. If you have
+multiclass tasks, you’ll have way more coefficients and it's
+harder to visualize. 
+
+This seems to be like a pretty reasonable model to pick up
+on the bad words and the good words. This is the baseline
+approach. 
 
 
 
@@ -289,6 +607,14 @@ class:spacious
 - How to tokenize?
 - How to normalize words?
 - What to include in vocabulary?
+???
+In tokenization, there are many different options to change
+what's happening here.
+
+In particular, there's the tokenization, which is how do you
+break it up into tokens. Then normalization, which is how do
+you make tokens look sort of reasonable. And then what to
+include in vocabulary. 
 
 ---
 class: spacious
@@ -299,6 +625,30 @@ class: spacious
   * Includes numbers
   * doesn't include single-letter words
   * doesn't include `-` or `'`
+???
+Scikit-learn is not an LLP library. Some very good Python
+LLP libraries are NLTK and spacy. They have a lot more
+things for doing text analysis. Scikit-learn only has quite
+simple things.
+
+In tokenization, what the count vectorizer does the regular
+expression, “\b\w\w+\b”. That means it finds anything of
+length 2 or longer that has word boundaries, which are any
+punctuation or white spaces, and matches w.
+
+As we saw, this includes any numbers. Numbers can be at the
+beginning of the word, the middle of the word or it can be
+just all numbers.
+
+You don't include single letter work or single letter
+numbers. So ‘I’ is always discarded. There’s an interesting
+thing where you can get the gender of a person, depending on
+how much often they use ‘I’.
+
+It doesn't include any punctuation because we only use the
+w, which is digits. 
+
+This is pretty simple and pretty restrictive.
 
 ---
 # Changing the token pattern regex
@@ -325,6 +675,29 @@ print(vect.get_feature_names())
 ```
 
 ???
+If we just want to use a different regular expression, we
+can do something simple, like changing the regular
+expression. So here, for example, I removed one of the Ws
+and so now I match everything that's a single letter or
+more. So now I only the ‘s’ in ‘that’s’, without the
+apostrophe, making it a single token.
+
+I can also allow things to have an apostrophe in the middle
+of the word, and get ‘that’s’ as a single token. This might
+look nicer but actually, in reality, it usually doesn't
+matter that much. 
+
+But you can play around with this and see if the tokens you
+get with standard tokenization are good for your
+application. 
+
+Again, spacy and NLTK have much more sophisticated things.
+The X in vectorization slide represents the sparse matrix
+representation of the data and Y represents if it’s a
+positive or a negative review.
+
+
+
 Was not actually an apostroph but some unicode pattern
 because I copy & pasted the quote.
 
@@ -360,12 +733,65 @@ Lemmatization:<br/>
   * Lower-case it
   * Configurable, use nltk or spacy
 ]
+???
+Normalization is basically how do you want to bring your
+token in a standardized form. For example, you could get rid
+of plurals or you could correct spelling. There are three
+main methods.
+
+Correct spelling, which only very few people use in
+practice.
+
+Stemming reduces words to their word stem. The idea is to
+get rid of plural ‘s’ and ‘ing’ at the end of the verbs and
+so on so that you don't have the conjugations. Stemming
+removes some letters at the end of the word depending on a
+fixed rule set.
+
+Lemmatization also uses reduces the word stem but in a smart
+way. It tries to parse the sentence and then uses a
+dictionary of all English words with all its verb forms and
+conjugations and tries to map it to a standardized form. 
+
+The reason why I picked this example is ‘meeting’ appears
+twice in here, once as a noun and once as a verb. Using
+stemming:
+‘was’ becomes ‘wa’
+‘worse’ becomes ‘wors’ and so on
+‘I’m’ is just split up in two without the apostrophe. 
+‘scared’ becomes ‘scare’ 
+‘meeting’ becomes ‘meet’
+
+Lemmatization parsed the sentence and figured out that the
+first ‘meeting’ is a noun and keeps it as it is but the
+second ‘meeting’ which is a verb is simplified to ‘meet’.
+You can also see that the ‘was’ was normalized to ‘be’ and
+the ‘worse’ was normalized to ‘bad’ and the ’m was
+normalized to ‘be’ as well. 
+
+The question with any kind of normalization you do is will
+this be helpful for your application.
+
+Q: is stemming only applicable to English literature?
+
+These are both language dependent. This model exists for
+many languages. Today, I’m only talking about languages that
+work similar to English. 
+
+Scikit-learn only lowercases it. You can plug in other
+normalization from NLTK or spacy into the count vectorizer
+if you want, but the default is it lower cases the tokens.
 
 
 ---
 class: center, middle
 
 # Restricting the Vocabulary
+???
+The other main thing that you can play with is restricting
+the vocabulary. So far, I said, we're just going to use all
+the tokens that we see. 
+
 
 
 ---
@@ -411,6 +837,36 @@ print(list(ENGLISH_STOP_WORDS))
 ```
 ]
 ???
+One way to restrict the vocabulary often is to remove stop
+words. Stop words, are words that are not so important to
+the content and so you discard them. 
+
+If I do this for my example, the only thing that remains are
+‘ants’ and ‘want’ because ‘this’, ‘I’ and ‘how’ are all stop
+words.
+
+Scikit-learn has some stop words built in. So if you do stop
+word equal to English, it will use the built-in the stop
+word list. It's a little bit strange and we're working on
+improving it. So for example, there’s ‘system’ in the stop
+word list and ‘bill’ is in the stop word list. 
+
+For unsupervised problems, using stop words might be
+helpful. For supervised problems, I rarely found it helpful
+with the tools that we talked about. 
+
+So problem is, these are nearly 200 words but we have 66,000
+features, removing 200 features doesn't really make a
+difference. And because these words appear very often, the
+model won’t be able to figure out are they important or not.
+
+If you use an unsupervised model, in the unsupervised model
+since they appear so often, these might just dominate
+whatever clustering you do and so removing them might be a
+good idea. 
+
+
+
 - not a very good stop-word list? Why is system in it? bill?
 - For supervised learning often little effect on large corpuses (on small corpuses and for unsupervised learning it can help)
 ---
@@ -444,6 +900,31 @@ print(vect.get_feature_names())
 
 ]
 
+???
+Another thing that is often helpful is removing infrequent
+words. There's a parameter called min_df that basically
+removes words that appear less than twice.
+
+It'll only keep words that appeared twice or more, and so
+only ‘ants’ and ‘you’ remain in the toy dataset example.
+
+This is often useful because it can remove a lot of
+features. And if a word appears only once in your data, it's
+unlikely that your algorithm will be able to learn. If you
+have hundreds of thousands of thousands of features, and one
+feature appears once in your dataset, then it’s probably not
+going to be helpful.
+
+You can also go the other way around and set max_features.
+Max_features sets the number of features that you want to
+keep, in this case, four most common features.
+
+It's kind of interesting, this goes a little bit in the
+opposite direction of what the stop words do. The stop words
+remove the most common ones that are meaningless and here,
+we removed the most infrequent ones because they're probably
+not helpful. These are often misspellings, or names or
+something like that. 
 
 ---
 
@@ -481,6 +962,33 @@ lr.score(X_val_df4, y_val)
 ```
 ]
 ???
+Here I used the count vectorizer with min_df=2 and min_df=4.
+That means either use tokens that appear in 2 documents in a
+training set, or at least 4 documents in a training set. 
+
+Min_df=2 gives me 39825 while min_df=4 gives me 26928. I’ve
+drastically reduced the feature space when using min_df=2
+and if I set min_df=4, I cut down feature space even more.
+
+Min_df means minimum document frequency, meaning the number
+of documents the words appear in. It's not the number of
+times the word appears. So if a word appears in 100 times in
+a single document, it's still going to be thrown out by
+this. 
+
+Here, I used X_train_df=4, which is much, much smaller, it’s
+less than half the size. And the result I get is identical,
+basically, in terms of accuracy. 
+
+These are the main configuration you just used a single bag
+of words. 
+
+That said, they're throwing away a lot of the context and
+information. One way to improve upon this is what's called
+N-grams. 
+
+
+
 - Removed nearly 1/3 of features!
 - As good as before
 
@@ -495,6 +1003,25 @@ lr.score(X_val_df4, y_val)
 ![:scale 70%](images/single_words.png)
 ]
 ???
+Because there's a big difference between ‘didn't love’ and
+‘love’ and the default settings in the count vectorizer
+cannot distinguish between the two because somewhere along
+the document, it could appear ‘don't’ and you don't know if
+it's in front of ‘love’, or if it’s ‘love, don't hate’ or
+‘don't love hate’, since they basically have the same
+representation. 
+
+The idea behind N-grams is you look at pairs of words that
+appear next to each other. Unigrams looks at single words,
+bigrams look at pairs of two words next to each other, and
+trigrams looks at three words next to each other, and so on.
+
+
+Here instead of splitting it up into single tokens, we can
+split it up into pairs of tokens allowing me to have a
+little bit of context around each of the words. 
+
+
 - N-grams: tuples of consecutive words
 
 
@@ -537,6 +1064,29 @@ Vocabulary:
 ```
 ]
 ???
+When implementing in scikit-learn, you have to specify the
+N-gram range, which has the minimum number of tokens and the
+maximum number of tokens you want to look at. 
+
+Usually, you want to look at Unigram + Bigrams + Trigrams,
+don't look at only Bigrams. If I only look at Unigrams, I
+get a vocabulary of size 8. If I look only at Bigrams, I get
+a vocabulary of size 8 as well, that's because this was a
+toy example and in the real world there will be much more
+Bigrams than Unigrams.
+
+If you look at the result from combining Unigrams and
+Bigrams together, we get 16, which is a combination of both
+the result.
+
+Now I have a feature representation of size 16, and so I
+extended my feature space so that I can take the context
+into account.
+
+Unigrams and Bigrams together are the most common
+combinations. Using higher order N-grams is rare.
+
+
 
 - Typically: higher n-grams lead to blow up of feature space!
 
@@ -562,6 +1112,32 @@ Vocabulary size 1-4gram (min_df=1): 7815528
 
 
 - More than 20x more 4-grams!
+???
+This is using no stop words.
+
+Now because many bigrams and many trigrams are very
+infrequent. So if I use the example of min_df=4 in Unigrams
+I get 26928 features while in Bigrams I get 128426 features.
+So it grew by nearly the order of magnitude. So I have a
+much, much bigger feature space now. If I put it together,
+it's even bigger.
+
+The higher I go, the bigger it gets. Though, you can see
+that it actually grows relatively slowly here. So if I look
+into 1-3grams programs, and 1-4grams, I only get 300,000
+features. But this is mostly because I did the min_df=4.
+There are very few sequences of 4 words that appear often
+together. If I don't use the min_df=4 and I look at all
+things I get nearly 8 million features. This is like 20
+times more four grams than what we had before. 
+
+So particularly if you use higher N-grams using this pruning
+of document frequency might be quite helpful. You can see
+that probably they have about the same amount of
+information, but you’ll have 20 times fewer features, which
+will definitely impact runtime and possibly impact
+generalization. 
+
 
 ---
 #Stop-word impact on bi-grams
@@ -579,6 +1155,23 @@ print("(1, 2), stopwords, min_df=4: {}".format(len(cv.vocabulary_)))
 (1, 2), min_df=4: 155354
 (1, 2), stopwords, min_df=4: 81085
 ```
+???
+This is with stop words. What we're doing is we do stop
+words first and then N-grams. What I find interesting is
+that here using unigrams and bigrams we got 155354, but if
+we remove the stop words it gets halved to 81085. This is
+pretty extreme. 
+
+The stop word list is only 200 words. So if we remove these
+200 words and if you look at the bigrams we half the number
+of bigrams. This is because the most common combinations are
+actually we with stop words. So ‘the movie’ and ‘the film’
+are probably the most common Bigrams in this.
+
+So if we remove this then whatever word that came before
+‘the’ is now makes after bigram. And so now, the
+combinations appear much less frequently. 
+
 
 ---
 # Stop-word impact on 4-grams
@@ -598,6 +1191,10 @@ print(len(cv4sw.get_feature_names()))```
 31585
 369
 ```
+???
+4grams are even rarer and so there are 31585 4grams that
+appear at least 4 times but if I remove the stop words I get
+only 369 4grams that appeared at least 4 times. 
 ---
 ```
 ['worst movie ve seen' '40 year old virgin' 've seen long time'
@@ -621,6 +1218,11 @@ print(len(cv4sw.get_feature_names()))```
 'friday morning sunday night' 'don waste time movie'
 'saturday night friday night' 'really wanted like film']
 ```
+???
+This is the most common 4grams after removing stop words.
+Whenever you have the ability to look into something
+interesting in our data, do it. 
+
 ---
 .center[
 ![:scale 75%](images/stopwords_1.png)
@@ -630,6 +1232,23 @@ print(len(cv4sw.get_feature_names()))```
 ![:scale 75%](images/stopwords_2.png)
 ]
 ???
+Here are some models using Unigrams, Bigrams, and Trigrams,
+with and without stop words. You can see that most of the
+most common features are actually Unigrams.
+
+It's interesting because previously ‘worth’ didn't show up
+but since we have bigrams, we can distinguish between ‘not
+worth’ and ‘well worth’.
+
+You can also see that most of these actually were Bigrams
+that included stop word. 
+
+It gets slightly worse because all of these Bigrams actually
+have stop words in them. 
+
+
+
+
 Stopwords removed fares slightly worse
 ---
 
@@ -655,6 +1274,10 @@ lr3msw.score(X_val3msw, y_val)
 .center[
 ![:scale 90%](images/stopwords_3.png)
 ]
+???
+Basically, removing stop words is fine but you should keep
+in the ‘not’ and the ‘well’ so that the important things can
+still be expressed.
 ---
 
 # Tf-idf rescaling
@@ -671,6 +1294,56 @@ $df(d,t)$ = number of documents containing term $t$
 * In sklearn: by default also L2 normalisation!
 
 ???
+Next thing we can do is actually try to rescale our words
+with something called Tf-idf which stands for Term Frequency
+Inverse Document Frequency. 
+
+This is sort of an alternative to using soft stop words in a
+sentence. The idea here is to down-weight things that are
+very common. 
+
+It’s the logarithm of 1 over the number of documents
+containing the term. 
+
+So if something happens to appear in most of the documents,
+the inverse document frequency will give it a very low
+weight. This is something that's very commonly used in
+information retrieval. 
+
+Information retrieval basically means you're trying to find
+relevant documents. If you can think of how a search engine
+works, if you want to match a bag of words representation of
+two different query strings, you might not care so much
+about matching the ‘a’ and ‘the’, but you care a lot about
+matching the parts that are rare and that are very specific
+to a particular search term. That is the motivation for
+this.
+
+But people find it also sometimes helps in a machine
+learning context. 
+
+You can’t really know in advance whether this helps for the
+particular dataset or not, but basically you should keep in
+mind, this emphasizes rare words and does a soft removal of
+very common words. This also means the sort of stop words
+here are corpus specific so here it will learn to
+down-weight ‘movie’ and ‘film’ because they're very common.
+
+The implementation of this in scikit-learn is a little bit
+non-standard but I don't think it makes a big difference.
+
+You should also keep in mind is that if you use the
+implementation of TF-IDF in scikit-learn by default, it will
+also do L2 normalization. L2 normalization means you divide
+each row by its length. That means you normalize the weight
+the length of the document. You only want to count how often
+the word appears relative to how long the document is.
+Basically, if you make a document that basically repeats
+each word twice, it should still have the same
+representation. By default, that's turned on for TF-IDF. But
+it's not turned on for the bag of words.
+
+
 * Emplasizes "rare" words - "soft stop word removal"
 * Slightly non-standard smoothing (many +1s)
 
@@ -701,11 +1374,50 @@ array([[ 0.41 ,  0.   ,  0.576,  0.   ,  0.   ,  0.   ,  0.576,  0.41 ],
 ```
 
 ]
+???
+In scikit-learn, there are two ways to do this. You can
+either use the TF-IDF vectorizer which you can use directly
+on the text and it will build the vocabulary and then do the
+rescaling. Or you can use to count vectorizer,
+TFIDFTransformer, which will work on the sparse matrix
+created by the count vectorizer and then just transform it
+using rescaling. 
+
+This is an alternative to using stop words or putting more
+emphasis on rare words.
+
+
+Q: Explain the part about the L2 norm.
+
+For the L1 norm, it might be easier to visualize. Dividing
+by L1 norm would mean just dividing by word count and so
+that would mean that basically, if you have a very long
+review, and it says bad 3 times, but it says good 20 times,
+then you only care about the relative frequency. And if it's
+a very short review that says good, 0 times, and bad also 3
+times, then it's probably a bad review. So you want to
+really scale these so that the relative frequency of the
+word only matters and not the total length document. That's
+sort of what the normalization does. 
+
+And so the common thing to do is L2 normalization, which
+divides by Euclidean norm. 
+
+
 
 ---
 class: middle
 
 # Character n-grams
+???
+The next thing I want to talk about is character n-grams.
+Character n-grams are a different way to extract features
+from text data. It's not that useful for general text
+classification but it's useful for some more specific
+applications. 
+
+The idea is that, instead of looking at tokens, which are
+words, we look at windows of characters.
 
 ---
 #Principle
@@ -748,6 +1460,15 @@ class: middle
 .center[
 ![:scale 100%](images/char_ngram_5.png)
 ]
+???
+Here, I want to look at character trigrams, look at windows
+of length 3. 
+
+My first one would be “Do_” and then “o_y” and then “_you”
+and so…
+
+Then you build the vocabulary over these trigrams. 
+
 
 ---
 class: spacious
@@ -756,6 +1477,29 @@ class: spacious
 - Be robust to misspelling / obfuscation
 - Language detection
 - Learn from Names / made-up words
+???
+This can be helpful to be more robust towards misspelling or
+obfuscation. So people might replace a single particular
+letter in a word with like internet speak. And so if you use
+character n-grams, you can still match if someone used the
+same characters for the rest of the word.
+
+You can also use it for language detection. Language
+detection, I think by now relatively soft task. But
+basically, it's very easy to detect the language, if you
+have a text, you can use character n-grams. You can't really
+use a bag of words because the words in different languages
+are sort of distinct, and you don't actually need to build
+vocabularies for all the languages. If you just look at the
+n-grams, that's enough to know whether something is English
+or French or something.
+
+Also, it helps to learn from names or any made-up words.
+
+One thing that is interesting in a social context is to look
+at ethnicity from names. And you can actually get someone's
+ethnicity from their last name, and in some cases, also from
+their first name.
 
 ---
 # Toy example
@@ -795,7 +1539,27 @@ at’', 'au', 'aus', 'be', 'bec', 'ca', 'cau', 'do', 'do ', 'e ', 'ec', 'eca', '
 'u ', 'us', 'use', 'w ', 'wa', 'wan', 'yo', 'you', '’s', '’s ']
 ```
 ]
+???
+To do this with scikit-learn, you can use the count
+vectorizer with the analyzer equal char. So instead of word
+tokenization, it does character tokenization.
 
+Usually, we look at characters that are longer, so single
+characters don’t really tell us much. Here, I look at
+n-grams of size 2 and 3. You can also go up to, like 5 or 7,
+obviously, the feature space tends to explode if you go
+higher. 
+
+After applying, I get a vocabulary of size 73, which is
+pretty big for such a short text. 
+
+And there's also a featurette that can respect word
+boundaries called char_wb. 
+
+So here, you get the end of one word and the beginning of
+the next word, you might want to exclude that if you're only
+interested on the actual words. So the char_wb makes sure
+that there's no white space inside the character n-gram. 
 
 
 ---
@@ -823,18 +1587,42 @@ lr_char.score(X_val_char, y_val)
 ```
 
 ]
+???
+If you want, you can use that for classification.
+
+Here, I use it again on the IMDb data set with 2-5grams. The
+vocabulary is quite a bit bigger than if I looked at single
+words. But actually, I get a result that is about as good as
+the bag of words.
 
 ---
 class: middle
 .center[
 ![:scale 100%](images/imdb_char_ngrams.png.png)
 ]
+???
+I can also look at the features that are important. The way
+this looks like is that it seems pretty redundant. So it
+picked up different subparts of the words. So this might not
+be ideal, but the accuracy is still good.
+
+Another thing that I found quite interesting when I looked
+at this is that some people gave their star rating in the
+comment. This is actually leaking the label of the star
+rating. This is not something that we saw before but here
+looking at his character n-grams, we can see that that's
+something that's in the dataset. 
+
+
 
 ---
 class: middle
 
 # Predicting Nationality from Name
-
+???
+A more useful application is going back to the European
+Parliament. What I'm going to do now is predict nationality
+from the name. 
 ---
 .center[
 ![:scale 70%](images/nationality_name_1.png)
@@ -843,7 +1631,9 @@ class: middle
 .center[
 ![:scale 70%](images/nationality_name_2.png)
 ]
-
+???
+Here's the distribution of the country. This is a very
+imbalanced classification. 
 ---
 # Comparing words vs chars
 
@@ -865,6 +1655,14 @@ array([ 0.452,  0.459,  0.341,  0.469,  0.418])
 ```
 
 ]
+???
+I can try to do either with word or character n-gram.
+
+Using an f1 macro, I don’t get a good f1 score. If I use
+character n-grams, it's not super great but it's still quite
+a lot better than if we look at the words because I don't
+need to learn new digital names.
+
 
 ---
 
@@ -906,13 +1704,54 @@ grid.best_params_
 ```
 ]
 ???
+We can do a grid search, though that might take a while on
+the bigger dataset. 
+
+Things that you want to tune are a regularization of your
+models, I always use logistic regression CV to tune it
+internally. If I want to tune multiple things at once, I
+could use as a pipeline grid search.
+
+Here, this is for character n-grams, but still, I might want
+to tune the n-gram range. If I was using bag of words, I
+might not look at sequences of 8 words because it will take
+very long to compute this and it's probably not going to be
+useful. 
+
+Here, I'm using count vectorizer, but I could still
+normalize using the L2 normalizer.
+
+Another thing, if you do something like this, you don't want
+to fit each step of the pipeline every time. So some of
+these steps for the count vectorizer, if you have a big
+dataset, it might be pretty expensive and so you don't want
+to refit this again, just because you're plugged in the
+normalizer or just because you changed the C parameter in
+the logistic regression. 
+
+Make pipeline has a parameter called memory that allows you
+to cash the results. So you just have to give it a non-empty
+string and it'll use that as the full name to catch the
+results. If there's no catch eviction, at some point you
+need to delete it, or your hard drive will run full. 
+
+Here, you can see that after tuning everything, I actually
+get a result that's much better than what I had before. So
+before I had an f1 macro of 0.45 and now I have 0.58. 
+
+So min_df=2 and ngram_range: (1,5) and c=10 gives the best
+results. 
+
+
 - Small dataset, makes grid-search faster! (less reliable)
 
 ---
 .center[
 ![:scale 100%](images/grid_search_table.png)
 ]
-
+???
+Here, I used pivot tables and Pandas to look into the effect
+of the different parameters. 
 ---
 # Other features
 - Length of text
@@ -921,22 +1760,74 @@ grid.best_params_
 - Punctuation...!? (somewhat captures by char ngrams)
 - Sentiment words (good vs bad)
 - Whatever makes sense for the task!
+???
+There are other kinds of features that you might want to
+look into. 
+
+There are actual collections of positive-negative words that
+you can download and you can check how many positive words
+are in this, how many negative words are in this. So
+basically, the model can share information about how
+important these words are because a particularly positive
+word might appear only very infrequently in your dataset but
+you can still learn that positive word means good. 
+
+Bag of words is a pretty good baseline. It’s a very simple
+approach and often gives reasonable results. 
+
 
 ---
 class: middle
 
 # Large Scale Text Vectorization
+???
+The last thing I want to mention is how you can scale this
+up for really large scale stuff.
+
+Basically just a very slight modification. So for example,
+if you want to use training a model on the Twitter stream,
+which has tweets coming in all the time, this has a couple
+of problems.
+
+- You don't want to store all the data 
+
+- Your vocabulary might shift over time. You might not be
+able to store the whole vocabulary, because the whole
+vocabulary of what everybody says on Twitter is very large. 
+
+There's a trick which allows you to get away without
+building a vocabulary. 
+
 ---
 
 .center[
 ![:scale 90%](images/large_scale_text_vec_1.png)
 ]
-
+???
+This is what we did before. We tokenize the string, split
+onto words, build a vocabulary and then built a sparse
+matrix representation. Now we can replace this vocabulary
+with just a hash function. 
 ---
 
 .center[
 ![:scale 80%](images/large_scale_text_vec_2.png)
 ]
+???
+And we can use any string hash function, that computes half
+of the token, then we represent this token just by its hash
+number. 
+
+Here, I used a hash method. This just hashes to 832,412 and
+so this is the number of the feature. Then I can use these
+as indices into my sparse matrix encoding. So now I need a
+hash function with some upper limits, let's say 1 billion or
+something, and as I get a feature vector of length 1
+billion. And then I can use these hashes as indices into
+this feature vector. 
+
+So I don't need to build a vocabulary which is pretty nice. 
+
 
 ---
 # Near drop-in replacement
@@ -972,6 +1863,14 @@ lr.score(X_val, y_val)
 ```
 
 ]
+???
+This is a drop-in replacement for count vectorizer. It's the
+hashing vectorizer. Here, you can see by default, it
+actually uses a hash base of about a million.
+
+The result was about the same. It can be faster, and you get
+away without storing the vocabulary
+
 ---
 
 # Trade-offs
@@ -989,6 +1888,29 @@ Con:
 - (collisions are not a problem for performance)
 
 ]
+???
+Here are pros and cons listed. 
+
+It's hard to interpret the results because now you have like
+a feature vector of size million, but you don't know what
+the features correspond to. Previously we had a vocabulary
+and we could say feature 3 corresponds to X and now we don't
+know what it is.
+
+You could try to store the correspondences but that would
+sort of remove all the benefits. So that makes it kind of
+hard to debug. 
+
+There can be hash collisions, which make it harder to
+interpret. 2 tokens can hash to the same index. In practice,
+that's not really a problem for accuracy. But it's a problem
+for interpretability because you can't undo the hash
+function so you don't know why your model learned the thing
+it learned. But if you have really big text data or
+streaming setting, this is a quite simple and effective
+method. 
+
+
 
 ---
 class: middle

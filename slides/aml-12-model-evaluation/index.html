@@ -212,6 +212,27 @@ precision, recall, thresholds = precision_recall_curve(
 ![:scale 75%](images/rf_vs_svc.png)
 ]
 ???
+We’re going to compare random forest and support vector
+machine.
+
+You can see they're sort of similar. But in some areas, they
+are different. For example, you can see that the random
+forest is little bit more stable for very high precision but
+in some places the SVM is better than random forest and vice
+versa. So which of the two is better classifier really
+depends on which area you're interested in. 
+
+By comparing these two curves, again, sort of a very fine
+grain thing that you can do manually, if you want to do this
+for many models, and want to pick the best model. This is
+maybe not really feasible. So you might want to summarize
+this in a single number. So one number you could think of
+is, while I know I definitely want to have a recall of 90%
+so I'm going to put my threshold here and compare at that
+threshold. If you don't really have a particular goal yet,
+you can also consider all thresholds at once, and basically
+compute the area under this curve. It's not exactly the same
+but that's sort of what average precision does.
 
 ---
 # Average Precision
@@ -219,6 +240,25 @@ precision, recall, thresholds = precision_recall_curve(
 ![:scale 100%](images/avg_precision.png)
 ]
 ???
+Average precision basically does a step function integral of
+this thing. So for each possible threshold, you look at the
+precision at this threshold times the change in recall. So
+this is like fitting a step function under the curve and
+then computing the integral. This allows you to basically
+take all possible thresholds into account at once. 
+
+Q: How do I adjust the precision-recall ratio for the random
+forest? 
+
+I mean, it says predict_proba. So I can alter threshold that
+at different values if I want. For a support vector machine,
+which doesn't have predict_proba, I can also adjust the
+threshold the decision function.
+
+Average precision is a pretty good metric to basically
+compare models if there are imbalanced classes. 
+
+
 Related to area under the precision-recall curve
 (with step interpolation)
 ---
@@ -248,6 +288,35 @@ Average precision of svc: 0.693
 ```
 ]
 ???
+Previously, I just have sort of a simple comparison between
+f1 and average precision. I'm comparing these two models. So
+if I look at f1 score, it's going to compare basically these
+two points and the SVC is slightly is better.
+
+But F1 score only looks at the default threshold. If I want
+to look at the whole RC curve, I can use average precision.
+Even if I look at all possible thresholds, SVC is still
+better. Average precision is sort of a very sensitive metric
+that allows you to basically make good decisions even if the
+classes are very imbalanced and that also takes all possible
+thresholds into account. 
+
+One thing that you should keep in mind if you use this is
+that this does not give you a particular threshold. For
+example, if you use the default threshold, your accuracy
+might be zero. This only looks at ranking. 
+
+The curve and the area under the curve, don't depend on
+where the default threshold is. So if you predict
+everything, like for some weird reason, if you predict
+everything as the minority class, your accuracy will be
+really bad. But if they are ranked in the right order, so
+that all the positive classes are ranked higher than the
+negative classes, then you might still get an area under the
+curve that's very close to one. So this only looks at
+ranking. 
+
+
 AP only considers ranking!
 ---
 
@@ -258,11 +327,42 @@ AP only considers ranking!
 `$$ \text{FPR} = \frac{\text{FP}}{\text{FP}+\text{TN}}$$`
 `$$ \text{TPR} = \frac{\text{TP}}{\text{TP}+\text{FN}} = \text{recall}$$`
 ???
+Another very commonly used measure is the ROC curve. It's
+similar to the precision-recall curve. But now you're
+looking the false positive rate and the true positive rate.
+True positive rate is just another name for recall, which is
+true positives divided by true positives plus false
+positives. So of ones that are actually true, how many did I
+get? 
+
+False positive rate is false positives divided by false
+positives plus true negatives. So of everything that's
+predicted as negative, how many of those were wrongly
+predicted as negative.
+
 ---
 .center[
 ![:scale 75%](images/roc_curve.png)
 ]
 ???
+You can look at this for all possible thresholds. Again, you
+get a curve. Here is the curve for support vector machine
+and random forest again. With the same classifier. And
+again, the thresholds look pretty arbitrary. 
+
+It might be a little bit hard to say which one is better?
+For the precision-recall curve, the optimum was in the top
+right, you want to be in as top right as possible. So you
+want to have a recall of one and the precision of one. 
+
+For the ROC curve, the ideal point is the top left. You want
+a false positive rate of zero and a true positive rate of
+one. One thing that's kind of nice for the ROC curve is that
+no matter what the class imbalances are, the random
+classifier or classifier that predicts everything as the
+same class will be diagonal. 
+
+
 ---
 # ROC AUC
 - Area under ROC Curve
@@ -285,6 +385,29 @@ The Relationship Between Precision-Recall and ROC Curves
 <br />
 https://www.biostat.wisc.edu/~page/rocpr.pdf
 ???
+And so when you look at the area under the curve, which is
+called ROC AUC, it's always 0.5 for random or constant
+predictions. So it's very easy to say, how much better than
+random are you if you look at ROC AUC. 
+
+I encourage you to read the paper in the link. 
+
+One thing is that the ROC curve is usually much smoother and
+it makes more sense to interpolate it, where the
+precision-recall curve makes less sense to interpolate us.
+But the precision-recall curve can sometimes pick up on more
+fine-grained differences. 
+
+Even though AUC stands for area under the curve, if you see
+it in literature always means the area under the receiver
+operating curve. So AUC always means ROC AUC. 
+
+AUC is a ranking metric. So it takes all possible thresholds
+into account, which means that it's independent of the
+default thresholds. So again, you can have something with
+very low accuracy but still with perfect ROC AUC. 
+
+
 ---
 
 # Summary of metrics for binary classification
@@ -298,11 +421,49 @@ Ranking:
 - ROC AUC
 
 ???
+So let's briefly summarize the metrics for binary
+classification. So there are basically two approaches. One
+looks just at the predictions or look at soft predictions
+and take multiple thresholds into account. So the ones that
+I called threshold base, which is for single threshold, the
+ones that we talked about in our accuracy, which is just a
+fraction of correctly predicted, precision, recall, and f1.
+So the issue with accuracy is obviously that it can't
+distinguish between things that are quite different, for
+example, for imbalanced data sets, the classifier always
+predicts majority class often has like very high accuracy
+but tells you nothing. So in particular, for imbalanced
+classes, accuracy is a pretty bad measure. Precision and
+recall together are pretty good measures, though you always
+need to look at both numbers. One way to look at both
+numbers at once is the f1 score, though, using the harmonic
+mean is a little bit arbitrary. But still, only f1 score is
+a somewhat reasonable score if you only look at the actual
+predicted classes.
+
+For the ranking based losses, I think both average precision
+and ROC AUC are pretty good choices, ROC AUC, I like it
+because I know what 0.5 means, while for average precision,
+it's a little bit more tricky to see what the different
+orders of magnitude mean, or the different scales mean, but
+it can be more fine-grained measure. And so if you want to
+do cross-validation, my go-to is usually ROC AUC. In
+particular, for imbalance binary datasets, I would usually
+use ROC AUC. But then make sure that your threshold is
+sensible, but anything other than accuracy is okay. 
+
+Just don’t look at only precision or only recall, if you do
+a grid search for just precision, you will probably get
+garbage results. 
+
+
 add log loss?
 ---
 class: centre,middle
 # Multi-class classification
 ???
+The next thing I want to talk about is multiclass
+classification.
 ---
 class:split-40
 #Confusion Matrix
@@ -362,6 +523,27 @@ avg / total       0.96      0.96      0.96       450
 ]
 ]
 ???
+So again, for multiclass classification, you look at the
+confusion matrix. It's even more telling in a way than it
+was for binary classification but it's also pretty big. So
+here, I'm using the digital data set, which has 10 classes,
+and here's the confusion matrix. The diagonal is everything
+that's correct, the off-diagonal are mistakes. 
+
+And you can see very fine-grained which classes were
+mistaken for which other classes. So this is very nice if
+you want to look in a very detailed view of the performance
+of the classifier. But again, you can't really use it for
+model selection, or not easily. You can also again, look at
+the classification report, which will give you
+precision-recall and F score for each for the classes,
+again, very, very fine grained. So you can see, for example,
+that Class 0, was predicted while Class 8 is the hardest. 
+
+It might make more sense to look at in precision average
+classes, recall over the classes or f1 score for the
+classes. 
+
 ---
 # Averaging strategies
 - "macro", "weighted", "micro" (multi-label), "samples" (multi-label)
@@ -383,6 +565,63 @@ Macro average: 0.964
 ]
 <br />
 ???
+Two common ways to approach multitask is to look at averages
+over binary metrics. So you can do binary metrics for
+recall, precision f1 score. But in principle, you could do
+it for more things. And in scikit-learn has several
+averaging strategies.
+
+There is macro, weighted, micro and samples. You should
+really not worried about micro samples, which only apply to
+multi-label prediction. We haven't talked about multi-label
+prediction and we're not going to talk about multi-label
+prediction. Multi-level prediction is when each sample can
+have multiple labels. 
+
+Macro and weighted are the two options. They are
+interesting. For example, for recall, we can look at macro
+average recall, which is the average over all the labels and
+then the recall for just this label. So basically, here y_l
+is the true label, y ̂ is the predicted label. The positive
+class is now label l, and the negative classes is any other
+label, so this is sort of one versus rest version of recall.
+
+
+You can also do a weighted average, you weight by the number
+of samples in each class, and then divide by the total
+number of samples. So again, for each class, I compute
+recall for that class, and then I weight that by the number
+of samples. This is actually what classification report
+reports here.
+
+It's kind of interesting that if you do this, then actually
+looking at precision or recall just by themselves is
+informative. So if you look at macro average recall, that's
+actually also called balanced accuracy or if you look at
+macro average precision, this will be the useful metric by
+itself, because it looks at the precision of each of the
+classes. 
+
+So basically, the choice between macro and weighted is
+whether you think each class should have the same weight, or
+each sample should have the same weight. Let’s say, we have
+recall for one class is 1 and for the other class 0. And for
+the majority class recall is 1 and for the minority, class
+recall is 0. For macro average recall, you would get 0.5
+because you just take the average of the two. If you look at
+a weighted, then the outcome would be the proportion of the
+positive class. So if 90% of the data is positive, you will
+get 90% here. So basically weighted takes the class sizes
+into account and so the bigger classes count for more. If
+you're actually interested in the smaller classes, macro is
+probably better because each class weights the same. Which
+one is the best really depends on your application?
+
+Macro is counted each class the same while weighted is count
+each sample the same. I did this here on the digit data set,
+which is basically balanced and so there's no difference. 
+
+
 micro vs macro same for other metrics.
 
 ---
@@ -393,6 +632,32 @@ micro vs macro same for other metrics.
 `$$ \frac{1}{c}\sum_{j=1}^{c}p(j) AUC(j,\text{rest}_j)$$`
 - https://github.com/scikit-learn/scikit-learn/pull/7663
 ???
+You can do that similar for ROC AUC. It will soon be
+available in scikit-learn. There are basically two versions
+of doing multiclass ROC AUC. One is called Hand & Till while
+the other is called Provost & Domingo. And the first one is
+basically one versus one where you iterate over all the
+classes, and then you iterate over all the other classes,
+then you look at the AUC of one class versus the other
+class. 
+
+And this one is basically one versus rest where you look at
+the AUC of one class versus all the other classes. 
+
+H&T is not weighted whereas, on P&D, p(j) means number of
+samples in j, and P&D is weighted. You can also do weighted
+OvO or unweighted OvR.
+
+There are at least 4 different ways to do multi-class AUC.
+It’s not clear to me how they behave in practice. If you
+weighted then you count the samples are the same weight. If
+you do unweight, you give the different classes the same
+weight. 
+
+So this is definitely a pretty good metric if you want a
+ranking metric for multi-class classification.
+
+
 FIXME unify notation with slide on averaging
 ---
 # Summary of metrics for binary classification
@@ -406,6 +671,34 @@ Ranking:
 - OVO ROC AUC
 
 ???
+The threshold based ones are sort of the same, only now
+looking at only precision, or only recall, if you average
+over all the classes actually makes sense. So you can do a
+grid search over macro average recall, and it'll give you
+reasonable results.
+
+For ranking, in theory, you could also do OvR or OvO on the
+precision-recall curve. But I haven’t seen anyone done that
+or any papers on that. So let's not do that for now. Both
+can be weighted or unweighted versions of that.
+
+Both are great for imbalance problems again, but now you
+have to pick multiple thresholds and it's unclear how to do
+that well or at least for me.
+
+So let’s say you use OVO ROC and you get a classifier with a
+high value there, and now you want to make predictions. What
+thresholds do you use? 
+
+I don't actually have a good answer. Because you need n
+minus one different threshold to actually make a decision. 
+
+So for this reason, probably for multi-class, I might not
+use the ranking metrics unless you have to be cursed,
+they're sort of hard to interpret. And I would probably use
+something like macro average precision or macro average
+recall or macro average f1.
+
 
 ---
 
@@ -413,6 +706,32 @@ class: middle
 # Picking metrics
 
 ???
+In summary, for both multiclass and binary, you should
+really think about what your metrics are. And unless your
+problem is balanced, and even maybe then don't use accuracy.
+Accuracy is really bad. Problems are rarely balanced, in a
+real world and usually there heavily unbalanced unless
+someone artificially balances them. So it's really important
+to think about what is the right criterion for a particular
+task, and then you can optimize that criterion. 
+
+So as I said, that can be like having costs associated with
+the confusion matrix, emphasizing precision or recall,
+setting specific goals such as have recall of at least X
+percent, or have precision of at least X percent and for
+multi-class deciding whether are all the classes the same
+importance, or all the samples the same importance, what are
+the important classes, even for binary, which one is the
+positive class? 
+
+So whenever you talk about precision and recall, it’s
+important to think about which one is the positive class and
+how will changing the positive class change these two
+values? So and then finally, obviously, am I going to use
+the default threshold? Why am I going to use the default
+threshold? Do I use a ranking based metric? Or is there a
+reason why I would want to use a ranking based metric?
+
 
 - Accuracy rarely what you want
 - Problems are rarely balanced
@@ -448,6 +767,29 @@ AUC scoring: [ 0.93   0.885  0.923]
 ]
 
 ???
+So once you pick them, it's very easy to use any of these
+metrics in scikit-learn. So they're all functions inside the
+metrics module, but usually, you're going to want to use
+them in for cross-validation, or grid search. And then it's
+even easier. There's argument called scoring. It takes a
+string or a callable. And so here, if you give it a string,
+it'll just do the right thing automatically.
+
+By default its accuracy. So if you don't do anything, it's
+the same as if you provide accuracy. But you can also set
+ROC AUC, and it's going to use ROC AUC. So the thing is ROC
+AUC actually needs probabilities right or a decision
+function, so behind the scenes, it does the right thing and
+gets out the decision function for the positive class to
+compute the ROC AUC correctly.
+
+Using better a metric than accuracy is as simple as saying
+scoring equal to something. And it’s exactly the same as in
+grid search CV. So if you want to do a grid search CV or
+randomized search CV, you can set scoring equal to ROC AUC
+or average precision or recall macro.
+
+
 Same for GridSearchCV
 <br />
 Will make GridSearchCV.score use your metric!
@@ -479,6 +821,22 @@ homogeneity_score             precision_macro
 
 
 ???
+Here's a list of all the built-in scores, you can look at
+the documentation, there's really a lot of them. So these
+are for classification or regression or clustering. If you
+look in the documentation, you'll actually see which ones
+are for classification, which one is binary only, which ones
+are multiclass, which ones are regression and which ones are
+for clustering.
+
+The thing in scikit-learn, whatever you use for scoring
+greater needs to be better the way it's written. So you
+can’t use mean_squared_error for doing a grid search,
+because the grid search assumes greater is better so you
+have to use negative mean squared error. So for regression
+or log loss, you use mean squared error. For classification,
+you need to use the neg log loss one.
+
 ---
 class:spacious
 # Providing you your own callable
@@ -489,6 +847,20 @@ def accuracy_scoring(est, X, y):
         return (est.predict(X) == y).mean()
 ```
 ???
+You can also provide your own metric, for example, if you
+want to do multiclass ROC AUC, you can provide a callable as
+scoring instead of a string. For any of the built-in ones,
+you can just provide a string.
+
+In this case, I’ve re-implemented accuracy. And the
+arguments for this needs to be an estimator, x - which is
+the test data and y - which is the test data true labels or
+whatever data you want to score. To re-implement accuracy,
+you have to call predict on the test data, check whether
+it's equal to y, and then compute the mean. This is actually
+a very powerful framework so you can do a lot of things with
+it. 
+
 ---
 # You can access the model!
 .tiny-code[```python
@@ -528,6 +900,43 @@ print(len(grid.best_estimator_.support_))
 405
 ```]
 ???
+I can define a metric for support vector machines that
+penalizes having a lot of support vectors.
+
+The main thing that I want to illustrate here is that you
+can have access to the model. So you can write a function
+for grid search that can do anything with the model it
+wants. So you can do deep introspection into the model and
+use that for your model selection. And then I can set up set
+scoring and then my callable and then I can run grid search
+as I usually would. Only now it's select a bigger C because
+bigger C give fewer support vectors. 
+
+Question is why is the default accuracy? 
+
+I guess one reason is, we can't change it anymore. Because
+everybody assumes it is and if it would be anything else,
+people would be very confused because that's sort of the
+most natural metric that people think about, like the number
+of correctly classified samples. Otherwise, in the first
+lecture, I would have to explain ROC AUC to you if it was
+ROC AUC and it would be harder to understand for people.
+
+Question is if I don't have probabilities can I compute ROC
+and yes, it does not depend probabilities at all. It's just
+I go through all possible thresholds. It's really just a
+ranking. I go through all possible thresholds and look at if
+I've used this threshold and look at what's the precision?
+What's the recall? Or what's the false positive rate, what's
+the true positive rate, and you only need a ranking. 
+
+Basically, I only need to be able to sort the points and
+then for each possible threshold, I need to call the
+precision and recall. And so as long as it can sort the
+points, it doesn't matter. I can use any monotonous
+transformation of the decision function and it will still be
+the same because it only considers the ranking.
+
 ---
 class: centre,middle
 # Metrics for regression models
@@ -540,6 +949,28 @@ class:spacious
 - Mean absolute error, median absolute error: more robust
 - When using “scoring” use “neg_mean_squared_error” etc
 ???
+The built-in standard metrics by default in scikit-learn
+uses R squared. The other obvious metric is Mean Squared
+Error. The good thing about R squared is it's around zero
+and maximum of one. It's very easy to understand the scale.
+If it's close to one is good. If it's negative, it's really
+bad. If it's close to zero, it's bad.
+
+While the MSE is easier to relate to the input. So the scale
+of the mean squared error is sort of relates to the scale of
+the output. You can also use things like mean absolute
+error, and median absolute error, which is more robust. 
+
+If you square things, then outliers have a very big impact.
+So if we don't square things, then outliers have less of an
+impact. So often people prefer to use mean absolute error to
+limit the impact of outliers. If being low is good, you need
+to have a neg before and if being high is good you won't be
+needing to it be neg. 
+
+I think these are actually the only metrics that are in
+scikit-learn. 
+
 ---
 # Prediction plots
 .wide-left-column[
@@ -561,6 +992,25 @@ plt.plot(pred, y_test, 'o')
 ]
 
 ???
+I think one of the best debugging tools is prediction plots,
+where you plot the predicted versus the true outcome. This
+is on the Boston dataset here, I just do a ridge regression
+model. And so here, I plot the predicted outcome by the
+ridge regression on the test data set versus the true
+outcome. And so ideally, it should be the same, they it
+should be on the diagonal. 
+
+But you can see that there's like, a couple things wrong
+with it. So for example, there are a couple of things where
+the true prediction is 50K, but I under predict severely.
+There’s a lot of underprediction going on. In particular,
+for low values, I’m predicting too high and for high values,
+I’m predicting too low.
+
+Looking at this you can see different trends and see if
+there are any trends or not. 
+
+
 ---
 class:split-40
 # Residual Plots
@@ -570,14 +1020,57 @@ class:split-40
 .right-column[
 ![:scale 100%](images/regression_boston_3.png)]
 ???
+A different way to look at this is to basically rotate that
+45 degrees. 
+
+So here we are looking at the true versus true minus
+predicted. This allows you even more easily to see if there
+are trends, and you can see that basically, we're over
+predicting for low values and we're under predicting for
+high values.
+
+You can also look at the histogram of the residuals and you
+can see that they’re mostly centered around zero, which is
+good so there's probably no systematic bias but you can see
+that there are some values where we underpredict by quite a
+lot. These are nice because you can do these plots no matter
+what dimension your data set is.
+
 ---
 # Target vs Feature
 ![:scale 100%](images/target_vs_feature.png)
 ???
+If you want to look at in more detail, you can look at per
+feature plots. 
 ---
 # Residual vs Feature
 ![:scale 100%](images/residual_vs_feature.png)
 ???
+
+Here, I'm plotting y test minus the prediction against each
+of the features and see if there are particular aspects of
+the feature that are not captured. For example, you can see
+here that for a low LSTAT, we are underpredicting more than
+for a high LSTAT. That shows that there might be trends in
+these features that we're not capturing. 
+
+The X-axis is features. For each data point in the test
+dataset, I look at the value of this feature, and I look at
+the residual, which is the true value minus the prediction. 
+
+Ideally, this should all be sort of horizontal because the
+errors that the model makes should be independent of all of
+the features. If the error that the model makes is not
+independent of the feature that means there's some aspect of
+the feature that the model didn't capture. 
+
+This is basically the dependence of the target on the
+feature that is not captured by the prediction. And you can
+meditate that and then at some point it'll make sense.
+
+These are all more and more fine grain plots to understand
+the errors that you're making. 
+
 ---
 class:spacious
 # Absolute vs Relative: MAPE
@@ -587,6 +1080,38 @@ class:spacious
 ![:scale 50%](images/mape.png)
 ]
 ???
+There's another metric I want to talk about called MAPE.
+Which comes up in particular in forecasting. MAPE stands for
+Mean Absolute Percentage Error. MAPE captures is the
+percentage error. It divides the residual by the true value.
+Here for each individual data point, we’re dividing by the
+true value. 
+
+Basically, what that means is that if a data point is large,
+we care less about how well we predict it. Basically, we
+allow larger error bars around high values. And I tried to
+plot this here, this is sort of for the one feature, LSTAT,
+to have like a reasonable x-axis since that helps us
+visualize this. And so here is the true dataset in blue and
+the predictive dataset in orange predicted using all
+features. And so in the bottom right, you can see it that we
+are under predicting by about 10. And this gives us a MAPE
+of 36%.
+
+On the top left, we are under predicting by even more, but
+the MAPE is smaller. So even though the absolute error on
+the top is bigger than the absolute error on the bottom, the
+relative error in the top is much smaller than the relative
+error in the bottom. 
+
+This is a very commonly used measure in forecasting. Be
+careful when to use it because sometimes it might be not
+super intuitive. In particular, if something is not defined,
+if anything is zero, and if something is very close to zero,
+you need to perfectly predict it otherwise, you have unbound
+error. So this is usually used for things that are greater
+than one.
+
 ---
 class: spacious
 # Over vs under
@@ -594,6 +1119,24 @@ class: spacious
 - Try to create cost-matrix: how much does overprediction and underprediction cost? 
 - Is it linear?
 ???
+One of the things you might want to consider is looking at
+how much you under predict versus how much you over predict.
+In a business case under-predicting and overpredicting can
+have different costs. You can try to create a cost matrix to
+state the amount of underprediction or over prediction. You
+can also try to ask if this relationship linear. The most
+natural thing to do would be to look at the residuals and
+ask yourself how much it costs if I make a prediction that
+has this residual. 
+
+And ask is it a linear function of the error or not. Though
+this only looks at the absolute error, you can also do the
+same for relative error. So maybe the first decision is,
+should I look at absolute errors, or should I look at the
+relative errors. And then for each particular bin of how
+much I'm over or under predicting, how much this costs me.
+
+
 ---
 class: center, middle
 

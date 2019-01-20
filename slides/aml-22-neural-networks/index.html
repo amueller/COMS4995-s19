@@ -23,14 +23,18 @@ class: center, middle
 
 Andreas C. Müller
 ???
-The role of neural networks in ML has become increasingly important in recent years.
-We will only go through some relatively simple variants, and discuss how to implement them.
-I highly recommend you take a full course on neural networks, though I know they are a bit hard
-to get into.
+The role of neural networks in ML has become increasingly
+important in recent years.
+We will only go through some relatively simple variants, and
+discuss how to implement them.
+I highly recommend you take a full course on neural
+networks, though I know they are a bit hard to get into.
 
-In particular we will only talk about supervised feed-forward neural networks, both the standard fully
-connected variants and convolutional neural networks. We'll not discuss recurrent neural networks
-or LSTMs or anything more complex.
+In particular we will only talk about supervised
+feed-forward neural networks, both the standard fully
+connected variants and convolutional neural networks. We'll
+not discuss recurrent neural networks or LSTMs or anything
+more complex.
 
 FIXME needs wayyy more polish!
 FIXME tf.learn is deprecated (now in core or keras?)
@@ -57,26 +61,38 @@ FIXME tf.learn is deprecated (now in core or keras?)
     - residual networks
 
 ???
-For some reason, whenever anyone talks about neural networks, they also talk about history,
-so here's a very brief history of neural nets.
-While there was a big boom in use of neural nets, say in the last 9 years, many of the methods
-are actually from the 1990s, so much older than random forests of SVMs.
-There are two things that people say fundamentally changed the usefullness of neural nets:
-more data, and computers fast enough to process that data, in particular using GPUs.
-Actually, neural nets were kind of successful in the 1990s already, Yann LeCun's 
-convolutional networks were used to reach checks automatically in ATMs.
-That worked well because for digit recognition we had enough traning data becaus the variety
-was "small" enough.
-For natural images or audio, the variety in the data is much much larger, and so we need
-much larger datasets to learn neural networks from those. And using these larger datasets
-was not possible to collect in the 90, and not feasible to learn on without fast GPUs.
-For other datasets, like tabular data as we saw it before in this class, which have been
-the most popular domain of machine learning for a long time, there is often not enough
-data available for neural nets to work, and so people were very skeptical of them for a long time.
+For some reason, whenever anyone talks about neural
+networks, they also talk about history, so here's a very
+brief history of neural nets.
+While there was a big boom in use of neural nets, say in the
+last 9 years, many of the methods are actually from the
+1990s, so much older than random forests of SVMs.
+There are two things that people say fundamentally changed
+the usefullness of neural nets:
+more data, and computers fast enough to process that data,
+in particular using GPUs.
+Actually, neural nets were kind of successful in the 1990s
+already, Yann LeCun's 
+convolutional networks were used to reach checks
+automatically in ATMs.
+That worked well because for digit recognition we had enough
+traning data becaus the variety was "small" enough.
+For natural images or audio, the variety in the data is much
+much larger, and so we need much larger datasets to learn
+neural networks from those. 
+And using these larger datasets was not possible to collect
+in the 90, and not feasible to learn on without fast GPUs.
+For other datasets, like tabular data as we saw it before in
+this class, which have been the most popular domain of
+machine learning for a long time, there is often not enough
+data available for neural nets to work, and so people were
+very skeptical of them for a long time.
 
-Because neural networks were so successful recently, there has been a giant amount of research
-around them, and that resulted in many important improvements like the use or relu units,
-drop out, adam, batch normalization and residual networks. We'll talk about these improvements
+Because neural networks were so successful recently, there
+has been a giant amount of research around them, and that
+resulted in many important improvements like the use or relu
+units, drop out, adam, batch normalization and residual
+networks. We'll talk about these improvements
 today and next time as well.
 
 The dramatic shift that we've seen is mostly due to the availability of data and processing power, though.
@@ -90,25 +106,34 @@ The dramatic shift that we've seen is mostly due to the availability of data and
 ]
 
 ???
-Before I introduce you to neural networks, I want to introduce you to how people often draw
-neural networks, but drawing a model that you already know, binary logistic regression, in the same way.
-This drawing basically only encodes the prediction process, not the model building or fitting process.
+Before I introduce you to neural networks, I want to
+introduce you to how people often draw neural networks, but
+drawing a model that you already know, binary logistic
+regression, in the same way. This drawing basically only
+encodes the prediction process, not the model building or
+fitting process.
 
-Often networks are drawn as circles, which basically represent numbers.
-So here, I drew a four-dimensional input vector, x[0] to x[3]. For each input, we drew a little circle
-representing this number.
-In binary logistic regression, the output is computed as the inner product of
-the input vector and a weight vector w, or in other words a weighted sum of the
-x's, weighted by the ws. So each of these arrows corresponds to weighting the
-input by an w_i and then they are all added up to the output y. In logistic
-regression we usually compute the output y as the probability, given by the
-logistic sigmoid of this weighted sum. This is not drawn but kind of implicit in
-the picture.
-I also didn't draw the bias here, which is also added to the final sum.
-So to summarize, circles mean numbers, and arrows mean products between what's
-on the origin of the arrow, and a coefficient that's part of the model. And
-arrows into circles mean sums, and they often imply some non-linear function
-like the logistic sigmoid.
+Often networks are drawn as circles, which basically
+represent numbers.
+So here, I drew a four-dimensional input vector, x[0] to
+x[3]. For each input, we drew a little circle representing
+this number.
+In binary logistic regression, the output is computed as the
+inner product of the input vector and a weight vector w, or
+in other words a weighted sum of the x's, weighted by the
+ws. So each of these arrows corresponds to weighting the
+input by an w_i and then they are all added up to the output
+y. In logistic regression we usually compute the output y as
+the probability, given by the logistic sigmoid of this
+weighted sum. This is not drawn but kind of implicit in the
+picture.
+I also didn't draw the bias here, which is also added to the
+final sum.
+So to summarize, circles mean numbers, and arrows mean
+products between what's on the origin of the arrow, and a
+coefficient that's part of the model. And arrows into
+circles mean sums, and they often imply some non-linear
+function like the logistic sigmoid.
 ---
 
 #Basic Architecture
@@ -121,44 +146,53 @@ like the logistic sigmoid.
 
 `$ o(x) = g(W_2h(x) + b_2) $`
 ???
-So now let's look at what a neural network is. It's very similar to the logistic
-regression, only applied several times.
-So here I drew three inputs x, from which we compute weighted sums. But now
-there is not only a single output, but we compute several intermediate outputs,
+So now let's look at what a neural network is. It's very
+similar to the logistic regression, only applied several
+times.
+So here I drew three inputs x, from which we compute
+weighted sums. But now there is not only a single output,
+but we compute several intermediate outputs,
 the hidden units.
-Each of the hidden units is a weighted sum of the inputs, using different
-weights. Each hidden unit corresponds to an inner product with a weight vector,
-so all together they correspond to multiplying the input by a matrix, here a 3
-by 4 matrix.
-We also add a bias for each of the hidden units, so a vector of dimension 4 for
-all of them. Then, we basically repeat the process and compute again weighted
-sums of the hidden units, to arrive at the outputs. Here this would correspond
-to multiplying by a 4 by 2 matrix, and adding a vector of dimension 2. Then we
-could apply for example a logistic sigmoid or softmax to get a classification
-output.
-So we basically do two matrix multiplications. If that was all, we could
-simplify this by just multiplying the matrices together into a single matrix,
-and we would just have a linear model. But the interesting part is that in the
-hidden layer, after we compute the weighted sum, we apply a non-linear function,
-often called activation function or just nonlinearity.
-That is what makes this whole function non-linear, and allows us to express much
-more interesting relationships. You can think of this as doing logistic
-regression with learning non-linear basis functions. The process is written here
-in formulas, we take the input x, multiply with a matrix W, add a bias b, and
-apply a non-linearity f, to get h.
-Then we multipy h by another matrix W', add a bias b' and apply a non-linearity
-g. This looks a bit like the word2vec we had last time, though here it's really
-very important to have the non-linear activation functions. Wha we want to learn
-from data are the weights and biases, so in this case a 3x4 matrix, a vector of
-dim 4, a 2x4 matrix and a vector of dim 2.
-Each of these steps of computation is usually called a layer. Here we have an
-input layer, one hidden layer, and an output layer. The hidden layer is called
-hidden because the computation is not actually part of the result, it's just
-internal to the algorithm. Though I'm drawing all these things in a similar way,
-don't confuse them with graphical models, as I drew them for latent dirichlet
-allocation.
-All these nodes here are completely deterministic functions, and the graph just
-illustrates very simple computations.
+Each of the hidden units is a weighted sum of the inputs,
+using different weights. Each hidden unit corresponds to an
+inner product with a weight vector, so all together they
+correspond to multiplying the input by a matrix, here a 3 by
+4 matrix.
+We also add a bias for each of the hidden units, so a vector
+of dimension 4 for all of them. Then, we basically repeat
+the process and compute again weighted sums of the hidden
+units, to arrive at the outputs. Here this would correspond
+to multiplying by a 4 by 2 matrix, and adding a vector of
+dimension 2. Then we could apply for example a logistic
+sigmoid or softmax to get a classification output.
+So we basically do two matrix multiplications. If that was
+all, we could simplify this by just multiplying the matrices
+together into a single matrix, and we would just have a
+linear model. But the interesting part is that in the hidden
+layer, after we compute the weighted sum, we apply a
+non-linear function, often called activation function or
+just nonlinearity. That is what makes this whole function
+non-linear, and allows us to express much more interesting
+relationships. You can think of this as doing logistic
+regression with learning non-linear basis functions. The
+process is written here in formulas, we take the input x,
+multiply with a matrix W, add a bias b, and apply a
+non-linearity f, to get h. Then we multipy h by another
+matrix W', add a bias b' and apply a non-linearity g. This
+looks a bit like the word2vec we had last time, though here
+it's really very important to have the non-linear activation
+functions. Wha we want to learn from data are the weights
+and biases, so in this case a 3x4 matrix, a vector of dim 4,
+a 2x4 matrix and a vector of dim 2. Each of these steps of
+computation is usually called a layer. Here we have an input
+layer, one hidden layer, and an output layer. The hidden
+layer is called hidden because the computation is not
+actually part of the result, it's just internal to the
+algorithm. Though I'm drawing all these things in a similar
+way, don't confuse them with graphical models, as I drew
+them for latent dirichlet allocation.
+All these nodes here are completely deterministic functions,
+and the graph just illustrates very simple computations.
 
 ---
 # More layers
@@ -173,20 +207,25 @@ illustrates very simple computations.
 - Many layers → “deep learning”.
 - This is called a multilayer perceptron, feed-forward neural network, vanilla feed-forward neural network.
 
-- For regression usually single output neuron with linear activation.
-- For classification one-hot-encoding of classes, n_classes many output variables with softmax.
+- For regression usually single output neuron with linear
+activation.
+- For classification one-hot-encoding of classes, n_classes
+many output variables with softmax.
 
-We can have arbitrary many layers in a neural network, and more layers or more
-units allow to express more complex functions. And the term deep-learning is
-referring to neural nets with many hidden layers. This type of network is called
-a multilayer perceptron, basically because it has more than one layer of
-computation.
+We can have arbitrary many layers in a neural network, and
+more layers or more units allow to express more complex
+functions. And the term deep-learning is referring to neural
+nets with many hidden layers. This type of network is called
+a multilayer perceptron, basically because it has more than
+one layer of computation.
 
-For the output, it functions similar to linear models. You can do binary
-classification with a single output, you can do multi-class classification with
-a softmax like in multinomial logistic regression, or you can have just a single
-output for regression. All of the hidden layers usually have the same non-linear
-function f, but that's not usually the same as the output function.
+For the output, it functions similar to linear models. You
+can do binary classification with a single output, you can
+do multi-class classification with a softmax like in
+multinomial logistic regression, or you can have just a
+single output for regression. All of the hidden layers
+usually have the same non-linear function f, but that's not
+usually the same as the output function.
 
 ---
 #Nonlinear activation function
@@ -195,14 +234,16 @@ function f, but that's not usually the same as the output function.
 ![:scale 65%](images/nonlin_fn.png)
 ]
 ???
-The two standard choices for the non-linear activation function are shown here,
-either the tanh, which is the more traditional choice, or the rectified linear
-unit or relu, which is more commonly used recently. Tanh basically squashes
-everything between -inf and +inf to -1 and 1 and saturates towards the
-infinities. The rectified linear unit just is constant zero for all negative
-numbers, and then the identity. One of the reasons given for preferring the relu
-unit is that the gradient of tanh is very small in most places, which makes it
-hard to optimize.
+The two standard choices for the non-linear activation
+function are shown here, either the tanh, which is the more
+traditional choice, or the rectified linear unit or relu,
+which is more commonly used recently. Tanh basically
+squashes everything between -inf and +inf to -1 and 1 and
+saturates towards the infinities. The rectified linear unit
+just is constant zero for all negative numbers, and then the
+identity. One of the reasons given for preferring the relu
+unit is that the gradient of tanh is very small in most
+places, which makes it hard to optimize.
 ---
 #Supervised Neural Networks
 
@@ -224,46 +265,57 @@ networks, neural turing machines...)
 
 ???
 
-I want to give you a brief overview of what these models are for before we dive
-into more details. These are non-linear models that can be used for
-classification and regression. They can also be used for much more, but we'll
-not talk about this in this class. They are what's called universal
-approximators, so they can model, i.e. overfit any function, like trees or RBF
-Kernel SVMs. They work particularly well for very large datsets, usually with at
-least tens of thousands of samples, or even millions of examples.
-They require solving a non-convex optimization problem, so the solution is
-dependent on initialization and the method of optimization you choose.
-They are notoriously slow to traing compared to many other models, requiring GPUs.
-There is alot of fast implementations of neural networks on GPUs out there, but
-scikit-learn doesn't contain any. We'll use scikit-learn a little bit for
-illustration purposes, but you probably don't want to use it on any real
-problem. We'll discuss some other libraries that you can use instead, though, in
-particular tensorflow and keras. You can run these on your laptop, but to really
-get the benefit of GPUs you need to have the right hardware, so you can either
-use a cluster or GPU cloud resources or maybe your gaming PC with an Nvidia
-card.
+I want to give you a brief overview of what these models are
+for before we dive into more details. These are non-linear
+models that can be used for classification and regression.
+They can also be used for much more, but we'll not talk
+about this in this class. They are what's called universal
+approximators, so they can model, i.e. overfit any function,
+like trees or RBF Kernel SVMs. They work particularly well
+for very large datsets, usually with at least tens of
+thousands of samples, or even millions of examples. They
+require solving a non-convex optimization problem, so the
+solution is dependent on initialization and the method of
+optimization you choose. They are notoriously slow to traing
+compared to many other models, requiring GPUs. There is alot
+of fast implementations of neural networks on GPUs out
+there, but scikit-learn doesn't contain any. We'll use
+scikit-learn a little bit for illustration purposes, but you
+probably don't want to use it on any real problem. We'll
+discuss some other libraries that you can use instead,
+though, in particular tensorflow and keras. You can run
+these on your laptop, but to really get the benefit of GPUs
+you need to have the right hardware, so you can either use a
+cluster or GPU cloud resources or maybe your gaming PC with
+an Nvidia card.
 
-State of the art models in computer vision and audio take days or even weeks to
-train, often on multiple GPUs.
-In a sense, neural networks are quite related to linear models, as we'll see in
-a bit, working also with dot products. So similar to those, you need to
-preprocess your data to be continuous and scaled. Neural networks, probably
-because of the non-convex optimization, are actually much more sensitive to
-scaling than linear models in practice.
+State of the art models in computer vision and audio take
+days or even weeks to train, often on multiple GPUs. In a
+sense, neural networks are quite related to linear models,
+as we'll see in a bit, working also with dot products. So
+similar to those, you need to preprocess your data to be
+continuous and scaled. Neural networks, probably because of
+the non-convex optimization, are actually much more
+sensitive to scaling than linear models in practice.
 
 
-And finally, as I said earier, there are many many different variants of this.
-Neural networks, or deep learning, is really an umbrella term that describes a
-large number of different architectures and algorithms. The things that we'll
-talk about first are often called vanilla neural networks, or multilayer
+And finally, as I said earier, there are many many different
+variants of this. Neural networks, or deep learning, is
+really an umbrella term that describes a large number of
+different architectures and algorithms. The things that
+we'll talk about first are often called vanilla neural
+networks, or multilayer
 perceptron.
-And the zoo of neural network types is growing all the time, given the amount of
-research in that area. The only other type we'll cover is convolutional neural
-nets, which we'll cover next time. Other common types include recurrent neural
-networks like LSTMs, there's recursive neural networks, GANs that are all the
-rage because they can generate nice faces and cats and photos from drawings,
-neural turing machines that can learn algorithms, and FIXME of course deep
-reinforcement learning that can play better go than any human.
+And the zoo of neural network types is growing all the time,
+given the amount of research in that area. The only other
+type we'll cover is convolutional neural nets, which we'll
+cover next time. Other common types include recurrent neural
+networks like LSTMs, there's recursive neural networks, GANs
+that are all the rage because they can generate nice faces
+and cats and photos from drawings, neural turing machines
+that can learn algorithms, and FIXME of course deep
+reinforcement learning that can play better go than any
+human.
 
 ---
 # Training Objective
@@ -279,37 +331,45 @@ reinforcement learning that can play better go than any human.
 - `$l$` Squared loss for regression. Cross-entropy loss for classification
 
 ???
-So how are we going to learn these parameters, these weights and biases for all
-the layers? If we did logistic regression, this would be relatively simple. We
-know it's a convex optimization problem, to optimize the log-loss, so we can
-just run any optimizer, and they'll all come to the same result.
+So how are we going to learn these parameters, these weights
+and biases for all the layers? If we did logistic
+regression, this would be relatively simple. We know it's a
+convex optimization problem, to optimize the log-loss, so we
+can just run any optimizer, and they'll all come to the same
+result.
 
-For the neural network it's a bit more tricky. We can still write down the
-objective. So let's say we have a single hidden layer, then the hidden layer is
-x multiplied by W with bias b added, and then a non-linearity f, and the output
-o(x) is another matrix multiplication, another bias, and the output
-non-linearity like softmax. 
+For the neural network it's a bit more tricky. We can still
+write down the objective. So let's say we have a single
+hidden layer, then the hidden layer is x multiplied by W
+with bias b added, and then a non-linearity f, and the
+output o(x) is another matrix multiplication, another bias,
+and the output non-linearity like softmax. 
 
-If we want to find the parameters W1,w2,b1,b2, we want to do empirical risk
-minimization, so for classification we want to minimize the cross-entropy loss
-for classification of the outputs o(x) given the ground thruth y_i over the
-training set. For regression we'd just use the square loss instead.
+If we want to find the parameters W1,w2,b1,b2, we want to do
+empirical risk minimization, so for classification we want
+to minimize the cross-entropy loss for classification of the
+outputs o(x) given the ground thruth y_i over the training
+set. For regression we'd just use the square loss instead.
 
 FIXME why W1/W2 here and before W and W'?
-We could also add a regularizer, like an L2 penalty on the weights W if we
-wanted, though that's not necessarily as important in neural networks as in
-linear models. Generally, this is the same approach as for linear models, only
-the formula for the output is more complicated now.
+We could also add a regularizer, like an L2 penalty on the
+weights W if we wanted, though that's not necessarily as
+important in neural networks as in linear models. Generally,
+this is the same approach as for linear models, only the
+formula for the output is more complicated now.
 
-In particular this objective is not convex, so we can basically not hope to find
-the global optimum. But we can still try to find "good enough" values for the
-parameters w and b by running an optimizer. We could use a gradient based
-optimizer like gradient descent, or newton, or conjugate gradient of lbfgs on
-this objective and this will yield a local optimum, but not necessarily a global
-one, and that's basically the best we can do.
+In particular this objective is not convex, so we can
+basically not hope to find the global optimum. But we can
+still try to find "good enough" values for the parameters w
+and b by running an optimizer. We could use a gradient based
+optimizer like gradient descent, or newton, or conjugate
+gradient of lbfgs on this objective and this will yield a
+local optimum, but not necessarily a global one, and that's
+basically the best we can do.
 
-Because you have to care about this optimization more than for many other models I'll go into a bit more details
-about how this works. Let me know if anything is unclear.
+Because you have to care about this optimization more than
+for many other models I'll go into a bit more details about
+how this works. Let me know if anything is unclear.
 ---
 
 #Backpropagation
@@ -322,36 +382,46 @@ about how this works. Let me know if anything is unclear.
 
 
 ???
-To run an optimizer, we do need to compute the gradients for all our parameters
-though, and that's a bit non-obious. Luckily there's a simple algorithm to do
-that, called backpropagation, that is computationally very simple. You probably
-heard the name backpropagation before, and often people make a big deal out of
-it, but it is not actually a learning algorithm or anything like that, it's just
-a nice way to compute the gradients in a neural network.
-And back propagation is basically just a clever application of the chain rule
-for derivatives. So let's say we want to get the gradients for the first weight
-matrix W1, so del o/del w1. If you try to write this down directly from the
-formula for the network it's a bit gnarly, but using the chain rule we can
-simplify this a bit.
-Let's define net(X) as the first hidden layer before the non-linearity. Then we
-can apply the chain rule (twice) and we see that we can write the gradient as a
-product of three terms, the input to the first layer, x, the gradient of the
-non-linearity f, and the gradient of the layer after W1, namely h. So to compute
-the gradient of the first weight vector, we need the activation/value of the
-layer before, and the derivative of the activation after.
+To run an optimizer, we do need to compute the gradients for
+all our parameters though, and that's a bit non-obious.
+Luckily there's a simple algorithm to do that, called
+backpropagation, that is computationally very simple. You
+probably heard the name backpropagation before, and often
+people make a big deal out of it, but it is not actually a
+learning algorithm or anything like that, it's just a nice
+way to compute the gradients in a neural network. And back
+propagation is basically just a clever application of the
+chain rule for derivatives. So let's say we want to get the
+gradients for the first weight matrix W1, so del o/del w1.
+If you try to write this down directly from the formula for
+the network it's a bit gnarly, but using the chain rule we
+can simplify this a bit.
+Let's define net(X) as the first hidden layer before the
+non-linearity. Then we can apply the chain rule (twice) and
+we see that we can write the gradient as a product of three
+terms, the input to the first layer, x, the gradient of the
+non-linearity f, and the gradient of the layer after W1,
+namely h. So to compute the gradient of the first weight
+vector, we need the activation/value of the layer before,
+and the derivative of the activation after.
 FIXME backpropagation image?
-FIXME need deriviative of loss, not output (unless square loss kinda)
-When computing the predictions, we compute all the activations of the layers, and we get an error.
-So we already have all these values.
-So to compute the gradients, we can do a single sweep, a backward pass, from the output to the input,
-computing the derivatives using the chain rule.
+FIXME need deriviative of loss, not output (unless square
+loss kinda)
+When computing the predictions, we compute all the
+activations of the layers, and we get an error. So we
+already have all these values. So to compute the gradients,
+we can do a single sweep, a backward pass, from the output
+to the input, computing the derivatives using the chain
+rule.
 
-It's probably educational to go through the details of this once yourself,
-deriving this starting from the chain rule. But you can also just look it up in
-the deep learning book I linked to.
-I don't think it's gonna be instructive if I try to walk you through the algebra.
+It's probably educational to go through the details of this
+once yourself, deriving this starting from the chain rule.
+But you can also just look it up in the deep learning book I
+linked to. I don't think it's gonna be instructive if I try
+to walk you through the algebra.
 
-Anyone see a problem with this? In particular the gradient of the non-linearity?
+Anyone see a problem with this? In particular the gradient
+of the non-linearity?
 
 
 ---
@@ -362,19 +432,24 @@ Anyone see a problem with this? In particular the gradient of the non-linearity?
 ]
 
 ???
-So if you're a mathematician you might be slightly confused now. I showed you
-these non-linearities earlier, the relu and the tanh. But the relu is not
-actually differentiable. it's differentiable everywhere but at zero. So
-formally, there is no gradient, and we can't do gradient descent. We can do
-what's called "subgradient" descent, though, which only requires a subgradient.
-At every point where there's a gradient, we just use the gradient, and if you
-hit the zero, you can actually pick any gradient that is "below the function"
-here; any tangent direction is fine. But in reality, you're never going to hit
-the zero, computing with floating point numbers, so we really don't have to
-worry about it. And just to point this out again, backpropagation is not an
-optimization algorithm, it's a way to compute gradients. We still need to think
-about what optimizer to use to actually find the minimum given the gradients. So
-how could we do that? Gradient descent for example(FIXME gave answer earlier)
+So if you're a mathematician you might be slightly confused
+now. I showed you these non-linearities earlier, the relu
+and the tanh. But the relu is not actually differentiable.
+it's differentiable everywhere but at zero. So formally,
+there is no gradient, and we can't do gradient descent. We
+can do what's called "subgradient" descent, though, which
+only requires a subgradient. At every point where there's a
+gradient, we just use the gradient, and if you hit the zero,
+you can actually pick any gradient that is "below the
+function" here; any tangent direction is fine. But in
+reality, you're never going to hit the zero, computing with
+floating point numbers, so we really don't have to worry
+about it. And just to point this out again, backpropagation
+is not an optimization algorithm, it's a way to compute
+gradients. We still need to think about what optimizer to
+use to actually find the minimum given the gradients. So how
+could we do that? Gradient descent for example(FIXME gave
+answer earlier)
 
 
 ---
@@ -397,38 +472,45 @@ Minibatch
 
 
 ???
-So doing standard gradient descent, we would update a weight matrix W_i but
-using the old W_i and taking a gradient step, so subtracting the gradient of the
-loss wrt the paramters, summed over the whole training set, times some learning
-rate. The problem with this is that it's quite slow. Computing all these
-gradients means that we need to pass all the examples forward through the
-network, make predictions, and then do a backward pass with backpropagation.
-That's a lot of matrix multiplications to do a single gradient step, in
-particular given that we want to do this for very large datasets.
-So what we can do to speed this up is doing a stochastic approximation, as we
-already saw for linear models, doing stochastic gradient descent aka online
-gradient descent. Here, you pick a sample at random, compute the gradient just
-considering that sample, and then update the parameter.
-So you update the weights much more often, but you have a much less stable
-estimate of the gradient. In practice, we often just iterate through the data
-instead of picking a sample at random. And as with linear models, this is much
-faster than doing full batches for large datasets.
+So doing standard gradient descent, we would update a weight
+matrix W_i but using the old W_i and taking a gradient step,
+so subtracting the gradient of the loss wrt the paramters,
+summed over the whole training set, times some learning
+rate. The problem with this is that it's quite slow.
+Computing all these gradients means that we need to pass all
+the examples forward through the network, make predictions,
+and then do a backward pass with backpropagation. That's a
+lot of matrix multiplications to do a single gradient step,
+in particular given that we want to do this for very large
+datasets. So what we can do to speed this up is doing a
+stochastic approximation, as we already saw for linear
+models, doing stochastic gradient descent aka online
+gradient descent. Here, you pick a sample at random, compute
+the gradient just considering that sample, and then update
+the parameter. So you update the weights much more often,
+but you have a much less stable estimate of the gradient. In
+practice, we often just iterate through the data instead of
+picking a sample at random. And as with linear models, this
+is much faster than doing full batches for large datasets.
 
-However, it's less stable, and also it doesn't necessarily use the hardware in
-the best way. So we can do a compromise in where we look at mini-batches of size
-k, usually something like 64 or 512. So we look at k samples, compute the
-gradients, average them, and update the weights. That allows us to update much
-more often than looking at the whole dataset, while still having a more stable
-gradient, and better being able to use the parallel computing capabilities of
-modern CPUs and GPUs. This is what's used in practice basically always.
-The reason why this is faster is basically that doing a matrix-matrix
-multiplication is faster than doing a bunch of matrix-vector operations.
+However, it's less stable, and also it doesn't necessarily
+use the hardware in the best way. So we can do a compromise
+in where we look at mini-batches of size k, usually
+something like 64 or 512. So we look at k samples, compute
+the gradients, average them, and update the weights. That
+allows us to update much more often than looking at the
+whole dataset, while still having a more stable gradient,
+and better being able to use the parallel computing
+capabilities of modern CPUs and GPUs. This is what's used in
+practice basically always. The reason why this is faster is
+basically that doing a matrix-matrix multiplication is
+faster than doing a bunch of matrix-vector operations.
 
-In principle we could also be using smarter optimization methods, like second
-order methods or LBFGS, but these are often not very effective on these large
-non-convex problems.
-One, called levenberg-marquardt is actually a possibility, but it's not really
-used these days.
+In principle we could also be using smarter optimization
+methods, like second order methods or LBFGS, but these are
+often not very effective on these large non-convex problems.
+One, called levenberg-marquardt is actually a possibility,
+but it's not really used these days.
 
 
 ---
@@ -447,28 +529,34 @@ class:spacious
 
 - http://sebastianruder.com/optimizing-gradient-descent/
 ???
-As with linear models, tuning the learning rate is a major issue here, so finding a good value of eta.
+As with linear models, tuning the learning rate is a major
+issue here, so finding a good value of eta.
 
-Actually, having a constant learning rate during the whole learning process is
-not good. Instead, we want to make bigger steps in the beginning and smaller
-steps in the end, so that's what people used for many years. Even better is to
-have a different learning rate for each parameter that we're tuning, based on
-past gradient steps.
-There's many heuristics for that, and it's somewhat related to diagonal
-approximations of second order methods. There's adagrad, adadelta, rmsprop and
-may more. When I first started doing neural nets, I actually used something
-similar, Rprop, from the 90s. Arguably the state of the art for these
-per-parameter adaptive learning rates is adam. It has some magic numbers in it
-but it seems to work well in practice. Rmsprop is also used by some.
+Actually, having a constant learning rate during the whole
+learning process is not good. Instead, we want to make
+bigger steps in the beginning and smaller steps in the end,
+so that's what people used for many years. Even better is to
+have a different learning rate for each parameter that we're
+tuning, based on past gradient steps. There's many
+heuristics for that, and it's somewhat related to diagonal
+approximations of second order methods. There's adagrad,
+adadelta, rmsprop and may more. When I first started doing
+neural nets, I actually used something similar, Rprop, from
+the 90s. Arguably the state of the art for these
+per-parameter adaptive learning rates is adam. It has some
+magic numbers in it but it seems to work well in practice.
+Rmsprop is also used by some.
 
-In addition to the speed of convergence, there's the addition issue that you
-will get different solutions depending on how you pick the learning rates, as
+In addition to the speed of convergence, there's the
+addition issue that you will get different solutions
+depending on how you pick the learning rates, as
 it's a non-convex problem.
 
-While there is a whole lot of literature on this topic, it's really hard to do
-actual theory about this, as it's fundamentally impossible to actually find a
-global optimum. So nearly all of these strategies are heuristics, that have just
-proven well to work in practice.
+While there is a whole lot of literature on this topic, it's
+really hard to do actual theory about this, as it's
+fundamentally impossible to actually find a global optimum.
+So nearly all of these strategies are heuristics, that have
+just proven well to work in practice.
 
 ---
 class:spacious
@@ -481,21 +569,24 @@ class:spacious
 - Have time &amp; nerve: tune the schedule
 
 ???
-So for large datasets, something like adam or rmsprop is probably a good idea.
-However, if you have a very small datasets, you might just try an off-the-shelf
-solver like lbfgs. Lbfgs basically uses an estimate of the hessian and is
-originally meant for convex problems, but it also works reasonably well for
-non-convex problems.
-And if you have time and nerve, you can try tuning a learning rate or learning
-rate schedule yourself, and that can give better results than using one of the
-heurstics, but only after putting in some effort. One other commonly used
-strategy is using a constant learning rate for all weights, and half it once
-learning slows down.
-These are basically the options that scikit-learn gives you, with the default
-being adam. For some of the toy datasets we'll use lbfgs instead, which is more
-likely to give good results if it's feasible to run a large number of
-iterations.
-So let's start using these models now, for now with scikit-learn.
+So for large datasets, something like adam or rmsprop is
+probably a good idea.
+However, if you have a very small datasets, you might just
+try an off-the-shelf solver like lbfgs. Lbfgs basically uses
+an estimate of the hessian and is originally meant for
+convex problems, but it also works reasonably well for
+non-convex problems. And if you have time and nerve, you can
+try tuning a learning rate or learning rate schedule
+yourself, and that can give better results than using one of
+the heurstics, but only after putting in some effort. One
+other commonly used strategy is using a constant learning
+rate for all weights, and half it once learning slows down.
+These are basically the options that scikit-learn gives you,
+with the default being adam. For some of the toy datasets
+we'll use lbfgs instead, which is more likely to give good
+results if it's feasible to run a large number of
+iterations. So let's start using these models now, for now
+with scikit-learn.
 ---
 class: middle
 
@@ -520,7 +611,8 @@ print(mlp.score(X_test, y_test))
 ]
 
 ???
-So lets start with some toy data. Here's my favorite two moons dataset.
+So lets start with some toy data. Here's my favorite two
+moons dataset.
 
 - Don’t user sklearn for anything but toy problems in
 neural nets.
@@ -532,8 +624,10 @@ neural nets.
 ]
 
 ???
-This net is also way over capacity and can overfit in many ways.
-Regularization might make it less dependent on initialization.
+This net is also way over capacity and can overfit in many
+ways.
+Regularization might make it less dependent on
+initialization.
 ---
 # Hidden Layer Size
 
@@ -555,6 +649,20 @@ print(mlp.score(X_test, y_test))
 
 
 ???
+By default in scikit-learn, it has a single hidden layer
+with 100 units. Hidden layer size is a tuple. The number of
+entries gives you the number of hidden layers, and each
+integer gives you the size of the layers. So here, this one
+has a single hidden layer of size 5.
+
+If I didn't put the comma here, it will give me an error,
+because then it'll just pass 5, not the tuple of length 1
+with a 5 in it.
+
+Each unit corresponds to a different part of this line
+segment. And if you add more units you get more smooth line
+segments.
+
 ---
 
 # Hidden Layer Size
@@ -577,6 +685,21 @@ print(mlp.score(X_test, y_test))
 ]
 
 ???
+Instead of the layer wide, we can add more hidden layers. So
+here, I created 3 hidden layers each of size 10. This is one
+of the main ways to control complexity in the model. 
+
+The question is, does each hidden layer correspond to some
+representation of the data or a learned feature?
+
+Yeah, that definitely makes sense to think of the
+activations as features. But these are learned in a very
+supervised way, we're learning these to classify. So
+basically, the idea is that the first layer will be more
+sort of related to what did the input look like, whereas the
+last layer will look more like which class does this
+represent. 
+
 ---
 #Activation Functions
 .smaller[
@@ -621,6 +744,22 @@ mlp_tanh = MLPRegressor(solver="lbfgs", activation='tanh').fit(X, y)
 ```]
 
 ???
+We can use the same neural networks for regression. We can
+do this relu or tanh. Relu gives more line segments, and a
+little bit more abrupt than the tanH.
+
+Tuning the number of hidden layers in the hidden layer sizes
+is kind of tricky. I want to give you some intuition about
+how you might do that. So one thing definitely to think
+about is representing the input. So if I have a
+1000-dimensional vector, and my first hidden layer size is 2
+that means the first layer would need to compress everything
+in my 1000-dimensional vector into a 2-dimensional space.
+And if I tried to do this, it will probably lose most of the
+information. So if you want to do classification, you
+usually don't want to compress down your input space too
+quickly. 
+
 ---
 class:spacious
 # Complexity Control
@@ -634,6 +773,21 @@ class:spacious
 - (drop-out)
 
 ???
+These are the main ways to control complexity.
+
+Early stopping means while you're doing gradient descent,
+you're looking at a validation set, and you stop, when you
+start to overfit. This is a very weird way to control
+complexity from a machine learning point of view because
+it's a little bit unclear what you're optimizing, but it has
+been proven very successful in practice. 
+
+Basically, you don't try to find the optimum, you just do
+gradient descent and get closer and closer to the optimum,
+then you try to detect when are you overfitting and once
+you're overfitting, you stop learning.
+
+
 FIXME number of parameters calculation graph!
 ---
 #Grid-Searching Neural Nets
@@ -666,6 +820,16 @@ res
 .center[![:scale 45%](images/gridsearch_plot.png)]
 
 ???
+This is the breast cancer dataset. In orange is the training
+score and in blue is the validation error.
+
+If the alpha value is very small, you overfit perfectly. And
+if you increase it, then it worsens.
+
+But generally, having a simpler model is probably
+preferable. You can also do a grid search for the hidden
+layer sizes.
+
 ---
 #Searching hidden layer sizes
 .smaller[
@@ -683,6 +847,13 @@ grid.fit(X_train, y_train)
 .center[![:scale 40%](images/search_hidden_layers_plot.png)]
 
 ???
+Ideally, you can do both at once. This is mostly to
+illustrate how you can grid search over the different hidden
+layer sizes. 
+
+If you have a big dataset running this will probably take
+too long.
+
 ---
 class:center,middle
 #Getting Flexible and Scaling Up
@@ -937,12 +1108,37 @@ a bit more. But these all have their pros and cons.
   – Run the actual computation.
 
 ???
+If you want to do neural network research, if you want to
+build new kinds of neural network that no one ever thought
+about, then using TensorFlow might be good. 
+
+You can use TensorFlow for things that are are not neural
+networks, you can just do like find elements simulations, or
+you can run a linear model or some matrix factorization. 
+
+If you have a complex computation graph that you want to
+optimize or if you want to compute gradients, then
+TensorFlow can help you. 
+
+If you want to do this for actual learning, there are
+basically three steps. 
+
+The first step is to build a computation graph. The second
+step is to create an optimizer and tell the optimizer to
+optimize the graph. Third, then you want to run the actual
+computation.
+
+Here, we are decoupling the building of the computation
+graph, and the actual computation. 
+
 ---
 .center[
 ![:scale 75%](images/tensor_flow_basics.png)
 ]
 
 ???
+This is linear regression in TensorFlow. We have a very
+simple 1D regression tasks that I created with Numpy. 
 ---
 # Great Resources!
 

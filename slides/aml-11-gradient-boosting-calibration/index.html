@@ -25,32 +25,42 @@ Andreas C. Müller
 
 ???
 We'll continue tree-based models, talking about boosting.
-Another ensemble technique called stacking.
-Finally, a technique called calibration that looks somewhat similar to ensembles
-but has the goal of obtaining good probability estimates from any classifier.
+Another ensemble technique called stacking. Finally, a
+technique called calibration that looks somewhat similar to
+ensembles but has the goal of obtaining good probability
+estimates from any classifier.
 
-FIXME: XGBOOST!!
-FIXME early stopping
-FIXME GBRT: better explain log-loss
-FIXME: add example of calibrated and inaccurate vs accurate but not calibrated!
-FIXME: calibration: what are the estimators fit to, and why does fitting it to 0 and 1 create probabilities in between
+FIXME: XGBOOST!! FIXME early stopping FIXME GBRT: better
+explain log-loss FIXME: add example of calibrated and
+inaccurate vs accurate but not calibrated! FIXME:
+calibration: what are the estimators fit to, and why does
+fitting it to 0 and 1 create probabilities in between
 
-Partial dependence plot. how is that different from feature importances.
-calibration curve plotting: bins are different for hist and calibration curve?
-slide 27: maybe put probabilities on x axis?
-calibration curve: blue histogram is number of total points, y axis not labeled
+Partial dependence plot. how is that different from feature
+importances. calibration curve plotting: bins are different
+for hist and calibration curve? slide 27: maybe put
+probabilities on x axis? calibration curve: blue histogram
+is number of total points, y axis not labeled
 ---
 class: centre,middle
 # Gradient Boosting
 ???
-Gradient boosting is one of the most successfull supervised machine learning methods in practice.
-It's often used in kaggle to win competition, it's used for credit scoring, it's one of the standard tools of the trade.
-It's one of the best of-the-shelf models
-A standard implementation that people use is XGBoost, but there's also an implementation in scikit-learn, and we'll talk about both of them.
+Gradient boosting is one of the most successfull supervised
+machine learning methods in practice. It's often used in
+kaggle to win competition, it's used for credit scoring,
+it's one of the standard tools of the trade. It's one of the
+best of-the-shelf models A standard implementation that
+people use is XGBoost, but there's also an implementation in
+scikit-learn, and we'll talk about both of them.
 
-Last time we talked about Random forests, which builds many trees independently, each randomized in a different way, and then averages their predictions.
-Gradient boosting on the other hand builds trees one by one in a sequential manner, with each tree requiring the results of previous trees.
-Often, Gradient boosting is done with very small trees, or even decision stumps, which is trees of depth one, so a single split.
+Last time we talked about Random forests, which builds many
+trees independently, each randomized in a different way, and
+then averages their predictions. Gradient boosting on the
+other hand builds trees one by one in a sequential manner,
+with each tree requiring the results of previous trees.
+Often, Gradient boosting is done with very small trees, or
+even decision stumps, which is trees of depth one, so a
+single split.
 
 ---
 class: center, middle
@@ -63,11 +73,14 @@ class: center, middle
  - Gradient Boosting often the best of the bunch
  - Many specialized algorithms (ranking etc)
 
-This is an instance of a more general family of models, called boosting models, which all iteratively
-try to improve a model built up from weak learners. Gradient boosting is this particular technique
-where we are trying to fit the residuals, and it's been found to work very well in practice, in particular
-if you're using shallow trees as the weak learners.
-In principle, you could use any model as a weak learner, but trees just work really well.
+This is an instance of a more general family of models,
+called boosting models, which all iteratively try to improve
+a model built up from weak learners. Gradient boosting is
+this particular technique where we are trying to fit the
+residuals, and it's been found to work very well in
+practice, in particular if you're using shallow trees as the
+weak learners. In principle, you could use any model as a
+weak learner, but trees just work really well.
 
 ---
 
@@ -85,19 +98,24 @@ In principle, you could use any model as a weak learner, but trees just work rea
 
 $y \approx$ ![:scale 22.5%](images/grad_boost_term_1.png) + ![:scale 22.5%](images/grad_boost_term_2.png) + ![:scale 20%](images/grad_boost_term_3.png) + ...
 ???
-Let's look at the regression case first.
-We start by building a single tree f1 to try to predict the output y. But we
-strongly restrict f1, so it will be rather bad at predicting y.
-Next, we'll look at the residual of this first model, so y - f1(x).
-We now train a new model f2 to try and predict this residual, in other words to correct the mistakes made by f1.
-Again, this will be a very simple model, so it will still not be able to fix all errors.
-Then, we look at the residual of both of the models together, so y - f1(x) - f2(x), so the mistakes that could not be fixed by f2,
-and we build f3 to fix that, and so on.
-This is natural for regression. For classification this is not as clear.
-For binary classification you use log-loss, or rather you apply the logistic function to get a binary prediction, for multi-class
-you can use 1 vs rest.
+Let's look at the regression case first. We start by
+building a single tree f1 to try to predict the output y.
+But we strongly restrict f1, so it will be rather bad at
+predicting y. Next, we'll look at the residual of this first
+model, so y - f1(x). We now train a new model f2 to try and
+predict this residual, in other words to correct the
+mistakes made by f1. Again, this will be a very simple
+model, so it will still not be able to fix all errors. Then,
+we look at the residual of both of the models together, so y
+- f1(x) - f2(x), so the mistakes that could not be fixed by
+f2, and we build f3 to fix that, and so on. This is natural
+for regression. For classification this is not as clear. For
+binary classification you use log-loss, or rather you apply
+the logistic function to get a binary prediction, for
+multi-class you can use 1 vs rest.
 
-So we're sequentially building up a model using what's called "weak learners", small trees, and create a more
+So we're sequentially building up a model using what's
+called "weak learners", small trees, and create a more
 powerful composite model.
 
 ---
@@ -130,6 +148,85 @@ Come back to this
 ![:scale 50%](images/grad_boost_regression_steps.png)
 ]
 ???
+Here's an illustration for doing this for regression. This
+is a 1D regression dataset for illustration purposes here to
+form features on the x-axis, the prediction is on the
+y-axis.
+
+
+In the first step, I'm just fitting my tree to the data. I
+use a simple tree of depth 3. The depth 3 tree is not able
+to completely model the data and so the orange is the tree
+that was fit. After this first step, I look at the total
+predictions. So this is just alpha times the predictions
+made by the first tree. So you see everything is sort of
+squashed together. This is the effect of alpha. The blue
+points here in this next panel is this data minus the minus
+the predictions from step one, and so this is the residual.
+It still looks pretty much the same, because we took only a
+small step. Then I fit another tree to this residuals again
+of depth three. Then here's the total prediction, which is
+alpha times the first tree plus alpha times the second tree,
+followed against the original data. The orange has more
+steps now because it's a combination of two trees.
+
+As I continue the same procedure until step five, you can
+see that residual gets much smaller and it has learned most
+of the variations in the data. A total linear combination of
+all the trees and learning looks like this. And if I keep
+doing this, then at some point, residuals will become very
+small. And the total prediction will fit the data better and
+better.
+
+The question is can I extrapolate?
+
+The answer is no.
+
+The question is how is this different? 
+
+And it's quite different. It’s kind of hard for me to answer
+his question.
+
+A) The combination of stumps is different than building a
+deeper tree because you always apply all the splits to the
+whole dataset. Whereas if you make a tree deeper, you will
+have different splits on the deeper nodes. If you have
+already like 10 nodes, and you want to grow one more level,
+each of these parts of the data will have a different split.
+Whereas if I add another stump it will be on a global level.
+In decision trees, decisions are very hard. And here you
+don't trust any hard decisions. So you only go a little bit
+in each direction. 
+
+B) This works way better. 
+
+So this was for regression and because it's easier to
+visualize, you can do the same thing for classification. 
+
+Basically, what gradient boosting for classification does is
+you’re letting regression trees to learn decision function.
+So basically, you're doing regression again, but you're
+doing logistic regression. Instead of using a linear model
+for logistic regression, we're now using this linear
+combination of trees. So in other words, what we're doing is
+we're applying a log loss, and we're trying to find the
+regression function that has a small log loss. This f is the
+decision function that we're doing. And so inside a gradient
+boosting classifier, you're not actually learning
+classification trees, you're learning regression trees,
+which are trying to predict the probability, which is quite
+different. 
+
+The question is, how they're different?
+
+The same is true for f1. If I fit f1, exactly to y this
+becomes 0. One reason is the alpha, which means I only go a
+small step. But even if I set alpha equal to one, the point
+is that I restricted my f1 to not completely fit the data.
+I'm not trying to completely overfit the data, I'm trying to
+use a simple model. So if I use a tree of depth one, there
+will be a very large residual. 
+
 
 ---
 #GradientBoostingClassifier
@@ -138,6 +235,29 @@ Come back to this
 ![:scale 70%](images/grad_boost_depth2.png)
 ]
 ???
+Here’s an illustration of what this might look like for
+classification. This is basically the same thing going on.
+I’m plotting the probabilities assigned by the model. 
+
+Here's a first estimator, which makes some mistakes here and
+makes a bunch of mistake in the middle. This is the decision
+tree of depth two. Then I fit the model to the residuals
+here. To minimize the log loss of this dataset changes
+something in the middle, and so on. And you can see that as
+I add more and more estimator it fits the data better and
+better and gets more and more complex decision boundaries.
+
+Since it works like a gradient descent on log loss, it's a
+little bit harder to visualize this for classification. 
+
+White mean probability of 0.5 (which is a tie). Red means
+high probability for the red class. Blue means a high
+probability for the blue class. Here, clearly, it hasn't fit
+the data perfectly. So I could add more and more models and
+then, in the end, it would fit the data perfectly. 
+
+For multi-class, the default thing to do is One Versus Rest.
+
 
 ---
 class:spacious
@@ -147,6 +267,24 @@ class:spacious
 - Small model size
 - Typically more accurate than Random Forests
 ???
+It's sort of slower to train if you're training serial, but
+if you paralyze it, it's often faster to train since it has
+a much smaller model size. So the trees are usually not as
+deep and you don't need as many because you're doing much
+more focused learning where you try to correct the mistakes
+of the other models. So usually it’s very fast to predict
+because prediction can happen in parallel over all the
+trees, while learning cannot happen in parallel over all the
+trees necessarily. Usually, this is more accurate than
+random forests.
+
+The question is for the same number of estimators, how does
+low versus high learning rate changes?
+
+High learning rate allows you to fit the data more strongly
+and also overfit the data more strongly.
+
+
 ---
 
 class:spacious
@@ -156,6 +294,32 @@ class:spacious
 - Typically strong pruning via max_depth
 
 ???
+There are several things you can tune about the gradient
+boosting. A common approach is to pick the number of
+estimators that you have time for. So runtime is obviously
+linear than number of estimators because you need to build
+each tree one by one. Each tree is built with the same
+parameters. And then you can tune the learning rate to see
+how strongly you want to fit the data.
+
+You can also tune something like max features if you want to
+add more randomness, but that's actually not very commonly
+used. You can also subsample the data if you want faster
+training. And typically there's a maximum depth.
+Traditionally, it was like maximum depth of one, two or
+three, though in kaggle people are doing like 8 to 10 or
+something. But typically, the depth is much, much smaller
+than for random forests. This means the model will be small
+in memory, and also will be faster to predict since you have
+less deep trees to traverse. 
+
+Before we go into implementation I want to talk a little bit
+about analyzing the models. So again, because it’s a
+tree-based model, the prediction is a linear combination of
+trees, you can look at feature importance like the same way
+we did for random forest and trees. 
+
+
 ---
 
 # Partial Dependence Plots
@@ -178,6 +342,22 @@ fig, axs = plot_partial_dependence(
 ]
 
 ???
+But there's also something else that's quite interesting,
+which is called Partial Dependence Plots that's actually
+possible for all trees. Unfortunately, in scikit-learn, it’s
+available only for the gradient boosting. So the idea here
+is to not only see what parameters are important but how
+will they influence the target. And so after you fit your
+model, I'm using the Boston data set to the gradient
+boosting regressor, there's a thing called plot partial
+dependence, which gets the model and the training data set
+and then the features for which I want to make the partial
+dependence plots.
+
+So here, I'm looking at the six most important features. The
+feature importance is important according to the trees. So I
+sort this and take the six most important ones. 
+
 ---
 # Partial Dependence Plots
 
@@ -186,6 +366,37 @@ fig, axs = plot_partial_dependence(
 ]
 
 ???
+And so this is what the partner dependence plots look like.
+So this is the most important feature, the second most
+important feature and so on. This is sort of the marginal
+contribution of each feature. Basically, in each tree,
+you're summing out the contribution of all the other
+features, and you look only at what is the contribution of
+this particular feature. In general, this would be hard to
+compute. For tree-based models you can compute is a very
+efficient way because you can basically just sum up over the
+whole space by traversing the tree. 
+
+Here with increased room size, the price increases and you
+can see how it increases and you can see that there's like a
+big step function here. And you can see that for increased
+LSTAT, the price decreases. For the others, there aren’t any
+drastic effect. There seems to be some threshold for NOX.
+And something funky going on DIS. 
+
+The question is, so I said for random forest, you can't find
+out the direction of which way the feature influences. But
+that was for the feature importance. So the feature
+importance tells the impurity decrease. So here I also look
+at the feature importance and they're just numbers so they
+don't give you the direction. For both gradient boosting and
+random forest, you can look at partial dependency plot, and
+they will give you a non-parametric model of how a single
+feature influences it. Unfortunately, it’s not available in
+scikit-learn. You could do the same thing for random
+forests. Because in the end, the way they predict is quite
+similar.
+
 ---
 # Bivariate Partial Dependence Plots
 .smaller[
@@ -200,6 +411,21 @@ plot_partial_dependence(
 ]
 
 ???
+You can also do this in bivariate. So here, looking at the
+two most important features in a bivariate plot, I'm
+actually not giving it a list of features, but I'm giving it
+a list of list of features. And so the two most important
+features, LSTAT, and ROOM. 
+
+You can see there’s no very complex interaction. As you can
+see, the effect of these two features taking into account
+all the other features. 
+
+This is something you can usually do for linear model
+easily. If you do this for the linear model, you would have
+lines everywhere but for more complicated models this is
+very hard to do. Way more tricky to do in neural networks.
+
 ---
 # Partial Dependence for Classification
 .tiny-code[
@@ -214,7 +440,20 @@ for i in range(3):
 ![:scale 50%](images/feat_impo_part_dep_class.png)
 ]
 ???
+We can do the same for classification. Here is a partial
+dependency plot for the iris dataset. 
 
+As I said, for classification we’re usually using One Versus
+Rest. So here, we have three classifiers.
+
+One classifier for sertosa, one for Versicolor and one for
+virginica.
+
+You can see that for the first two features they're like
+flat. But for sertosa the decision function is high for
+small part petal length, medium peddling for versicolor and
+large for virginca. These are all put through logistic
+function and then normalized. 
 ---
 
 # XGBoost
@@ -231,6 +470,51 @@ xgb.score(X_test, y_test))
 - supports multi-core
 
 ???
+In terms of implementation, there's a couple of
+implementation methods. Scikit-learn has gradient boosting
+classifier and gradient boosting regressor. Unfortunately,
+they are rather slow.
+
+So one of the most commonly used packages is XGBoost, which
+you can install from conda forge for example. It's
+completely scikit-learn compatible. So you can import
+XGBClassifier if you want you can use it with grid search or
+with pipelines. 
+
+The cool thing is its fast. It supports missing values so
+you don't need to do an imputation strategy, you can put
+them directly into XGBoost. And it also supports multi-core.
+
+The gradient boosting in scikit-learn is just sequential on
+a single core which on most of the machines are not great.
+If you have a big machine you want to use all the cores in
+parallel. You can’t do that with scikit-learn but you can do
+it with XGBoost.
+
+For random forest, on the other hand, scikit-learn can also
+run random forest in parallel, because it's much easier.
+XGBoost also has a random forest. XGBoost also has some
+enhancements to the algorithm. It has L1 and L2 penalties
+for the leaves, so you can do something like an elastic net
+or lasso penalty to the leaves. I think by default, it's
+disabled. But they are not really training like the vanilla
+decision trees. 
+
+One of the reasons they're faster is because they have a
+faster implementation. But you can make even faster if you
+use approximate splits in the trees.
+
+If you want to find a split, you need to search over all
+features and you need to search over all possible thresholds
+on the feature. Searching over all possible thresholds on
+the feature means soaring feature, which is an analog
+operation. Instead, what you can do is you can bin the
+features, and then its linear time operation but the
+threshold will be approximate. 
+
+And that will make your computation much faster.
+
+
 - Efficient implementation of gradient boosting (5x sklearn)
 - Improvements on original algorithm
 - https://arxiv.org/abs/1603.02754
@@ -250,6 +534,30 @@ class: spacious
 - Both have GPU support
 - https://github.com/szilard/GBM-perf
 ???
+Here is actually for the exact version of XGBoost the
+comparison in terms of time and accuracy. This is for
+illustrative purposes. I ran this on amnest or subsets of
+amnest. The x-axis is the number of samples and so you can
+see how the runtime increases as the number of samples
+increases. 
+
+For a significant number of samples, you can see that
+XGBoost is much faster. 
+
+If you run on a single core XGBoost tends to be about five
+times faster, if you run it on a 10 core machine, it's going
+to be much, much faster. 
+
+There's also an implementation out of Microsoft called
+lightGBM, which might be even faster. So according to a lot
+of latest benchmarks that I saw, lightGBM is actually
+fastest. LightGBM and XGBoost both have GPU support, which
+makes them even faster. For GPU support, the benchmark that
+I saw stated XGBoost was a bit faster while on CPU lightGBM
+was a bit faster. But both are pretty fast and highly
+paralleled optimized algorithms. So if you care about
+speeds, you want to use one of these two.
+
 ---
 # Early stopping
 
@@ -258,6 +566,29 @@ class: spacious
 - Optional in XGBoost and sklearn >= 0.20 (development)
 
 ???
+As I said earlier, if you add more and more trees, the
+algorithms can overfit. So instead of searching for the
+learning rate, or searching for number of trees, you can
+also do early stopping. Because this is a sequential
+algorithm that gets better and better the more trees you
+add, you can just use a validation set and stop adding trees
+once you overfit. You can do that both with scikit-learn and
+XGBoost.
+
+Basically, the idea is that you pick a large number of
+estimators and you have a separate validation set and if the
+validation set accuracy doesn't improve or if it decreases
+for number of iterations, say five, then you just stop the
+learning. This way, you get results faster, because you
+don't keep learning but also you possibly get a better model
+because you know the overfitting.
+
+The only downside stopping learning is that you have fewer
+data to train your model because you need to the validation
+set for early stopping. You’ll still need a separate test
+set to see how well the model actually does. You can't use
+the same set for early stopping and for evaluation. 
+
 ---
 class:spacious
 # When to use tree-based models
@@ -268,10 +599,52 @@ class:spacious
 - Gradient boosting often best performance with careful tuning
 
 ???
+To summarize, tree-based models are really very, very
+popular family of models. They're very commonly used. You
+probably want to use them if you want nonlinear
+relationships, or if you have a lot of different kinds of
+weird features because they really don't care about scaling
+of the features, so it allows you to get rid of mostly
+preprocessing.
+
+If you want very interpretable model, single trees or small
+single trees are good ideas, because it's one of the few
+models that you can sort of write down on a blackboard and
+show to someone, and they'll have some idea of what's going
+on. That's impossible for any other models.
+
+Random forests are great because they're very robust. And
+you don't have to tune anything, you just run a random
+forest with 100 trees and with the default settings and it
+will work great. 
+
+And so this one of my first benchmarks. Usually, I first ran
+a logistic regression then I run random forests.
+
+Gradient Boosting is often the best performing model, sort
+of the centered toolbox. Sometimes you need to tune a little
+bit more, so you need to tune the depth of the trees or the
+learning rate, and so on. But if you tune them, then they
+will usually beat random forest on those data sets. 
+
+One case where you might not want to use trees is if you
+have very high dimensional sparse data then linear models
+might work better but also your mileage may vary. On the
+contrary, if you have like a low dimensional space,
+tree-based models are probably a good bet. 
+
+Next thing we'll talk about is a different way to build
+ensembles, different way to put together multiple models. 
+
+
 ---
 class: centre,middle
 # More ensembles: Stacking
 ???
+That's called stacking. So last time, we talked about
+bagging and model averaging. And stacking basically goes a
+little beyond that, in that it tries to stack models on top
+of each other. 
 ---
 # Simplified Stacking
  .tiny-code[
@@ -296,6 +669,20 @@ lr, tree, knn = voting.estimators_
 ]
 
 ???
+This is not simplified stacking. This is basically just
+averaging models. This is one of the simplest ensemble we
+saw last time. 
+
+So here, I have this two-class data set and I trained a
+logistic regression, a decision tree, and KNN. So in simple
+ensemble, I just average all the probabilities and then take
+the arg max as a prediction. And that's implemented in the
+voting classifier that we saw last time. 
+
+But instead of just taking an average, what we could do is
+take a weighted average, for example. And so the way to do
+that would be….
+
 ---
 # Simplified Stacking
 .tiny-code[
@@ -334,6 +721,50 @@ class:centre,middle
 
 ## Problem : Overfitting!
 ???
+One way is simplified stacking, where you take the
+probability estimates by all of the models as an input, and
+you train logistic regression on these probability estimates
+in an effort to predict the class. 
+
+This is basically weights for each of these probability
+estimates. And then you can take the weight average. 
+
+So here, I used a pipeline out of voting classifier logistic
+regression. If I used the voting classifier as a
+transformer, it'll just transform into the probabilities. 
+
+So here are the coefficients, there are three coefficients,
+one for each of the models. You can see that it trusts the
+logistic regression the least, the decision tree a little
+bit more, and the KNN the most. Instead of just averaging,
+you get something like this.
+
+Instead of using logistic regression, we could use any model
+we want, you could use a decision tree, random forest,
+gradient boosting neural network, I can train whatever model
+I want on the probabilities created by these 3 models.
+
+The question is why don't we just simply take the most
+accurate model? 
+
+Because averaging them is often better.
+
+There’s a problem with doing this, though, which is that you
+basically overfit the trained data a lot. The thing is that
+here we train logistic regression on the training data and
+we train the logistic regression on the probability
+estimates of these other models on the training data. So the
+more the model overfit well it will be on the training data.
+
+The KNN for example, overfit quite a bit. If you do this on
+trained data set, the model that overfit most is the most
+informative on the training dataset, because it does
+perfectly. So then the second stage model will learn to
+trust the one most that overfits most. And clearly, you
+don't want that. 
+
+There are two ways to overcome this. 
+
 ---
 class:spacious
 # Stacking
@@ -342,6 +773,11 @@ class:spacious
 - No overfitting of second step!
 - For testing: as usual
 ???
+While you can either just hold the hold-out set and use a
+single hold-out set to train a second stage model. So then
+on the hold-out set, the model that overfits obviously
+doesn't do as well on the hold-out model. And so the second
+stage will not trust the overfitting model.
 ---
 # Hold-out estimates of Probabilities
 ![:scale 100%](images/holdout_estimate.png)
@@ -354,6 +790,39 @@ class:spacious
 
 
 ???
+The other way is to use cross-validation. And basically,
+now, instead of having a single hold-out set, you have
+multiple hold-out sets. So for each data point, you need to
+compute the features. And the way you compute the features
+of the first stage on the training set is you train the
+model on the remaining folds and then you do probabilistic
+predictions or probabilistic estimates on this data point in
+the training set. But the model that you're using for this
+probabilistic estimates was not trained on this data. You
+can do leave one out, for example, and you can train a model
+on all of the other data and then predict probabilities for
+one point. Obviously, that's going to be very slow.
+
+You can also do something like 5 fold cross-validation,
+wherein the first stage, you have to train the model five
+times and then get hold-out probability estimates for each
+of these. 
+
+This way, you have unbiased probability estimate for all
+training data points. 
+
+The output of the first stage with cross-validation would be
+just the features which are probability estimates of the
+underlying model. Only now, instead of being biased, their
+unbiased estimates because it's hold-out data.
+
+The benefit of doing this compared to single hold-out set is
+that the second stage now has much more training data
+because the training dataset is the same size. I have
+unbiased probability estimates for my models for all data
+points. So I have the same size training set only without
+overfitting now. 
+
 ---
 
 .tiny-code[
@@ -386,6 +855,47 @@ print(second_stage.score(first_stage.transform(X_test), y_test))
 
 
 ???
+And so here is the result of this. There is a pull request
+in scikit-learn to do this directly. I do it slightly
+differently using cross_val_predict, cross_val_predict
+allows me to apply any method inside cross-validation. 
+
+Here, I'm using the transform method of the voting
+classifier, and I'm using 10 fold cross-validation to always
+just use transform on the hold-out set. So computing the
+probabilities of the voting classifier on the hold-out set.
+
+TransformCV is something of the same number of samples as a
+training data set. And it has 3 dimensions, which are the 3
+probability estimates. And then again, here I train logistic
+regression on it and I get coefficients.
+
+And so now you can see that here in the coefficients, the
+first model was logistic regression, it trusts this more.
+The trust for the coefficient of the trees is similar. The
+last one, the nearest neighbor now has the lowest weight. 
+
+So here's the model that we had just doing a logistic
+regression, training on the training dataset. And here's
+with proper stacking where you use hold-out probability
+estimates. And you can see here, there's much less
+overfitting going on and they're sort of much more
+uncertainty here.
+
+For prediction, this cross-validation doesn't really change
+anything, if you apply this to the test set… The standard
+way is to train a model on the whole training set, and then
+use this to estimate the probabilities on the test set. So
+this cross-validation is only to get probability estimates
+on the training set to train the second stage. 
+
+The next thing I want to talk about is similar stacking but
+actually has a different goal. The goal in stacking is
+really to blend different models in a smart way. And so you
+take multiple models, you try to build a stronger, more
+expressive model by blending these models using some
+weighting.
+
 ---
 class:spacious
 #Calibration
@@ -398,6 +908,38 @@ Predicting%20good%20probabilities%20with%20supervised%20learning.pdf">Source</a>
 - “The model predicted you don’t have cancer” vs “The model predicted you’re 40% likely to have cancer”
 
 ???
+So the next thing I want to talk about is calibrations.
+Calibration also builds a model on top of a model. But the
+goal of calibration is to actually get accurate probability
+estimates. Oftentimes, we’re interested not only in the
+output of the classifier, but also interested in the
+uncertainty estimate of a classifier. 
+
+So for example, think about a model that does cancer
+prediction. If the model predicted you don't have cancer,
+you're going to be pretty happy. If it says there’s a 40%
+chance that you have cancer, which is the same thing if you
+have a binary classification, you might be less happy since
+40% seems pretty high for having cancer anyway. 
+
+So often, we want actual probability estimates that allow us
+to make decisions that are finer grained than just a yes or
+no. 
+
+Calibration is a way to get probability estimates out of any
+models. For example, SVMs are not good at breaking
+probabilities, so you can use calibration if you really want
+to use an SVM and get the probabilities out. Or if you have
+a model that already was able to predict probabilities like
+tree or random forests or nearest neighbors, you can use
+calibration to make sure that the probabilities that you get
+are actually good probabilities. So if you use random forest
+and use it to estimate probabilities, if it says “this is
+70% class one”, it's not really clear what it means because
+the model is not really trained to optimize probability
+estimates so the probability estimates could be off quite a
+bit. 
+
 ---
 class: spacious
 #Calibration curve (Reliability diagram)
@@ -410,6 +952,56 @@ class: spacious
 ]
 
 ???
+Before we talk about how to do calibration, I want to talk
+about how to measure calibration and binary classification.
+You can also do it for multiclass classification, but binary
+is much simpler. The cool thing about it is you can actually
+measure calibration and you can calibrate the classifier
+without having round first the probability estimates. So
+even if you only have like 0 or 1 labels you can still make
+sure that you have a model that provides reasonable
+probabilities. 
+
+The way you do this if you take the probability estimates of
+the model, you bin the probability... So here, for example,
+let's say these are probabilities estimate by a model, these
+are my true targets. So now I sort and bin them by the
+probability estimates. 
+
+And then I create three bins. And then I look at what is the
+actual prevalence of the classes in each of these bins. 
+
+If these probabilities estimates were actually accurate,
+then let's say if I have a bin for all the 90% ones, the
+prevalence in the 90% bin should actually be 90%, that's
+sort of what it says. 90% of the points that are given a
+score of 90% should be the true class. And so you can plot
+this in the calibration curve or the reliability diagram. 
+
+So here I have three bins. And basically what I wanted is
+the diagonal line where the bin that contains the very small
+probabilities has the same prevalence. And so here, for
+example, things that are around like 0.5 actually have zero
+prevalence. So there's no true class in there, which is
+really weird. You won’t use a diagonal line, this would be a
+very bad classifier.
+
+One thing that I want to emphasize here is that calibration
+doesn't imply that the model is accurate. These are actually
+two different things. If I have a binary model on a balanced
+data set, and it always says 50% probability for all data
+points. It's perfectly calibrated because it says 50% for
+all data points. 50% of those data points are actually the
+true class if the dataset is balanced. So it's a completely
+trivial classifier that doesn't tell you anything but
+perfectly calibrated, but also kind of tells you nothing
+because it always gives you 0.5. So you know that you can
+trust it basically.
+
+Calibration basically tells you how much you can trust the
+model.
+
+
 - For binary classification only
 - you can be calibrated and inaccurate!
 - Given a predicted ranking or probability from a supervised classifier, bin predictions.
@@ -473,6 +1065,37 @@ print(prob_pred)
 ]
 
 ???
+I'm using a subsample of cover type dataset because it's
+kind of big and we get some nice histograms here. So I train
+a logistic regression model. Logistic regression typically
+gives pretty good probability estimates. So I expect this
+model to be relatively well calibrated. 
+
+For the first 10 data points, the probabilities and the
+actual predictions. So what I'm going to take is the
+predicted probabilities for all data points, for the first
+class and the actual predictions. 
+
+Obviously, I need to do this on the test set. If I do this
+on the training set, then it'll tell me nothing, because on
+the training set the model is good. So either I need to do
+this on a test set or on some of the holdout set. On the
+training set, if I perfectly overfit, I would be doing
+perfect, but that's not the point. So here, I need to use a
+separate set and so I can compute the calibration curve. 
+
+You can see the histogram here shows how many points are in
+this area. And here, the orange thing is the actual
+calibration curve, the dotted line is sort of perfect
+calibration. And in here, I’m using five bins. The first bin
+is zero until 0.2, so I would expect that 10% of the data in
+this bin 10 is the true class, but actually, it's more like
+20%. So here, it's like not perfectly calibrated.
+
+In the second bin from 0.2 to 0.4. So what I would expect is
+that 30% of these data points are predicted as class one and
+actually- it's 30%.
+
 ---
 class:spacious
 #Influence of number of bins
@@ -480,6 +1103,15 @@ class:spacious
 .center[![:scale 100%](images/influence_bins.png)]
 
 ???
+How do I pick the number of bins?
+
+More bins give me more resolution. But also at some point,
+you get noise. So I guess it's the same way you would do for
+histogram. You can use the standard heuristic for histogram
+but usually, if you do something like 10 or 20, that's
+usually enough bins. 
+
+
 - Works here because dataset is big
 - Might become very noisy for larger datasets
 ---
@@ -488,6 +1120,16 @@ class:spacious
 
 .center[![:scale 90%](images/calib_curve_models.png)]
 ???
+Logistic regression is pretty well calibrated. The decision
+tree, since I didn't use any pruning, it'll be way too
+certain. So all probabilities estimates, even on a test set
+that will be either 0 or 1. So that's not very great. Random
+forest classifier used here is not certain enough.
+
+Now we want to fix that. Before I want to say how we can
+trust them let's measure them first. 
+
+
 ---
 # Brier Score (for binary classification)
 
@@ -496,6 +1138,33 @@ class:spacious
 
 .center[![:scale 70%](images/models_bscore.png)]
 ???
+This graph is a nice way to look at how calibrated something
+is. But it's very hard to compare. A standard way to compare
+calibration is a Brier score, you could also use something
+like a log loss. Log loss would also tell you how good that
+a probability estimate is.
+
+Brier score is the mean squared error of probability
+estimates.  Yi is either one or zero, basically, and p ̂ is
+the probability estimate. 
+
+So if you predict 0.5 then it's always going to give you a
+loss, but it's going to give you a loss of only 0.5. If you
+predict 0 when you should’ve predicted 1 then it's going to
+give you a very large loss.
+
+Here are the brier loss for the different models. Also, the
+smaller is better. But this conflates accuracy and
+calibration a little bit because here, you can see that the
+random forest actually does best-.
+
+I guess it does better because just it's a more accurate
+model. So it's not well calibrated. But it is actually a
+much better predictor and so it still has a smaller score.
+
+We defined it, we can measure it and we actually want to
+calibrate it. 
+
 ---
 # Fixing it: Calibrating a classifier
 - Build another model, mapping classifier probabilities to better probabilities!
@@ -512,6 +1181,26 @@ Need model for $f_{callib}$, need to decide what data to train it on.
 - Can train using cross-validation → use data, slower
 
 ???
+The way to do fix this is similar to stacking and that we
+built another model on top of the probability estimates. So
+usually, that's just a 1D model because we only have 1
+underlying model.
+
+If you have binary classification it gives us a single
+probability output and so we need to learn 1D function that
+basically maps this probability to something that is more
+accurate. 
+
+It also works if the model gives us a score rather than a
+probability. SVM only gives us a score, we can still learn
+one leave function that tries to get probabilities. 
+
+Similar to what we did was stacking. So you don't want to
+learn this the calibration model on the training data set
+because on train dataset you're doing very well. So you need
+to use either a whole dataset or you need to use
+cross-validation again.
+
 ---
 
 # Platt Scaling
@@ -525,6 +1214,17 @@ Need model for $f_{callib}$, need to decide what data to train it on.
 
 
 ???
+There are two main methods that people use and both are in
+scikit-learn. One is Platt scaling, Platt scaling is
+basically the same as 1D logistic regression. So you learn
+to 1d just sigmoid plus, there's like some new tricks. 
+
+This basically allows you to fix a particular sigmoid shape
+that you usually get from SVM scores and this works well for
+SVMs. But you only have one parameter here, so there's not a
+lot that you can tune.
+ 
+
 ---
 # Isotonic Regression
 
@@ -535,6 +1235,25 @@ Need model for $f_{callib}$, need to decide what data to train it on.
 .center[![:scale 40%](images/isotonic_regression.png)]
 
 ???
+
+The other one is Isotonic regression, which is basically a
+non-parametric mapping. What it does is it fits the monotone
+function that minimizes the squared error.
+
+The problem it’s solving is the peace wise constant function
+that’s monotonous with minimums error. So this what it looks
+like and so if you have to data in red, then standard
+regression will find this green thing. 
+
+In Platt scaling, s(x) is what the model scores, the score
+that comes from the SVM or random forest. The w is the one
+parameter you learn from the data. This is a very inflexible
+model that allows you to say how steep should the sigmoid
+correction be while Isotonic regression is a very flexible
+model that allows you to correct anything in any way, it’s
+monotonous.
+
+
 ---
 class:spacious
 # Building the model
@@ -573,6 +1292,31 @@ scores_iso = cal_rf_iso.predict_proba(X_test)[:, 1]
 .center[![:scale 90%](images/types_callib.png)]
 
 ???
+This is for a random forest again. It can use calibrated
+classifier CV. This does calibration. You can either you do
+it with single hold-out dataset or with cross-validation.
+
+Here, I'm using a single holdout set. I split my dataset,
+the training set into X_train_sub and X_val.
+
+X_train_sub is what I used to train a random forest and then
+x_val is what I'm going to use to calibrate it. I created
+calibrated classifier CV with the random forest that I’ve
+already fit on the training dataset. I set cross-validation
+to prefit and set the method to sigmoid. And then I can fit
+this calibration model on the validation set. 
+
+So here is what this looks like, the random forest model
+with no calibration, with sigma calibration and with
+isotonic calibration.
+
+In this case, sigmoid and isotonic don't look very
+different. They both look like reasonably calibrated.
+
+That said if you're doing sort of holdout set, destroying
+away a bunch of data for training your first model. 
+
+
 ---
 
 # Cross-validated Calibration
@@ -586,6 +1330,25 @@ scores_iso_cv = cal_rf_iso_cv.predict_proba(X_test)[:, 1]
 .center[![:scale 90%](images/types_callib_cv.png)]
 
 ???
+So we can also not specify CV, then it uses
+cross-validation, I think 3 fold by default.
+
+And so then it does the whole cross-validation thing
+internally. And then I get an even better calibration. So
+what it does here for each cross-validation it trains a
+separate model. And then if I want to predict on the test
+set, it uses all of these models and then averages them. So
+in a sense, it's not very surprising that I get a better
+result here because I built 3 random forest models on
+subsets of the data and then average them. I calibrated them
+and I averaged calibrated models. So I basically just build
+a bigger random forest, so it's not very surprising that it
+does better. Also, we were able to use more data. 
+
+So if you do this, you retain as many models as there are
+cross-validation folds and you use all of them in
+prediction. 
+
 - kinda cheating, we have more trees now lol
 - we use all the data, get good probabilities. just time-consuming
 ---
@@ -594,6 +1357,11 @@ scores_iso_cv = cal_rf_iso_cv.predict_proba(X_test)[:, 1]
 .center[![:scale 100%](images/multi_class_calibration.png)]
 
 ???
+You can also do this for multi-class calibration, which does
+basically the same thing, but you just do it for each class
+individually and then you normalize again and you can make
+pretty pictures.
+
 - per-class calibratoin
 - renormalization
 ---

@@ -46,11 +46,13 @@ Limitations of bag of words:
 
 ???
 
-Last time we started talking about limitations of bag of words, such as
-semantics of words are not captured synonymous words are not represented - if I
-use two synonymous words, for example film and movie, they are represented in
-completely different ways and there is no connection between them. and we also
-have a very distributed representation of documents, which might be hard to
+Last time we started talking about limitations of bag of
+words, such as semantics of words are not captured
+synonymous words are not represented - if I use two
+synonymous words, for example film and movie, they are
+represented in completely different ways and there is no
+connection between them. and we also have a very distributed
+representation of documents, which might be hard to
 understand or hard to learn from.
 ---
 
@@ -65,15 +67,18 @@ space.
 
 ???
 
-Last time we looked at latent semanic analysis, non-negative matrix
-factorization and latent dirichlet allocation.
-Each of them embedds the documents into a continuous, corpus specific space of a
-dimension of our choosing, using an unsupervised objective. The first two are
-matrix factorization, the third is a probabilistic generative model.
+Last time we looked at latent semanic analysis, non-negative
+matrix factorization and latent dirichlet allocation. Each
+of them embedds the documents into a continuous, corpus
+specific space of a dimension of our choosing, using an
+unsupervised objective. The first two are matrix
+factorization, the third is a probabilistic generative
+model.
 
-Today we'll be talking about a more general embedding, which tries to embedd
-individual words, not documents. The goal is to learn an embedding that's
-generally useful, and not necessarily tied to a particular corpus.
+Today we'll be talking about a more general embedding, which
+tries to embedd individual words, not documents. The goal is
+to learn an embedding that's generally useful, and not
+necessarily tied to a particular corpus.
 
 ---
 # Idea
@@ -86,12 +91,14 @@ representation.
 
 ???
 
-We'll talk about several methods, but they'll all use a very large corpus to
-create a relatively generic embedding. So we might use something like wikipedia
-or google news or a big corpus of books. It's an unsupervised task, but the way
-it is phrased is using an auxiliary supervised task to learn the embedding. And
-what I mean by that will be more clear shortly. The starting principle is a
-one-hot representation of each word, as in Bag of words, which basically just
+We'll talk about several methods, but they'll all use a very
+large corpus to create a relatively generic embedding. So we
+might use something like wikipedia or google news or a big
+corpus of books. It's an unsupervised task, but the way it
+is phrased is using an auxiliary supervised task to learn
+the embedding. And what I mean by that will be more clear
+shortly. The starting principle is a one-hot representation
+of each word, as in Bag of words, which basically just
 means each word is identified by some index.
 
 ---
@@ -106,12 +113,13 @@ want to learn representations.
 ???
 
 A very commonly used auxiliary task is the skip-gram model.
-Here the task is, given a word, predict the surrounding words. This is a
-supervised task, with each document providing many examples, basically as many
-as there are words in the document. I'm saying this is an auxiliary task,
-because we're not really interested in actually solving this problem of
-predicting surrounding words, we just want to use this task to learn useful
-representations.
+Here the task is, given a word, predict the surrounding
+words. This is a supervised task, with each document
+providing many examples, basically as many as there are
+words in the document. I'm saying this is an auxiliary task,
+because we're not really interested in actually solving this
+problem of predicting surrounding words, we just want to use
+this task to learn useful representations.
 
 ---
 class: left
@@ -127,24 +135,61 @@ class: left
 Using context windows of size 1 (in practice 5 or 10):
 
 ???
-Here's an example of what this task looks like.
-Let's say we have a corpus of two documents, "what is my purpose" and "you pass
-the butter". We specify a context window size, let's say one. Then, for each
-word that has enough context, we generate a training example.
-So for "is", we have a context of "what" and "my", for "my" we have "is" and
-"purpose", and so on. So the input would be "is" and the goal would be to
-predict that the word before is "what" and the word after is "my". that assigns
-a high probability to the outputs "what" and "my".
-In practice larger context windows are used, often 5-10 words in either
-direction. Cearly it's impossible to actually solve this task, because each word
-can appear in many different contexts. The goal is to learn which contexts are
-likely, and which are not.
+Here's an example of what this task looks like. Let's say we
+have a corpus of two documents, "what is my purpose" and
+"you pass the butter". We specify a context window size,
+let's say one. Then, for each word that has enough context,
+we generate a training example. So for "is", we have a
+context of "what" and "my", for "my" we have "is" and
+"purpose", and so on. So the input would be "is" and the
+goal would be to predict that the word before is "what" and
+the word after is "my". that assigns a high probability to
+the outputs "what" and "my". In practice larger context
+windows are used, often 5-10 words in either direction.
+Cearly it's impossible to actually solve this task, because
+each word can appear in many different contexts. The goal is
+to learn which contexts are likely, and which are not.
 
 ---
 .center[
 ![:scale 50%](images/cbow_skipgram_1.png)
 ]
 
+???
+Here’s the architecture that we will be using for this. It's
+kind of like neural network only, this is completely linear.
+In the left-hand side, we have the input layer with one hot
+encoding services in V-dimensional. V represents the size of
+vocabulary. And basically, only one of them will be 1 and
+the others will be 0.
+
+Then we have a weight matrix connecting it to the
+n-dimensional hidden layer. From there, we have multiple
+outputs that correspond to the previous word, previous 2
+words, and previous 3 words and so on. And then the next
+word, next 2 words, next 3 words and so on. 
+
+Each output is, again, one hot encoding, which allows you to
+predict each possible version of vocabulary. These layers
+here are very large in size.
+
+Behind the hidden layer is basically a logistic regression.
+So this is just a linear classifier with a softmax
+activation. So each of these Ws will try to predict what the
+words are before and after.
+
+Basically, you have one hot encoding, you've multiplied with
+the first matrix, and then you multiply it with another
+matrix and then you do softmax. The reason why you have
+these two matrix multiplication is basically you want to
+create a bottleneck so if you had a very wide vector, you
+could do one matrix multiplication, basically, you want this
+matrix to have a lower rank. So you want to compress a
+representation to something small.
+
+Each row of W corresponds to a single word. We train this
+whole thing in a supervised fashion to minimize the log
+loss. But we’re only interested in is getting weights w.
 
 ---
 
@@ -157,6 +202,20 @@ likely, and which are not.
 .smallest[
 <a href="http://papers.nips.cc/paper/5021-distributed-representations-of-words-and-phrases-and-their-compositionality.pdf">Mikolov et. al. - Distributed Representations of Words and Phrases and their Compositionality (2013)</a>]
 ]
+???
+The problem is you sum over all the outputs. All the outputs
+are all the words in the vocabulary. If you have a million
+words in your vocabulary, this is going to be a lot of work.
+
+
+This is a step that you need to do every time when you want
+to optimize it. And so what most of the algorithms do is
+they just approximate the sum by sampling some words. So it
+just normalizes by some words, but not by all words. 
+
+This is the model that's most commonly used. This is called
+skip grams.
+
 ---
 # CBOW vs Skip-gram
 
@@ -169,20 +228,30 @@ Efficient Estimation of Word Representations in Vector Space https://arxiv.org/p
 ]
 ???
 
-This is the skip-gram model, here you can see it on the left (FIXME?!)
-So we start with the one-hot-encoding of the word, and we have a matrix
-multiplication into a latent space. A matrix multiplication with a one-hot
-vector just means that each row in that embedding matrix represents one word.
-From this latent space, we run logistic regression, trying to predict what the
-word is for each particular offset, so here in this picture we're trying to
-predict the word two to the left, one to the left, one to the right, and two to
-the right. So these are basically four classifiers running on the same input.
+This is the skip-gram model, here you can see it on the left
+(FIXME?!) So we start with the one-hot-encoding of the word,
+and we have a matrix multiplication into a latent space. A
+matrix multiplication with a one-hot vector just means that
+each row in that embedding matrix represents one word. From
+this latent space, we run logistic regression, trying to
+predict what the word is for each particular offset, so here
+in this picture we're trying to predict the word two to the
+left, one to the left, one to the right, and two to the
+right. So these are basically four classifiers running on
+the same input.
 
-Another approach is shown on the left, the continuous bag of words model, or
-CBOW. This is something that seems a bit more natural to me, where given the
-context, we are trying to predict the word in the center. So here we would be
-given four context words and try to figure out what's the most likely word to be
-in between those.
+Another approach is shown on the left, the continuous bag of
+words model, or CBOW. This is something that seems a bit
+more natural to me, where given the context, we are trying
+to predict the word in the center. So here we would be given
+four context words and try to figure out what's the most
+likely word to be in between those.
+
+The skip grams work better. CBOW might capture some things
+like synonymous words because I can switch the synonyms word
+for another word, and it’ll still make sense in the same
+context. So if I say, I watched a movie or I watched the
+film, it doesn't really matter. 
 
 ---
 # Implementations
@@ -191,6 +260,22 @@ in between those.
 - Word2vec
 - Tensorflow
 - Don't train yourself
+
+???
+Word2vec uses both the skip grams and continues bag of
+words.
+
+You can train this using TensorFlow. If you actually want to
+train it yourself, it's probably the best idea because then
+you can do it on GPU. These are usually like large matrices,
+you have a large corpus which will take forever. With
+TensorFlow, you can do it on a GPU and, and it makes things
+much more bearable. 
+
+But generally, just don't train it yourself. You can
+download several of these word2vec models from Google, for
+example.
+
 ---
 
 
@@ -202,6 +287,25 @@ in between those.
 - No supervised learning
 - Uses list-of-tuples instead of sparse matrices to
 store documents.
+
+???
+Gensim is a Python library for text analysis. Gensim is very
+easy to use and it has a lot of features. Last time, I
+mentioned spacy and NLTK as libraries for NLP, Gensim is the
+third one in that list which is very specific to topic
+models. And it has multiple implementations of LDA. It has
+wrappers for Mallet and vowpal wabbit, which also has very
+fast on LDA implementation. It has no supervised learning.
+This is all about document retrieval and feature extraction.
+
+
+The main thing to keep in mind when you work with this and
+when you combine this with scikit-learn is that it uses a
+list of tuples to store documents instead of sparse
+matrices. It's completely equivalent. It's just a different
+data structure. But if you want to mix this with
+scikit-learn, you need to make sure to convert it.
+
 ---
 # Introduction to gensim
 
@@ -307,8 +411,8 @@ print(list(tfidf[corpus]))
 ```
 
 ]
-
-
+???
+You can do a TFIDF model with Gensim. 
 ---
 
 # Word2Vec in Gensim
@@ -328,12 +432,42 @@ w.vectors.shape
 ```
 (3000000, 300)
 ```
+???
+There are 2 benefits to using these prebuilt models.
+A)  It takes a long time to run to train these 
+B) You probably don't have the corpus, you can download
+Wikipedia, but I don't think you can actually download the
+Google News corpus. 
+
+There are 3,000,000 word vectors in total stored in this
+model. So there’s a vocabulary of size 3,000,000. Each of
+the words in the vocabulary has a 300-dimensional vector.
+
+I can only apply this to words that are within this
+vocabulary. If I have any words that are not in this
+vocabulary, then this model is useless.
+
+The first thing that we want to do is to check whether these
+representations actually semantic in some way. To do this,
+first, we need to define how can we measure similarity in
+this space. And the way that similarities usually measured
+between words is using the cosine similarity.
+
 ---
 # Cosine Similarity
 .padding-top[
 
 `$$\Large \text{similarity}(v, w)=\cos(\theta) = \frac{v^Tw}{\lVert v\rVert \lVert w \rVert}$$`
 ]
+???
+This is quite related to Euclidean distance but basically,
+it normalizes the weight, the length of the vector. This is
+a set of a distance matrix that’s very commonly used in NLP.
+For example, if you want to compare if the two documents are
+similar. For documents in the bag of words representation,
+this might be quite intuitive, since it just sort of
+normalizes the length of document away. 
+
 ---
 class: smallerr
 # Inspecting Semantics
@@ -348,11 +482,29 @@ w.most_similar(positive=['movie'], topn=5)
  ('moive', 0.6830361485481262),
  ('Movie', 0.6693680286407471)]
 ```
---
+???
+Now that we know how we can measure similarities in the
+space, we can find similar words. And so let's start with
+‘movie’ and the top 5 matches for it (ordered from most
+similar to least similar top 5)
+
+This computes the cosine similarities between the
+300-dimensional vector for movie and all the other
+300-dimensional vectors for the 3 million other words and
+gives the 5 closest one. In this case, they are ‘film’,
+‘movies’, ‘films’, ‘moive’, ‘Movie’. I guess ‘moive’ is a
+common misspelling.
+
+---
 ```python
 w.most_similar(positive=['good'], topn=5)
 ```
---
+???
+Trying the same for the word ‘good’ gives ‘great’, ‘bad’,
+‘terrific’, ‘decent’ and ‘nice’. ‘bad’ is an antonym not a
+synonym for ‘good’, this makes sense since sometimes if we
+replace ‘good’ with ‘bad’, it will still make sense. 
+---
 ```
 [('great', 0.7291510105133057),
  ('bad', 0.7190051078796387),
@@ -372,7 +524,11 @@ w.most_similar(positive=['cute', 'dog'], topn=5)
  ('Shitzu', 0.7004074454307556)]
  ```
 
----
+???
+You can also look at multiple vectors and take the average
+and then look what's close to that. I’ve computed for ‘cute’
+and ‘dog’.
+ ---
 
 # Prepare document (IMDB)
 
@@ -422,6 +578,19 @@ This is a silly way to tokenize the input and using only
 words that appear in the vocabulary used in the pretrained
 model.
 
+Doing the same for movie review. I’m tokenizing this in a
+way that only the words that appear in the vocabulary are
+actually here because the other words can’t be encoded in
+Word2vec. So I get the count vectorizer, I use the
+vocabulary in the Word2vec model and then I transform and
+inverse transform and I get these results where each of them
+has a 300-dimensional vector
+
+
+So now we have the list of tokens for all the movie reviews.
+And the most common way to use this to represent documents
+is just using the average. 
+
 ---
 # Represent doc by average
 
@@ -452,6 +621,29 @@ lr_w2v.score(X_val, y_val)
 ```
 
 ]
+???
+Right now, each of the tokens is replaced by a
+300-dimensional vector. And so I can represent each review
+by the mean of all the 300-dimensional vectors of the words.
+
+So previously, I had 18750 lists of 300-dimensional vectors
+for the training dataset and now I only have one
+300-dimensional vector.
+
+After computing, we can see that we didn't really gain a
+lot, but definitely, there's still a lot of information
+available to do the sentiment analysis. I think it's better
+than using LSA or LDA. 
+
+This still has some downsides of the bag of words in that
+you discard to word order.
+
+You can actually also do embedding for bigrams and trigrams.
+
+
+One of the thing that people found, which was quite
+interesting is that you can actually do some sort of
+semantic algebra with it. 
 
 ---
 # Analogues and Relationships
@@ -468,6 +660,23 @@ Find closest vector to vec(“Queen”) + (vec(“Kings”) - vec(“King”))
 
 .smallest[
 <a href="http://www.aclweb.org/anthology/N13-1090">Mikolov et. al. Linguistic Regularities in Continuous Space Word Representations (2013)</a>]
+???
+You can use these vectors to find relationships. So people
+found that if they look at the difference between men, and
+women, it looks very similar to the difference between uncle
+and aunt or king and queen. They also found that, for
+example, the difference between King and kings is the same
+as between queen and Queens. 
+
+If you want to ask a question, what is to Queen as kings are
+to King?
+
+You can take vector representation of Queen and add the
+vector representation of kings, and subtract the vector
+representation of King. And if you look at the closest point
+to that, you'll find it's going to be queens. People did
+this with a lot of different sort of semantic pairs. 
+
 ---
 .center[
 ![:scale 80%](images/analogues.png)
@@ -476,12 +685,27 @@ Find closest vector to vec(“Queen”) + (vec(“Kings”) - vec(“King”))
 
 .smallest[
 <a href="http://papers.nips.cc/paper/5021-distributed-representations-of-words-and-phrases-and-their-compositionality.pdf">Mikolov et. al. - Distributed Representations of Words and Phrases and their Compositionality (2013)</a>]
+???
+One thing that's quite interesting is people embedded
+countries and their capitals using a 300-dimensional space
+and then did the PCA on it. 
+
+This is projecting down to 2-dimensional space, all
+different countries and their capitals. 
+
+Even after this projection, they all look pretty peril. And
+so basically, the thing that goes from Poland to Warsaw is
+basically the same that goes from Japan to Tokyo. You can
+use this to discover analogies or relations. 
+
 ---
 # Finding Relations
 <br />
 $$\large a : b : : c : ?$$
 <br />
 $$\large d = \text{arg}\max_i\frac{\left(\text{vec}(b) - \text{vec}(a) + \text{vec}(v)\right)^T vec_i}{\lVert\text{vec}(b) - \text{vec}(a) + \text{vec}(v)\rVert\lVert \text{vec}_i\rVert}$$
+???
+The vec(v) in the numerator should be vec(c)
 ---
 class: middle
 
@@ -490,6 +714,13 @@ class: middle
 ]
 
 .smallest[<a href="https://cs224d.stanford.edu/lecture_notes/notes2.pdf">Stanford CS 224D: Deep Learning for NLP</a>]
+???
+The model is able to figure out what the relationship of
+what does it mean for a city to be in a state. 
+
+So now we have a space in which vector additions have
+semantic meaning. When people found about this, they were
+really excited. 
 
 ---
 
@@ -522,7 +753,14 @@ w.most_similar(positive=['Germany', 'pizza'], negative=['Italy'], topn=3)
 ```
 
 ]
+???
+In the first example, I'm computing ‘woman’ + ‘king’ – ‘man’
+and the top 3 results are ‘queen’, ‘monarch’ and ‘princess’.
+Queen is the highest since ‘man’ is to ‘king’ as ‘women’ is
+to ‘queen’.
 
+So relationships that are found here definitely depend a lot
+on the corpus that was used. 
 
 
 ---
@@ -547,7 +785,10 @@ $\overrightarrow{man} - \overrightarrow{woman} \approx \overrightarrow{computer 
 
 
 ]
-
+???
+This relation is actually in there. If you do ‘man is to
+computer programmer’ as ‘women is to x as to x, you get
+‘homemaker’ and we might not be very happy about this. 
 
 ---
 # Going along he-she direction:
@@ -556,12 +797,29 @@ $\overrightarrow{man} - \overrightarrow{woman} \approx \overrightarrow{computer 
 .center[
 ![:scale 90%](images/he_she.png)
 ]
+???
+They did an analysis of this particular embedding. And
+established that we don’t want these gender stereotypes in
+our model and gender appropriate he-she analogies
+
+Some of them are clearly something that we would not want.
+And this is just one particular instance.
+
+As with all machine learning models, this learns all the
+biases of the data that you give it, if you give it a lot of
+text, then it uses that to learn all the biases of human
+society. 
 
 ---
 class: middle
 
 # Paragaph Vectors
 ???
+Alright, so the next thing I want to talk about is a
+slightly smarter way to look at embedding documents, which
+is paragraph vectors. Instead of just taking averages we're
+trying to do a little bit better. 
+
 Fixme rerun experiments from doc2vec paper to show it works?
 ---
 
@@ -575,6 +833,9 @@ Fixme rerun experiments from doc2vec paper to show it works?
 <a href="https://cs.stanford.edu/~quocle/paragraph_vector.pdf">Le, Mikolov: Distributed Representations of Sentences and Documents (2014)</a>
 ]
 ???
+
+
+
 based on cbow, not skip-grams
 
 Add a vector for each paragraph / document, also
@@ -586,6 +847,58 @@ sampling context examples from this paragraph.
 FIXME better explanation.
 
 There is no gradient descent at encoding time for word2vec!
+
+
+The most common approach here is Doc2vec.
+
+This here on the right-hand side would be the continuous bag
+of word model where you get the context, and where you want
+to predict the word from the context. What paragraph vector
+now does is it adds in another thing, which is a paragraph
+specific ID. It’s basically like adding a unique word to a
+vocabulary that’s just unique to this paragraph and encodes
+its presence in this paragraph. And you do not only learn
+the embedding of all the words, but you also learn embedding
+for each paragraph. And so basically, this tries to make up
+for what the words cannot predict. So you have the standard
+CBOW in the middle layer that tries to make a prediction but
+then basically trying to correct this prediction by having a
+paragraph specific ID. This maybe not sorts of the most
+intuitive way. But it actually seemed to work quite well.
+This is actually in practice quite a bit trickier than just
+looking at the word vectors since how are you going to do
+this if you get a new document?
+
+If you get a new document for the word vectors, you just
+look for each word, if it's not in the vocabulary you’re
+lost out anyway, if it’s in the vocabulary, you can just
+take the vector for this word that you have computed
+already. 
+
+If you get a new paragraph, how do you get the paragraph
+vector?
+
+Since you have a new paragraph that has never seen before,
+the paragraph is not in the training set. And so what you do
+then you look at the paragraph and you sample training
+samples from this paragraph, so your sample context and
+words. And you fix all the word vectors because you learned
+them on the training sets. You're basically learning this
+paragraph ID by doing gradient descent. So you initialize
+this paragraph vector randomly and to transform a new
+paragraph, you basically learn the paragraph vector for this
+paragraph, fixing all the word vectors. 
+
+In this sense, it’s more of trying to correct what the model
+could not figure out with the word vectors. So now, you have
+a vector that represents everything in the paragraph that
+was not already encoded in the context, or it might encode
+like in a wider context or something like that. 
+
+And usually, it's just the same dimensionality as the other
+vectors. So here, we would get like a 300-dimensional vector
+that encodes each paragraph. But to encode a new paragraph
+you need to do gradient descent.
 
 
 ---
@@ -617,8 +930,15 @@ model.train(train_corpus, total_examples=model.corpus_count, epochs=55)
 https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/doc2vec-lee.ipynb
 ]
 ???
-fixme example of nearest neighbors to see if this learned something useful!
+fixme example of nearest neighbors to see if this learned
+something useful!
 Should use the unlabeled reviews!
+
+So here, basically, I started completely fresh from no model
+at all. And I learned embedding for all of the words and for
+all the paragraphs. So I did a small validation to see if
+the word vectors that I learned are meaningful.
+
 ---
 # Validation of Word Vectors
 ```python
@@ -636,7 +956,16 @@ model.wv.most_similar("movie")
  ('picture', 0.6427854299545288),
  ('thriller', 0.6300673484802246)]
  ```
----
+???
+I looked at the most similar ones to ‘movie’ and we get
+these results.
+
+I like this better than the ones from the pre-built one.
+These are pretty good but it's maybe not as surprising as
+‘movie’ is sort of the most common word in the whole corpus.
+
+
+ ---
 #Encoding using doc2vec
 
 .smaller[
@@ -658,6 +987,20 @@ X_test = np.vstack(test_vectors)
 ```
 
 ]
+???
+Now I can encode my training corpus.  I get a 50-dimensional
+vector for each movie review in the training dataset. If I
+want to do classification I can run a logistic regression on
+this vector.
+
+So model.infer_vector does the gradient descent to compute
+the paragraph vectors for each document. 
+
+In the paper, they used much more data from the same corpus
+and they used 400-dimensions and probably they also iterated
+longer. In the paper, they didn't train a logistic
+regression on this. They trained a neural network on this,
+this probably makes a difference
 
 ---
 
@@ -727,6 +1070,15 @@ class: center, spacious
 
 ![:scale 90%](images/glove_weighting.png)
 ???
+If you're larger than X max, it's just weighted by 1. If all
+words appear at least 100 times then the loss is weighted
+fully and if words appear less than 100 times, then you take
+x divided by 100 to the power of alpha, and they found alpha
+equal to 0.75. So it works better than linear.
+
+So in the beginning, you have to compute this big sparse
+matrix once, but then you can do gradient descent just on
+this given statistics.
 
 ---
 # Word analogies
