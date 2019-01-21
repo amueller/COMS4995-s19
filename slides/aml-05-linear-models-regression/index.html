@@ -306,11 +306,13 @@ never apply to what we’re doing.
 
 ---
 # Scaling (if you want)
+
 ```python
 from sklearn.linear_model import Ridge
 from sklearn.preprocessing import StandardScaler
 X, y = boston.data, boston.target
-X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=0)
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, random_state=0)
 
 scaler = StandardScaler()
 scaler.fit(X_train)
@@ -360,7 +362,7 @@ grid.fit(X_train, y_train)
 ```
 ]
 .center[
-![:scale 60%](images/ridge_alpha_search.png)
+![:scale 50%](images/ridge_alpha_search.png)
 ]
 
 ???
