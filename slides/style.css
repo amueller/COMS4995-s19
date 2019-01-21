@@ -52,6 +52,11 @@
       .remark-slide-content .smaller .remark-code,  .smaller .remark-code-line,.remark-slide-content .smaller a{
           font-size: 25px;
       }
+
+      .remark-slide-content .smallest p, .remark-slide-content .smallest li, .remark-slide-content .smallest .remark-code,
+      .smallest .remark-code-line{
+        font-size: 22px;
+      }
       .normal {
           font-size: 30px;
       }
