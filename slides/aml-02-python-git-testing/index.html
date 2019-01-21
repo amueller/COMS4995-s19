@@ -19,7 +19,7 @@ class: center, middle
 
 # Tools and Infrastructure
 
-01/22/18
+01/28/19
 
 Andreas C. Müller
 
@@ -262,10 +262,11 @@ if you think about commands, you should think about them in terms of
 what they do to each of these five.
 
 ---
+class: compact
 
 # git Commands
 
-.smaller[
+.smallest[
 - .normal[`git add`]<br />
 puts files from working director into staging area (index) If not tracked so far, adds them to tracked files.
 
@@ -613,415 +614,585 @@ class: center, middle
 ???
 Ok, so that’s enough version control for now. But we’ll get back to
 githubs integration of third party services later.
+---
+class: center, middle
+
+# Unit Tests and integration tests
+
+???
+So last time we talked about how we can guard ourselves against some simple
+issues with our syntax checkers, but that doesn’t find all errors, and it
+doesn’t tell us if our code works. So we now we’ll talk about unit testing and
+integration testing.
+
+Who of you has worked with an automatic testing framework?
+
+What is it for and why would we want it?
+
+---
+class: spacious
+
+# Why test?
+
+- Ensure that code works correctly.
+- Ensure that changes don’t break anything.
+- Ensure that bugs are not reintroduced.
+- Ensure robustness to user errors.
+- Ensure code is reachable.
+
+???
+So yes, we want to make sure that our code is correct. We also want to
+make sure that if we rewrite something, it remains correct. If you have
+good tests, it is much easier to aggressively refactor your code. If
+your tests are passing, everything works!
+Another important kind of test is no-regression tests. You found a bug,
+you fixed it, and now you want to make sure you don’t re-introduce
+it. The easiest way is to write a test that tests for the bug.
+You also want to make sure that your program behaves reasonable, even
+in edge-cases such as invalid input.
+And finally, testing can help you find code that is actually unreachable
+by measuring coverage. If you can’t write a test that will reach
+a particular part of the code, it’s never executed, and you should
+probably think about that.
 
 ---
 class: center, middle
 
-# General coding guidelines
+# Test-driven development?
 
 ???
-Next, I want to talk about Python and some software engineering
-principles. But before we do that, I want to mention two famous quotes
-that provide great general guidelines for software development.
-
----
-class: middle
-
-Programs must be written for people to read, and only incidentally for
-machines to execute.
-.quote_author[Harold Abelson (wizard book)]
-
-???
-The first one is by Harold Abelson from the foreword of “structure
-and interpretation of computer programs” a classic in programming
-languages and compilers.
-[read]
-The gist is that the main point of code is to communicate ideas to your
-peers and to your future self.
-A similar sentiment is expressed in the statement that “code is read
-more often than it is written”. Take more time writing code, so that
-you and other can spend less time reading it. Don’t focus on what’s
-“easy for the computer” or “elegant”. Focus on what’s easy to
-understand for people.
-
----
-class: middle
-
-Everyone knows that debugging is twice as hard as writing a program in
-the first place. So if you're as clever as you can be when you write it,
-how will you ever debug it?
-.quote_author[Brian Kernighan]
-
-???
-This one is from Brian Kernighan, who wrote the first book on C together
-with Dennis Richie. Kernighan is also the creator of awk and many other
-parts of unix, in particular the name. He says
-[read]
-This is another call for simplicity. Make code easy to understand. For
-yourself now to debug, for your future self to know what the hell you were
-thinking, and for others that might want to use this code in the future.
-Hopefully all the code you write will be read again. Otherwise, what’s
-the point? That might not be true for your assignments in most classes,
-but the point of the assignments it to practice for the real world. So I
-want to make sure that the code that you write in class is on the same
-standard that it needs to be out there on your job. Also, think of the
-poor course assistants.
-
----
-class: padding-top
-
-- Don’t be clever!
-
-
-- Make it readable!
-
-
-- Future you is the most likely person to try to understand your code.
-
-
-
-???
-So to summarize:
-[read]
-
-And there's one more trick to making your code readable and understandable.
-Don't write code. The more you write, the more you need to read. If you can
-avoid writing code, do it! If you can get a 10% speedup by making your code
-three times as long, usually it's not worth it.
-
---
-- Avoid writing code.
-
----
-class: center, middle
-
-# Python basics
-
-???
-So now I want to go over some Python basics. And don’t worries, we
-won’t go over syntax or the standard library.
-
----
-class: spacious
-
-# Why Python?
-
-- General purpose language
-- Great libraries
-- Easy to learn / use
-- Contenders: R (Scala? Julia?)
-
-???
-First, a short defense on why I’m teaching this class in Python.
-Python is a general purpose programming language, unlike matlab or R,
-so you can do anything with it.
-It is very powerful, mostly because there are so many libraries for
-python that you can do basically anything with just a couple of lines.
-Python is arguably easy to learn and easy to use, and it allows for a
-lot of interactivity.
-The only real contender in the data science space that I can think of
-is R, which is also a good option, but well, I’m not an R guy. Much
-of this course could be taught in R instead, though the software
-development tooling is a bit worse (but other things are better).
-You might have better chances with Python in industry jobs.
-There’s also Scala, but I’d argue that’s way too complicated and
-doesn’t have the right tools for the kind of data analysis and machine
-learning we want to do in this course.
+I love tests. But there are some people that love tests even more,
+and they practice what’s called test-driven development. Who here has
+heard about that?
+In test driven development, you write the tests before you write the
+code. And there are advantages to that. I don’t usually do that myself.
+However, I do test-driven debugging. If I find a bug, I first write a test
+that fails if the bug is present. I need to do that later anyhow, because
+I need a non-regression test, and it usually makes debugging much easier.
+I often do example driven development, where I write down some simple
+use-cases and then write implementations to fullfil them.
 
 ---
 
-# The two language problem
+# Types of tests
 
-Python is sloooow…
+- Unit tests – function does the right thing.
 
+- Integration tests – system / process does the right thing.
 
-- Numpy: C
-- Scipy: C, fortran
-- Pandas: Cython, Python
-- Scikit-learn: Cython, Python
-
-- CPython: C
+- Non-regression tests – bug got removed (and will not be reintroduced).
 
 ???
-So there’s one thing that I really  don’t like about Python. Any
-idea what that is?
-Python is slooow. Like really slow.
-So you know all these great libraries for Python for data science, like
-numpy, scipy, pandas and scikit-learn. Do you know what language they
-are written in?
-Numpy is written in C,
-Scipy is written in C and Fortran, pandas and scikit-learn are written
-in Cython and Python. And Cpython, the interpreter we use, is written
-in … C obivously
-That creates a bit of a divide between the users, who write python,
-and the developers, who write C and Cython. I have to admit, I don’t
-write a lot of Cython myself, mostly Python… but that’s not great.
-So you need to be aware that if you actually want to implement new
-algorithms, and you can’t express them with pandas and numpy, you
-might need to learn cython.
-For this course, this won’t really be a problem, though. We’ll stay
-firmly on the Python side.
-
+I usually think of tests in terms of three kinds: unit tests, that test
+the smallest possible unit, usually one function.
+Then, there’s integration tests, that test that the different parts
+of the software actually work together in the right way. That is often
+by testing several application scenarios.
+And finally, there’s non-regression tests, which can be either a unit
+tests, an integration test, or both, but they are added for a specific
+scenario that failed earlier, and you’ll accumulate them as your
+project ages.
 
 ---
 
-# Python 2 vs Python 3
+# How to test?
 
-- “current” : 2.7, 3.4, 3.5, 3.6, 3.7
+- py.test – http://doc.pytest.org
 
-???
-There’s another thing that you could call the two language problem,
-it’s python 2 vs python 3.
-The last version of python 2 is python 2.7, and really no-one should be
-using anything earlier. The commonly used versions of python 3 are 3.4
-and 3.5, 3.6 and 3.7.
-There is really no reason to use python 2 any more. Unless you already
-wrote lots of code earlier. If you’re at a company it might not be
-easy to make the  transition, and that’s why python 2 is still around.
+- Searches for all test_*.py files, runs all test_* methods.
 
-So the important part are the changes. Anyone know what changed?
+- Reports nice errors!
 
---
-
-Changes (that will bite you)
-
-- `print`
-
-- division
-
-- Iterators (range, zip, map, filter, dictionary keys, values, items)
-
-- Strings / unicode
+- Dig deeper:
+http://pybites.blogspot.com/2011/07/behind-scenes-of-pytests-new-assertion.html
 
 ???
-The print statement was removed, now print is a function, so it need
-parenthesis. The most common and trivial change. Division was changed
-to produce floats, so if you devided 2 by 3, it was 2 before, and now
-it’s 2.5
+There are several frameworks to help you with unit testing in
+python. There’s the built-in unittest module, there’s the now somewhat
+abandoned nosetests.
+For the course we’ll be using the py.test module, which is also what
+I’d recommend for any new projects.
+What it does is it searches all files starting with `test`, runs them,
+and reports a summary.
+The tests should contain assert statements, and if any of them fail,
+you’ll get an informative error.
+This is actually done with a considerable amount of magic, which you
+can read up on here, if you’re into rewriting the AST.
 
-Then, many things that returned lists now return iterators, which is more
-memory efficient, but means you can’t necessarily retrieve things by
-index any more. That’s true for range, which now behaves like xrange
-before, zip, which behaves like izip, map and filter.
-Also, dictionary keys, values and items are now iterables and not
-lists. If you tried to index any of those, you probably had a bug anyhow.
-
-And really the main thing that changed is strings. And they changed
-completely. In 2, there was a string type and a unicode type. Now
-there’s a string type, which is always unicode, and a bytes type that
-is the raw bytes and needs an encoding to interpret.
-The story is really a bit complicated, and I suggest you read up on it.
-If your standard environment is Python2, you should update it to Python3
-today.
 
 ---
-class: spacious
+# Example
 
-# Python 2 && Python 3
-
-- `from __future__ import print_function`
-- Six – tools for making 2 and 3 compatible code
-- 2to3 – convert python2 code to python3 code
-
-???
-
-If you write a library or code that you want to have reused, I suggest writing
-code that is compatible with both python 3 and python 2. Hopefully soon we
-can write Python3 only. For the first assignment I’ll make you do that, for
-later assignments the code only needs to run in 3.4 or newer.
-
-Generally it’s easy for code to run on both. You can just always
-use parenthesis on print, it will have no effect in python2. Or you
-can import features, like float division from the future. ` __future__`
-is a module that exists in python2 and python3 and that allows you to
-use certain python3 feature in python 2.
-Some cases are not covered, though, and the `six` package helps out in
-these cases. It provides some common names between python2 and python3.
-If you want to convert a codebase from python2 to python3, there’s an
-automatic converter called 2to3, which can do that for you.
-
-The next thing I want to talk about is managing python packages and environments.
-
----
-class: spacious
-
-# Python ...
-
-Package management:
-
-- don't use system python!
-
-- use Virtual environments
-
-- understand pip (and wheels)
-
-- probably use Conda (and anaconda or conda-forge)
-
-???
-Package management is really important if you want to become a serious python user.
-Unfortunately, it’s a bit tricky, partly due to the two language problem, which
-means packages have dependencies that are not in python.
-First of, you should be aware of the environment you are using. Usually
-it’s a good idea to work with virtual environments, in which you can
-control what software is installed in what version. If you’re on OS X
-or linux, your system will com with some python, but you don’t really
-want to mess with that. Create your own environments, and are aware of
-which environment you are using at any moment.
-The standard python way to install packages is pip, which is part of
-the setuptools package. Pip allows you to install all python packages in the pipy
-repository, which is basically all of them.
-
---
-???
-Until not so long ago, pip needed to compile all C code locally on your
-machine, which was pretty slow and complicated. Now, there are binary distributions,
-called wheels, which mean no compilation for most packages! If you’re compiling
-something when you’re installing, you’re probably doing it wrong.
-The issue with pip is that it only works for python packages, and some
-of our packages rely on linear algebra packages like blas and lapack,
-and you need to install them some other way.
-A really easy work-around for that is using a different package manager,
-called conda. It was created by a company called Anaconda (used to be continuum
-IO) and they ship a bundle called anaconda, which installs basically all the
-important packages. I recommend you use that for the course.
-Conda can be used with different source repositories. By default, it uses
-the anaconda one that is managed by the company. There’s also an open
-repository that is managed by the community that’s called conda-forge.
-In practice I use both conda and pip.
----
-class: some-space
-
-# Pip and conda and upgrades
-
-- Pip upgrade works on dependencies (unless you do -no-dep)
-
-- pip has no dependency resolution!
-
-- conda has dependency resolution
-
-- Use conda environments!
-
-- upgrading a conda package with pip (or vice versa) will break stuff!
-
-???
-Oh and one word of warning: if you do pip upgrade somepackage, it will
-also update all the dependencies. That is often not what you want, in
-particular if you are using it in a conda environment or if you installed
-a particular version of numpy or scipy that you don’t want upgraded.
-An imporatant thing to keep in mind about pip is that it has no dependency
-resolution, which means it will install the dependencies for any
-package you install, but it won't care about all the packages you installed
-before. So whenever you're using pip to install something, it could potentially
-break an already installed package.
-Conda on the other hand has a dependency resolution mechanism, which means
-it'll ensure that all the packages that you installed are compatible with each other.
-Sometimes there are conflicts between packages, though, which might prevent
-you from installing certain combinations.
-The solution here is to make liberal use of conda environments.
-If you need to work on a specific project, you should have a conda environment
-for that project ant it's requirements. Conda environments are really very useful
-and easy to use.
-
-Finally, don't try to upgrade a package with pip if it was installed
-with pip or the other way around. So if you mix conda and pip, make sure
-you check which one you used before upgrading. I recommend to use conda
-whenever possible.
-
----
-# Environments and Jupyter Kernels
 .smaller[
-- Environment != kernels
-- Use nb_conda_kernels or add environment kernels manually:
 
-.smallest[
-```bash
-source activate myenv
-python -m ipykernel install --user --name myenv --display-name "Python (myenv)"
-source activate other-env
-python -m ipykernel install --user --name other-env --display-name "Python (other-env)"
+```python
+# content of test_sample.py
+
+def inc(x):
+    return x + 2
+
+def test_answer():
+    assert inc(3) == 4
 ```
 ]
-- Even with `nb_conda_kernels`: need to install `ipykernel` package.
-]
+
+![:scale 60%](images/pytest_failure.png)
+
+???
+So here I have a slightly modified version of the example from the pytest
+website. We have a function called inc that’s supposed to increment
+a number. But there’s a bug: it adds two instead of one.
+And we have a test, which is called `test_answer`, that calls the
+inc function with the number three and checks if three is correctly
+incremented.
+If we call py.test on this file, or on the folder of this file, py.test
+will run the `test_answer` function - because it starts with `test_`.
+It tells us it ran one test, and that test failed. We also get a traceback
+showing us the line and what the actual value was. We got 5 instead of 4.
+Depending on how much you know about programming, this error message should
+come as a bit of a surprise to you. The assert only gets a boolean,
+but pytest actually unpacks the `False` and gives us more information.
+
+---
+
+# Example
+
+```python
+# content of test_sample.py
+
+def inc(x):
+    return x + 1
+
+
+def test_answer():
+    assert inc(3) == 4
+```
+
+![:scale 70%](images/pytest_passed.png)
+
+???
+So now we go back and fix our increment function, and run py.test
+again. This time, it tells us the tests passed.
+Does that mean the function is correct?
+No, but we could test more. How? We could do the same with more
+numbers. Tests are usually only necessary, not sufficient
+for correctness.
+
+Usually all test for a project are in a separate file or even a separate
+folder. In this example we had the test and the function to be tested
+in the same file, but that’s not good style.
+The actual implementation should be completely separate from the tests.
+
+
+---
+
+# Test coverage
+.smaller[
 .left-column[
-![:scale 100%](images/kernel_other_env.png)
+```python
+# inc.py
+def inc(x):
+    if x < 0:
+        return 0
+    return x + 1
+
+
+def dec(x):
+     return x - 1
+```
+]
+
+.right-column[
+```python
+# test_inc.py
+from inc import inc
+
+def test_inc():
+     assert inc(3) == 4
+```
+]
+]
+
+.reset-column[
+![:scale 70%](images/pytest_coverage1.png)]
+???
+Here’s a more complex example, with inc.py containing two functions
+and test_inc.py containing the same test. I added an if into the inc
+function, and a dec function.
+If we run the test, they still pass. But clearly we’re not testing
+everything. In this example, it’s easy to see that we don’t test the
+if branch and we don’t test the dec function at all. If you project
+is larger and more complex, it’s much harder to figure out whether
+you covered all the edge-cases, though.
+That’s where test coverage tools come in handy.
+
+---
+
+# Test coverage
+.smaller[
+.left-column[
+```python
+# inc.py
+def inc(x):
+    if x < 0:
+        return 0
+    return x + 1
+
+
+def dec(x):
+     return x - 1
+```
+]
+
+.right-column[
+```python
+# test_inc.py
+from inc import inc
+
+def test_inc():
+     assert inc(3) == 4
+```
+]]
+
+.reset-column[
+![:scale 50%](images/pytest_coverage2.png)
+]
+
+???
+So instead of just calling py.test, we specify --cov inc, which means
+we want to test the coverage of the inc module or file.
+Now we get a coverage report that tells us that out of the 6 statements
+in inc.py, two were not covered, resulting in 67% coverage.
+There are several ways to figure out which lines we missed, I like the
+html report the most.
+
+
+---
+
+# HTML report
+
+.larger[
+```bash
+$ py.test --cov inc --cov-report=html
+```
+]
+
+.left-column[![:scale 100%](images/pytest_html_report1.png)]
+.right-column[![:scale 100%](images/pytest_html_report2.png)]
+
+???
+So we specify --cov-report=html, and py.test will create a html report
+for us. We get an overview that contains the same information as before,
+but we’ll also get a detailed view of inc.py, which shows us which
+lines we covered and which lines we missed.
+And now we can clearly see that we never reached the return 0 line in
+inc and we never tested dec.
+
+Whenever your write tests, you should make sure they cover all cases in
+your code, in particular the different algorithmic pieces. Covering all
+error messages is possibly not as important. You should usually aim for
+coverage in the high nineties.
+
+If you look at projects on github, you can often see a badge that
+says “coverage X %”, showing the code coverage. These badges are
+actually automatically generated, and next I want to talk about how
+that’s done.
+
+
+---
+class: center, middle
+
+# Continuous integration (with GitHub)
+
+???
+This is the magic of continuous integration, which I mentioned already last time.
+Continuous integration is a general paradigm in software engineering, of
+automatically running integration tests whenever you change your software.
+I want to talk about it in particular in the context of github, because
+that’s what you’ll likely be using, both here and later in industry
+– at least in a startup. If you go to google or facebook of amazon,
+they all have their own frameworks, but the same principles apply.
+
+They often have even more involved systems, like continuous deployment,
+which actually automattically puts new code into production if it passes
+tests. We're not gonna talk about that here. Continuous deployment gets
+somewhat trickier with machine learning algorithms.
+
+---
+
+# What is Continuous integration?
+
+- Run command on each commit (or each PR).
+- Unit testing and integration testing.
+- Can act as a build-farm (for binaries or documentation).
+- requires clear declaration of dependencies.
+- Build matrix: Can run on many environments.
+- Standard serviced: TravisCI, Jenkins and CircleCI
+
+???
+Ok so what’s continuous integration in more detail?
+It runs some sequence of commands on a cloud machine every time a commit
+is made, either just for a particular branch, or for each pull request.
+Usually the command is just running the test suit, but you can also
+check coverage or style or build binaries or rebuild your documentation.
+This is done on a clean cloud machine, so you need to be very explicit
+about your dependencies, which is good. You can specify a build matrix
+of different systems you want to run, such as linux and os X, different
+versions of Python and different versions of the dependencies, like
+older and newer numpy versions.
+There are some standard services out there that are free for open
+source and educational purposes, travis, jenkins and circle are some of
+them. We’ll use travis for this course.
+
+
+---
+
+# Benefits of CI
+
+- Can run on many systems
+- Can’t forget to run it
+- Contributor doesn’t need to know details
+- Can enforce style
+- Can provide immediate feedback
+- Protects the master branch (if run on PR)
+
+???
+So what’s the benefits of doing this?
+You can run it on many systems, and in parallel. You might not have all
+the operating systems that you want it to run on, and you might not go
+through the hassle of trying out every patch on every machine.
+Because CI is automatic, you can’t forget to run it. There’s
+github integration that will give you a red x or a green check mark,
+and everybody will know whether your commit was ok or not.
+You can make a change to a package without knowing all the requirements
+and even without knowing how to run the tests. The CI will complain if
+you broke something.
+And you get immediate feedback while you’re working, because tests
+are run every time you commit!
+Most projects will only merge pull requests that pass CI, and that means
+the master branch can not break and will always be in working condition,
+which is important.
+
+---
+
+# What does it do?
+
+- Triggered at each commit / push
+- Sets up a virtual machine with your configuration.
+- Pulls the current branch.
+- Runs command. Usually: install, then test.
+- Reports success / Failure to github.
+
+???
+Ok so let’s go through the steps that the CI performs.
+Let’s say you configured travis for one of your branches on github. If
+you push to that branch, travis will be triggered.
+A virtual machine will be set up with the configuration that you
+specified. The machine pulls your current version of the project. If
+it’s a pull request, it might also use the code that would be the result
+of a merge, so it would be your changes applied to the current project.
+Then some commands are run that you can specify. Usually these are
+installing the package, possibly including dependencies, and then running
+the test suite.
+After the test-suite runs, it will report back to github.
+
+---
+# Setting up TravisCI
+
+.smaller[
+- Create account linked to your github account: http://travis-ci.org<br />
+![:scale 60%](images/travis_activate.png)
+- Check out docs at https://docs.travis-ci.com
+
+```yaml
+language: python
+python:
+  - "2.7"
+  - "3.4"
+  - "3.5"
+  - "3.6"
+  - "3.7"
+  - "nightly"
+# command to install dependencies
+install:
+  - pip install -r requirements.txt
+# command to run tests
+script:
+  - pytest # or py.test for Python versions 3.5 and below
+
+```
+]
+
+???
+So in general to set up travis you have to create an account that is
+linked to your github account, and enable travis-ci on the repository
+you want.
+For public repositories and students its free, otherwise you have to
+pay for the service.
+For the homework you'll need to enable this for your repo.
+
+There a docs online at this website, and the only thing you need to do
+is create a .travis.yml file with the configuration.
+Here, we specify the versions of python we want to run, the install
+command, and the final command.
+This will run pip install with a requirements file. You could also run
+python setup.py install,or specify requirements here directly.
+
+
+---
+
+# Using Travis
+
+- Triggered any time you push a change
+- Integrated with Pull requests
+- Try a pull request on your own repository!
+
+???
+Travis is run automatically each time you push a change, so in the
+homework, push a change and then see the status page.
+You can also do a pull request on your own repository, so you can see the
+pull request integration. It’s pretty cool and you should try it out.
+
+---
+class: center, middle
+
+# Documentation
+
+???
+So now, we come to the last bit that is about general software development,
+documentation. We talked earlier about how important it is to write readable
+code.  But no code is perfectly documenting itself. You definitely need to
+write additional documentation.
+Also, many people don’t like digging through code, so some documentation
+that’s more easily accessible is helpful.
+
+I decided to take this off the homework this year, because people were struggling
+a lot with setting up the infrastructure last year. That's a bit
+unfortunate, because it's really cool once you see all the pieces coming together.
+
+---
+
+# Why document?
+
+- Allow people to use the code without reading it.
+- Your code is harder to understand than you think.
+- Input types and output types are unclear in dynamic languages.
+- Often implicit assumptions about input.
+
+???
+So why do we document?
+The most obvious reason is that you want other people to use your code,
+and most people don't want to read the full implementation of a function
+before they can use it. You can document the functionality, interface
+and assumptions, and anyone can use your code, without having to dig
+through all the details.
+Even if someone wants to read the code, documentation makes reading the code
+easier. Others will thank you, including your future self.
+While you should document any function or class in any language, in
+dynamically typed languages in particular, it’s often unclear what the
+assumptions about the input are, and what the type of the output is. So
+these are really crucial to document.
+And if the input is some complex object like a dictionary or a custom
+class, often you make assumptions about the content of this object that
+are not obvious from the code.
+
+---
+# Python documentation standards
+.compact[
+.smaller[
+- PEP 257 for docstrings for class, methods and functions
+```python
+def inc(x):
+    """Add one to a number.
+
+    This function takes as argument a number, and adds one to it.
+    The result is returned.
+    """
+    if x < 0:
+        return 0
+    return x + 1
+```
+- Additional inline documentation
+```python
+    if x < 0:
+        # x is less than zero
+        return 0
+    return x + 1
+```
+]]
+???
+Python has some standards for documentation, described in pep  257.
+Every class, method or function should have a docstring, at the very
+least all public ones.
+These are particularly helpful because they can be easily viewed inside
+a python session or with Jupyter Notebook.
+For docstrings we use triple quotes, with a single line
+Explanation in the first line, then an empty line, then a more detailed
+explanation.
+This docstring is stored in the `__doc__` attribute of the object.
+
+In addition to that, you can use inline documentation when you think it
+might be useful, using the pound.
+
+---
+
+# NumpyDoc format
+
+See
+
+.smaller[https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt]
+
+```python
+"""
+Parameters
+-----------
+x : type
+    Description of parameter x.
+"""
+```
+
+???
+You might have noticed that the python folks like standards. In the
+data science community there’s a stricter standard, which is the
+numpydoc format.
+It’s what you’ll see in numpy, scipy, pandas and scikit-learn for
+example.
+The documentation has several sections for Parameters, return values,
+examples, notes and more.
+The most important parts are the parameters and return values, which
+you should document as you can see here.
+A detailed description of the documentation format is in the doc I linked
+to. You should always document all parameters and all return values.
+This documentation is in restructured text format, which we’ll come
+to in a bit.
+This format is a bit idiosyncratic with a space before the colon, but
+it’s important that you actually stick to this.
+
+---
+
+# NumpyDoc example
+
+.left-column[
+![:scale 95%](images/numpydoc_multinomial_nb.png)
 ]
 .right-column[
-![:scale 100%](images/kernel_other_env2.png)
+![:scale 95%](images/numpydoc_fit.png)
 ]
-???
-
-If you're using conda environments, you will want to use them in your jupyter notebooks.
-However, jupyter is not immediately aware of your environments. Jupyter runtime environments
-are defined by kernels, which can be python environments, or different programming languages.
-You need to make sure that jupyter is aware of your environments to use them as a kernel.
-One way is to manually add them by using this command here which invokes `ipykernel install`.
-That works with any kind of python environment.
-For conda environments specifically, you can also install the `nb_conda_kernels` package,
-which will automatically create kernels for all environments that contain the `ipykernel`
-package. If you do either of them, you'll get a choice of which kernel you want to use for
-a notebook. That's a great way to use different versions of python, like 2 and 3, or different
-versions of scikit-learn or matplotlib or anything else.
-
-There is a bit more tooling around python that I want to talk about next.
-
----
-class: spacious
-
-# Dynamically typed, interpreted
-
-- Invalid syntax lying around
-
-- Code is less self-documenting
 
 ???
-One of the reasons Python is so easy to learn and use is because it’s
-a dynamically typed languages.
-So who of you have worked with statically typed languages like C, C++,
-Java or Scala?
-It’s often a bit cumbersome that you have to declare the type of
-everything, but it provides some safety nets. For example you know that
-if the code compiles, the syntax is correct everywhere. You don’t know
-whether the code does what you want, but you know it’ll do something.
-Mabye crash your machine, but whatever.
-Also, arguably, dynamically typed code is less self-documenting. If I write a
-function without documentation, it’s very hard for you to guess what I
-expect the input types to be. There’s now type annotations for Python,
-which is great, but they are not supported in Python2 and are not adopted
-everywhere yet. So how can we get back our safety nets?
+Here you can see two examples from scikit-learn. On the left is the
+docstring for the MultinomialNB class. The class docstring follows
+the class definition, and the parameters are the parameters to the
+init function.
+You can see parameters, attributes, examples, notes and references.
 
----
-class: spacious
+Next to it is the fit method, which just has a one-line description and
+then the parameters and return values.
+You can see that the type descriptions can get pretty specific, giving
+the matrix shapes.
 
-# Editors
-
-- Flake8 / pyflake
-
-- Scripted / weak typing: Have a syntax checker!
-
-- write pep8 (according to the standard, not the tool)
-
-- use autopep8 if you have code lying around
-
-???
-One of the simplest fixes is to have a syntax checker in your
-editor. Whatever editor you’re using, make sure you have something like
-flake8 or pyflake installed that will tell you if you have obvious errors.
-These will also tell you if you have unused imports, undeclared variables
-or unused variables. All that helps you to immediately fix problems,
-and not wait until you run your program.
-I also recommend having a style checker. Flake8 also enforces pep8,
-which is the python style guide.
-You should write pep8 compatible code. It will make it easier for others
-to read your code, and once you’re used to it, it’ll make it easier
-for you to read other’s code.
-If you want to convert code to be pep8 compatible, check out the autopep8
-package. The pep8 tool is very strict these days, and I don't heed
-all the warnings. There is a configuration file you can use to silence
-the more obnoxious ones. When I say you should write pep9, I mean
-you should write according to the standard, not the tool.
-The first guideline of pep8 is to use your own judgment and not
-blindly follow the guide.
+You might ask why we’re using this specific format and why we’re
+using restructured text. And the answer to this is sphinx.
 
 ---
 class: middle

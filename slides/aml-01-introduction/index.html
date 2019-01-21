@@ -19,7 +19,7 @@ class: center, middle
 
 # Introduction
 
-01/17/18
+01/23/19
 
 Andreas C. Müller
 
@@ -40,6 +40,8 @@ taking it now, some things might be a bit redundant, but I promise you there’l
 be a lot of new stuff in this course. Who’s taking machine learning this
 semester, raise your hand? And who has taken it before? And who hasn’t?
 
+FIXME examples of supervised learning?
+FIXME add Hal's and Chris' book?
 ---
 
 class: center, middle
@@ -250,22 +252,6 @@ But that’s just facebook. Let’s see what else I’ve got open.
 ---
 
 .center[
-![:scale 70%](images/spotify.png)
-]
-
-???
-
-How about spotify? I’m German, so obviously I’m listening to Rammstein.
-What machine learning can we see here?
-There’s popular songs, which in this case are actually in the order of “likes”
-but in fact the algorithm also takes other features into account. And then
-theres Related Artists.  Is there other machine learning in spotify that you
-know of?  the artist radio, and of course, discover weekly. They also have a
-daily mix now, I think.
-
----
-
-.center[
 ![:scale 70%](images/amazon1.png)
 ]
 
@@ -332,6 +318,7 @@ class: center, middle
 There are three main branches of machine learning.
 Who can name them?
 ---
+class: spacious
 
 # Types of Machine Learning
 - Supervised
@@ -379,6 +366,30 @@ is to learn a function f so that for new inputs x for which we don’t observe y
 f(x) is close to y.  This approach is very similar to function approximation.
 The name supervised comes from the fact that during learning, a supervisor
 gives you the correct answers y_i.
+
+---
+
+# Generalization
+
+.left-column[
+Not only <br />
+also for new data:
+]
+
+.right-column[$f(x_i) \approx y_i$,<br />
+$f(x) \approx y$
+]
+???
+For both regression and classification, it’s important to keep in mind the
+concept of generalization.
+Let’s say we have a regression task. We have features, that is data vectors x_i
+and targets y_i drawn from a joint distribution. We now want to learn a
+function f, such that f(x) is approximately y, not on this training data, but
+on new data drawn from this distribution. This is what’s called generalization,
+and this is a core distinction to function approximation. In principle we don’t
+care about how well we do on x_i, we only care how well we do on new samples
+from the distribution. We’ll go into much more detail about generalization in
+about a week, when we dive into supervised learning. 
 
 ---
 
@@ -532,30 +543,6 @@ outcomes, so you might think it's classification. But there is also an obvious o
 between the outcomes, which would make it a regression problem.
 Both formulations could work, and there are approaches that combine the two for
 this particular problem.
-
----
-
-# Generalization
-
-.left-column[
-Not only <br />
-also for new data:
-]
-
-.right-column[$f(x_i) \approx y_i$,<br />
-$f(x) \approx y$
-]
-???
-For both regression and classification, it’s important to keep in mind the
-concept of generalization.
-Let’s say we have a regression task. We have features, that is data vectors x_i
-and targets y_i drawn from a joint distribution. We now want to learn a
-function f, such that f(x) is approximately y, not on this training data, but
-on new data drawn from this distribution. This is what’s called generalization,
-and this is a core distinction to function approximation. In principle we don’t
-care about how well we do on x_i, we only care how well we do on new samples
-from the distribution. We’ll go into much more detail about generalization in
-about a week, when we dive into supervised learning. 
 
 ---
 
@@ -970,210 +957,414 @@ feedback loop is really tricky, and we won’t go into that in this course. It�
 good to keep in mind when you all create your first startup, though.
 
 ---
+class: center, middle
 
-# Overview of the course
+# General coding guidelines
 
 ???
+Next, I want to talk about Python and some software engineering
+principles. But before we do that, I want to mention two famous quotes
+that provide great general guidelines for software development.
 
-I want to end the lecture with discussing the structure of the rest of the course,
-so you have some idea on where we are going.
+---
+class: middle
+
+Programs must be written for people to read, and only incidentally for
+machines to execute.
+.quote_author[Harold Abelson (wizard book)]
+
+???
+The first one is by Harold Abelson from the foreword of “structure
+and interpretation of computer programs” a classic in programming
+languages and compilers.
+[read]
+The gist is that the main point of code is to communicate ideas to your
+peers and to your future self.
+A similar sentiment is expressed in the statement that “code is read
+more often than it is written”. Take more time writing code, so that
+you and other can spend less time reading it. Don’t focus on what’s
+“easy for the computer” or “elegant”. Focus on what’s easy to
+understand for people.
+
+---
+class: middle
+
+Everyone knows that debugging is twice as hard as writing a program in
+the first place. So if you're as clever as you can be when you write it,
+how will you ever debug it?
+.quote_author[Brian Kernighan]
+
+???
+This one is from Brian Kernighan, who wrote the first book on C together
+with Dennis Richie. Kernighan is also the creator of awk and many other
+parts of unix, in particular the name. He says
+[read]
+This is another call for simplicity. Make code easy to understand. For
+yourself now to debug, for your future self to know what the hell you were
+thinking, and for others that might want to use this code in the future.
+Hopefully all the code you write will be read again. Otherwise, what’s
+the point? That might not be true for your assignments in most classes,
+but the point of the assignments it to practice for the real world. So I
+want to make sure that the code that you write in class is on the same
+standard that it needs to be out there on your job. Also, think of the
+poor course assistants.
+
+---
+class: padding-top
+
+- Don’t be clever!
+
+
+- Make it readable!
+
+
+- Future you is the most likely person to try to understand your code.
+
+
+
+???
+So to summarize:
+[read]
+
+And there's one more trick to making your code readable and understandable.
+Don't write code. The more you write, the more you need to read. If you can
+avoid writing code, do it! If you can get a 10% speedup by making your code
+three times as long, usually it's not worth it.
+
+--
+- Avoid writing code.
+
+---
+class: center, middle
+
+# Python basics
+
+???
+So now I want to go over some Python basics. And don’t worries, we
+won’t go over syntax or the standard library.
+
+---
+class: spacious
+
+# Why Python?
+
+- General purpose language
+- Great libraries
+- Easy to learn / use
+- Contenders: R (Scala? Julia?)
+
+???
+First, a short defense on why I’m teaching this class in Python.
+Python is a general purpose programming language, unlike matlab or R,
+so you can do anything with it.
+It is very powerful, mostly because there are so many libraries for
+python that you can do basically anything with just a couple of lines.
+Python is arguably easy to learn and easy to use, and it allows for a
+lot of interactivity.
+The only real contender in the data science space that I can think of
+is R, which is also a good option, but well, I’m not an R guy. Much
+of this course could be taught in R instead, though the software
+development tooling is a bit worse (but other things are better).
+You might have better chances with Python in industry jobs.
+There’s also Scala, but I’d argue that’s way too complicated and
+doesn’t have the right tools for the kind of data analysis and machine
+learning we want to do in this course.
+
+---
+class: spacious
+
+# The two language problem
+
+Python is sloooow…
+
+
+- Numpy: C
+- Scipy: C, fortran
+- Pandas: Cython, Python
+- Scikit-learn: Cython, Python
+
+- CPython: C
+
+???
+So there’s one thing that I really  don’t like about Python. Any
+idea what that is?
+Python is slooow. Like really slow.
+So you know all these great libraries for Python for data science, like
+numpy, scipy, pandas and scikit-learn. Do you know what language they
+are written in?
+Numpy is written in C,
+Scipy is written in C and Fortran, pandas and scikit-learn are written
+in Cython and Python. And Cpython, the interpreter we use, is written
+in … C obivously
+That creates a bit of a divide between the users, who write python,
+and the developers, who write C and Cython. I have to admit, I don’t
+write a lot of Cython myself, mostly Python… but that’s not great.
+So you need to be aware that if you actually want to implement new
+algorithms, and you can’t express them with pandas and numpy, you
+might need to learn cython.
+For this course, this won’t really be a problem, though. We’ll stay
+firmly on the Python side.
+
 
 ---
 
-# Infrastructure and basic tools (Wk 2, 3)
+# Python 2 vs Python 3
 
-- Python, Jupyter
-- git, github
-- testing, documentation, continuous integration
-- Writing fast Python
-- Numpy, matplotlib, pandas
+- “current” : 2.7, 3.4, 3.5, 3.6, 3.7
 
 ???
+There’s another thing that you could call the two language problem,
+it’s python 2 vs python 3.
+The last version of python 2 is python 2.7, and really no-one should be
+using anything earlier. The commonly used versions of python 3 are 3.4
+and 3.5, 3.6 and 3.7.
+There is really no reason to use python 2 any more. Unless you already
+wrote lots of code earlier. If you’re at a company it might not be
+easy to make the  transition, and that’s why python 2 is still around.
 
-Starting next week, we'll talk about the basic infrastruture.
-This will be not very specific to machine learning, but it's an important
-foundation for any applied data science. We'll talk about Python and Jupyter,
-about version control with git and github, and about testing and continuous integration.
+So the important part are the changes. Anyone know what changed?
 
-Who of you has used continuous integration? Many students that I talk to don't
-even know what that means. That's shocking to me, because it's part of any
-software related job you'll get. It's about automatically running tests
-via a service and it's a core piece of infrastructure for any software project.
+--
 
-We'll also talk about how to write efficient python code, and how to work with numpy,
-matplotlib and pandas. I'll spend some time on matplotlib, since some parts
-are not super intuitive, and a lot of it is often sweeped under the rug.
-Visualizing your data and models is really critical to any data analysis, though.
+Changes (that will bite you)
+
+- `print`
+
+- division
+
+- Iterators (range, zip, map, filter, dictionary keys, values, items)
+
+- Strings / unicode
+
+???
+The print statement was removed, now print is a function, so it need
+parenthesis. The most common and trivial change. Division was changed
+to produce floats, so if you devided 2 by 3, it was 2 before, and now
+it’s 2.5
+
+Then, many things that returned lists now return iterators, which is more
+memory efficient, but means you can’t necessarily retrieve things by
+index any more. That’s true for range, which now behaves like xrange
+before, zip, which behaves like izip, map and filter.
+Also, dictionary keys, values and items are now iterables and not
+lists. If you tried to index any of those, you probably had a bug anyhow.
+
+And really the main thing that changed is strings. And they changed
+completely. In 2, there was a string type and a unicode type. Now
+there’s a string type, which is always unicode, and a bytes type that
+is the raw bytes and needs an encoding to interpret.
+The story is really a bit complicated, and I suggest you read up on it.
+If your standard environment is Python2, you should update it to Python3
+today.
 
 ---
+class: spacious
 
-# Basics of Supervised Learning (Wk 3, 4)
+# Python 2 && Python 3
 
-- Generalization in practice
-- Nearest Neighbors, Nearest Centroid
-- Linear Classification and Regression
-- Penalties and Regularization
+- `from __future__ import print_function`
+- Six – tools for making 2 and 3 compatible code
+- 2to3 – convert python2 code to python3 code
 
 ???
 
-Once we finished with infrastructure and tools, we'll start working with scikit-learn
-and explore some of the basic machine learning algorithms like neighbors based
-algorithms and linear models, and how to do proper model evaluation and set up
-a basic machine learning workflow.
+If you write a library or code that you want to have reused, I suggest writing
+code that is compatible with both python 3 and python 2. Hopefully soon we
+can write Python3 only. For the first assignment I’ll make you do that, for
+later assignments the code only needs to run in 3.4 or newer.
+
+Generally it’s easy for code to run on both. You can just always
+use parenthesis on print, it will have no effect in python2. Or you
+can import features, like float division from the future. ` __future__`
+is a module that exists in python2 and python3 and that allows you to
+use certain python3 feature in python 2.
+Some cases are not covered, though, and the `six` package helps out in
+these cases. It provides some common names between python2 and python3.
+If you want to convert a codebase from python2 to python3, there’s an
+automatic converter called 2to3, which can do that for you.
+
+The next thing I want to talk about is managing python packages and environments.
 
 ---
+class: spacious
 
-# Data Preparation (Wk 4, 5)
+# Python ...
 
-- Preprocessing
-- Feature engineering
-- Dealing with missing values
-- Feature Selection
+Package management:
+
+- don't use system python!
+
+- use Virtual environments
+
+- understand pip (and wheels)
+
+- probably use Conda (and anaconda or conda-forge)
 
 ???
+Package management is really important if you want to become a serious python user.
+Unfortunately, it’s a bit tricky, partly due to the two language problem, which
+means packages have dependencies that are not in python.
+First of, you should be aware of the environment you are using. Usually
+it’s a good idea to work with virtual environments, in which you can
+control what software is installed in what version. If you’re on OS X
+or linux, your system will com with some python, but you don’t really
+want to mess with that. Create your own environments, and are aware of
+which environment you are using at any moment.
+The standard python way to install packages is pip, which is part of
+the setuptools package. Pip allows you to install all python packages in the pipy
+repository, which is basically all of them.
 
-Once we covered the basic algorithms, we'll dive more into data preparation,
-in particular preprocessing, feature engineering and missing values.
-For any real-world dataset you usually have to do quite a bit of work before you
-can feed it into a machine learning model. There will be a homework project
-centered around all of these.
+--
+???
+Until not so long ago, pip needed to compile all C code locally on your
+machine, which was pretty slow and complicated. Now, there are binary distributions,
+called wheels, which mean no compilation for most packages! If you’re compiling
+something when you’re installing, you’re probably doing it wrong.
+The issue with pip is that it only works for python packages, and some
+of our packages rely on linear algebra packages like blas and lapack,
+and you need to install them some other way.
+A really easy work-around for that is using a different package manager,
+called conda. It was created by a company called Anaconda (used to be continuum
+IO) and they ship a bundle called anaconda, which installs basically all the
+important packages. I recommend you use that for the course.
+Conda can be used with different source repositories. By default, it uses
+the anaconda one that is managed by the company. There’s also an open
+repository that is managed by the community that’s called conda-forge.
+In practice I use both conda and pip.
+---
+class: some-space
+
+# Pip and conda and upgrades
+
+- Pip upgrade works on dependencies (unless you do -no-dep)
+
+- pip has no dependency resolution!
+
+- conda has dependency resolution
+
+- Use conda environments!
+
+- upgrading a conda package with pip (or vice versa) will break stuff!
+
+???
+Oh and one word of warning: if you do pip upgrade somepackage, it will
+also update all the dependencies. That is often not what you want, in
+particular if you are using it in a conda environment or if you installed
+a particular version of numpy or scipy that you don’t want upgraded.
+An imporatant thing to keep in mind about pip is that it has no dependency
+resolution, which means it will install the dependencies for any
+package you install, but it won't care about all the packages you installed
+before. So whenever you're using pip to install something, it could potentially
+break an already installed package.
+Conda on the other hand has a dependency resolution mechanism, which means
+it'll ensure that all the packages that you installed are compatible with each other.
+Sometimes there are conflicts between packages, though, which might prevent
+you from installing certain combinations.
+The solution here is to make liberal use of conda environments.
+If you need to work on a specific project, you should have a conda environment
+for that project ant it's requirements. Conda environments are really very useful
+and easy to use.
+
+Finally, don't try to upgrade a package with pip if it was installed
+with pip or the other way around. So if you mix conda and pip, make sure
+you check which one you used before upgrading. I recommend to use conda
+whenever possible.
 
 ---
+# Environments and Jupyter Kernels
+.smaller[
+- Environment != kernels
+- Use nb_conda_kernels or add environment kernels manually:
 
-# Non-linear machine learning models (Wk 5, 6)
-
-- Support Vector Machines and Kernels
-- Decision Trees
-- Random Forests
-- Gradient Boosting
-- Model Calibration
-
+.smallest[
+```bash
+source activate myenv
+python -m ipykernel install --user --name myenv --display-name "Python (myenv)"
+source activate other-env
+python -m ipykernel install --user --name other-env --display-name "Python (other-env)"
+```
+]
+- Even with `nb_conda_kernels`: need to install `ipykernel` package.
+]
+.left-column[
+![:scale 100%](images/kernel_other_env.png)
+]
+.right-column[
+![:scale 100%](images/kernel_other_env2.png)
+]
 ???
 
-After we taked about how to prepare data, we'll look into more powerful supervised models.
-We'll look into support vector machines and kernel-based methods, and then dive a bit deeper into
-tree-based models. Tree-based models, in particular gradient boosted trees, have been very
-successful and are some of the best off-the-shelf methods for machine learning.
+If you're using conda environments, you will want to use them in your jupyter notebooks.
+However, jupyter is not immediately aware of your environments. Jupyter runtime environments
+are defined by kernels, which can be python environments, or different programming languages.
+You need to make sure that jupyter is aware of your environments to use them as a kernel.
+One way is to manually add them by using this command here which invokes `ipykernel install`.
+That works with any kind of python environment.
+For conda environments specifically, you can also install the `nb_conda_kernels` package,
+which will automatically create kernels for all environments that contain the `ipykernel`
+package. If you do either of them, you'll get a choice of which kernel you want to use for
+a notebook. That's a great way to use different versions of python, like 2 and 3, or different
+versions of scikit-learn or matplotlib or anything else.
+
+There is a bit more tooling around python that I want to talk about next.
 
 ---
+class: spacious
 
-# Model evaluation and imbalanced data (Wk 7)
+# Dynamically typed, interpreted
 
-- Metrics for binary and multi-class classification
-- Metrics for regression
-- Analyzing predictions
-- Handling imbalanced datasets for classification
+- Invalid syntax lying around
+
+- Code is less self-documenting
 
 ???
-
-Knowing all these machine learning models, we come back to the workflow, in particular
-the evaluation. Model evaluation is a tricky beast in practice, and it's often hard
-to decide which model is best, and how to tell.
-We'll also look into methods that are designed for classification with very imbalanced
-classes, something you'll see very frequently in practice.
-
-That concludes the main section on supervised learning.
+One of the reasons Python is so easy to learn and use is because it’s
+a dynamically typed languages.
+So who of you have worked with statically typed languages like C, C++,
+Java or Scala?
+It’s often a bit cumbersome that you have to declare the type of
+everything, but it provides some safety nets. For example you know that
+if the code compiles, the syntax is correct everywhere. You don’t know
+whether the code does what you want, but you know it’ll do something.
+Mabye crash your machine, but whatever.
+Also, arguably, dynamically typed code is less self-documenting. If I write a
+function without documentation, it’s very hard for you to guess what I
+expect the input types to be. There’s now type annotations for Python,
+which is great, but they are not supported in Python2 and are not adopted
+everywhere yet. So how can we get back our safety nets?
 
 ---
+class: spacious
 
-# Decomposition Methods (Wk 10)
+# Editors
 
-- PCA
-- Discriminant Analysis
-- Manifold Learning
-- Non-negative Matrix Factorization
+- Flake8 / pyflake
 
-???
+- Scripted / weak typing: Have a syntax checker!
 
-We'll then look into some unsupervised models, starting with decomposition methods.
-These are often useful for exploratory analysis and plotting, but can also be used
-in other situations. We'll stick to the most commonly used methods like
-Principal components, Non-negative matrix factorization and t-SNE.
+- write pep8 (according to the standard, not the tool)
 
----
-
-# Clustering (Wk 10, 11)
-
-- K-Means
-- DBScan
-- Agglomerative Clustering
-- Spectral Clustering
-- Supervised evaluation metrics
-- Unsupervised evaluation metrics
+- use autopep8 if you have code lying around
 
 ???
-
-A second area of unsupervised learning that is often used in practice, mostly
-in exploratory settings, is clustering. We'll discuss some of the standard
-clustering approaches and how to evaluate them.
-As this is unsupervised learning, there's usually no correct answer, and
-picking and tuning algorithms is even harder than for supervised learning.
-
----
-
-# Outlier Detection (Wk 11)
-
-- One Class SVM
-- Robust Covariance Estimates
-- Isolation Forests
-
-???
-
-The last class of unsupervised models that we'll look into is outlier detection.
-In Outlier Detection we are trying to find data points that look odd.
-That's helpful if you want to detect rare events, but you don't know what these
-might look like. Applications are fraud detection, network security, hardware failures
-and so on.
-
-That concludes the section on unsupervised methods.
-
----
-
-# Text Data (Wk 12, 13)
-
-- n-grams and Bag-of-words models
-- Preprocessing text
-- Text classification
-- Topic models
-- word embeddings and word vectors
-
-
-???
-
-The final direction of the course will be about how to work with certain types of data
-that need special treatment. We'll start with text data, and discuss the classical bag-of-word
-approach, as well as the more recent word vectors and embedding approaches.
-
----
-
-# Neural Networks (Wk 13, 14)
-
-- Backpropagation
-- Tensorflow
-- Keras
-- Learning Algorithms
-- Image data and convolutional neural networks
-- Best practices for neural networks
-
-???
-
-Then, we'll look at neural networks, and how convolutional neural networks can
-be applied to image data.  Before we go to image data we'll actually go through
-neural networks in some depth, covering libraries and algorithms.
-
----
-
-# Time Series Data (Wk 15)
-
-- The forecasting task
-- Evaluation of forecasting
-- ARMA
-- ARIMA
-
-???
-
-The very last part will be about time series data, and how to work on forecasting problems.
-We'll only briefly cover this topic, and mostly look at classical approaches like Autoregressive models.
+One of the simplest fixes is to have a syntax checker in your
+editor. Whatever editor you’re using, make sure you have something like
+flake8 or pyflake installed that will tell you if you have obvious errors.
+These will also tell you if you have unused imports, undeclared variables
+or unused variables. All that helps you to immediately fix problems,
+and not wait until you run your program.
+I also recommend having a style checker. Flake8 also enforces pep8,
+which is the python style guide.
+You should write pep8 compatible code. It will make it easier for others
+to read your code, and once you’re used to it, it’ll make it easier
+for you to read other’s code.
+If you want to convert code to be pep8 compatible, check out the autopep8
+package. The pep8 tool is very strict these days, and I don't heed
+all the warnings. There is a configuration file you can use to silence
+the more obnoxious ones. When I say you should write pep9, I mean
+you should write according to the standard, not the tool.
+The first guideline of pep8 is to use your own judgment and not
+blindly follow the guide.
 
 ---
 class: middle
