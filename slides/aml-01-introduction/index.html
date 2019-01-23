@@ -27,8 +27,8 @@ Andreas C. Müller
 
 Hey and welcome to my course on Applied Machine Learning. As you can see we
 have a pretty full class so make sure you don’t hog too much space.  I’m
-Andreas Mueller, I’m a lecturer at the DSI and I spend some of my time working
-on scikit-learn development. Also, I decided to go on a first name basis with
+Andreas Mueller, I’m a reseach scientist at the DSI and I spend some of my time working
+on scikit-learn development. Also, I'm going on a first name basis with
 people in the course, so you can call me Andy. If you have any feedback about
 the class, feel free to send me an email or drop by my office hours. Also feel
 free to interrupt me with questions. I’m not sure if that’ll work with so big a
@@ -39,9 +39,103 @@ on it.  For those of you who have taken a machine learning class, or who are
 taking it now, some things might be a bit redundant, but I promise you there’ll
 be a lot of new stuff in this course. Who’s taking machine learning this
 semester, raise your hand? And who has taken it before? And who hasn’t?
+I'm recording all of these lectures and they'll go up on youtube.
 
 FIXME examples of supervised learning?
 FIXME add Hal's and Chris' book?
+
+
+---
+
+# Logistics
+
+## Email
+andreas.mueller@columbia.edu
+(NOT amueller who is someone else)
+
+### CAs: Pranjal Bajaj, Ujjwal Peshin, Liyan Nie, Yao Fu, Luv Aggarwal, Sukriti Tiwari
+
+## Office Hours
+- Andreas Müller Wednesdays 10am-11am, Interchurch 320 K
+- CA office hours: TBA
+
+???
+
+Before we get started, here’s some logistics. I'll post all the dates
+on the course website and piazza. My office hours are Thursdays, and I’m in the
+Interchurch building.
+
+About enrollment: The class is currently full and there's a long waiting list.
+If you're a DSI student, you should be in. Otherwise you can wait for people to drop.
+If you're a PhD student and on the waiting list, please contact me.
+If you're not a PhD or DSI student, please don't contact me.
+You can informally sit in on the course, everything will be public.
+I might give those auditing informally access to courseworks later.
+
+---
+
+# Logistics
+
+.larger[
+- Course website
+http://www.cs.columbia.edu/~amueller/comsw4995s19/<br /><br />
+- Six programming assignments<br /><br />
+- Grade: 60% homeworks, 20% first examp, 20% second exam<br /><br />
+]
+
+???
+
+If you haven’t already, please check out the course website which has the
+syllabus and other information. I’ll link to the slides there, too.  The most
+up-to-date material will always be on this website and the github repository,
+which is linked from there. There will be 6 homeworks, all will be
+programming, submitted via github. The homeworks will make up 60% of the grade,
+and there’ll be two exams, each making up 20% of the grade.
+You can also check out last years' schedule which has slides and videos.
+This year will mostly follow the same structure.
+ 
+---
+
+# Slides and course materials
+
+.center[
+![:scale 40%](images/slides_and_notes.png)
+]
+
+Using markdown with remark. Press "p" for notes.
+
+???
+
+As I said, you can find the slides on the website or on github. 
+The slides are all written in markdown and on github. 
+Hopefully using Markdown will make it easier to provide corrections for the slides.
+If you open the slides in the browser, you can press "P" for presenter mode
+and you'll see my notes. These are partially transcripts of last years lectures.
+I haven't fully proof-read those, so if you find any issues asnd typos, please let me know,
+or even better, send me a pull request with fixes.
+The same goes for the slides themselves.
+---
+class: middle
+
+# Lecture Recordings
+???
+All lectures will be recorded and posted publicly.
+You can check out last year's lecture to get an idea of what that looks like.
+If you're asking a question, the mic might pic you up, and you might end up audible on youtube.
+Does anyone have a problem with that? I'll have you fill out a consent form with the first homework.
+Really, it's unlikely that it's possible to hear or identify you, but I want to make sure I don't
+get sued, and I don't really have the resources to edit all the videos.
+
+---
+# Plagiarism and Code copying
+
+- Homeworks are checked for plagiarism
+- Copied code will result in 0 points for all involved
+- Copying from my slides or online sources (Stack overflow, tutorials, etc. ) is fine.
+
+???
+You should acknowledge external sources, you don't have to acknowledge copying from my slides or notebooks.
+
 ---
 
 class: center, middle
@@ -64,54 +158,6 @@ contributing, the link is here. If you want to do a project with me,
 the best way is to start solving some of the easy issues on the issue
 tracker to get familiar with the project and the workflow before working
 on something bigger.
-
----
-
-# Logistics
-
-## Email
-andreas.mueller@columbia.edu
-(NOT amueller who is someone else)
-
-### CAs: Rajath Kumar, Isht Dwivedi, Kevin Raji Cherian, Vinale Kale, Ben Lai
-
-## Office Hours
-- Andreas Müller Thursdays 11am-12pm, 410 Mudd
-- Kevin Raji Cherian Fridays 5pm-7pm
-- Rajath Kumar Wednesdays 7pm-9pm
-- TBD
-
-???
-
-Before we get started, here’s some logistics. There’s four course assistance to
-this classi so far, Rajath, Isht, Kevin and Vinale, who are here to help you.
-We'll probably have one or two more join by the end of the week.
-They all have office hours in the CS TA Room. I'll post all the dates
-on the course website and piazza. My office hours are Thursdays, and I’m in the
-Data Science space in the Mudd building.
-
-Oh and about enrollment: If you’re not a DSI student, and you haven’t heard
-from us about enrollment, you’ll hear from us this week.
-
----
-
-# Logistics
-
-.larger[
-- Course website
-http://www.cs.columbia.edu/~amueller/comsw4995s18/<br /><br />
-- Six programming assignments<br /><br />
-- Grade: 60% homeworks, 20% first examp, 20% second exam<br /><br />
-]
-
-???
-
-If you haven’t already, please check out the course website which has the
-syllabus and other information. I’ll link to the slides there, too.  The most
-up-to-date material will always be on this website and the github repository,
-which is linked from there. There will be 6 homeworks, all will be
-programming, submitted via github. The homeworks will make up 60% of the grade,
-and there’ll be two exams, each making up 20% of the grade. 
 
 ---
 
@@ -139,33 +185,6 @@ website.
 If you want to brush up on your Python skills, I also recommend the Python Data
 Science Handbook by my friend Jake Vanderplas. It's linked on the course page
 under the prerequisits.
-
----
-
-# Slides and course materials
-
-.center[
-![:scale 40%](images/slides_and_notes.png)
-]
-
-Using markdown with remark. Press "p" for notes.
-
-???
-
-As I said, you can find the slides on the website or on github. I’ll probably
-publish slides with and without notes. My goal is to write a note for each
-slide that says what I’m gonna say. So it’s like a script for the lecture.
-Here’s what this looks like. I really wanted to have video recording, but I'm
-not sure yet whether this will work out.  I might also publish some Jupyter notebooks
-at some point, if I feel they might help. In general, I’ll mostly do standard
-slides, though.
-The slides are all written in markdown and on github. If you find any errors
-or have suggestions, don't hesitate to send me pull requests.
-In the past I have used libre office impress, but that produces binary
-files that you can't easily version control. Hopefully using Markdown
-will make it easier to provide corrections for the slides.
-If you open the slides in the browser, you can press "P" for presenter mode
-and you'll see my notes.
 
 ---
 
@@ -370,15 +389,19 @@ gives you the correct answers y_i.
 ---
 
 # Generalization
-
+.padding-top[
 .left-column[
-Not only <br />
+Not only
+
+
 also for new data:
 ]
 
-.right-column[$f(x_i) \approx y_i$,<br />
+.right-column[$f(x_i) \approx y_i$,
+
+
 $f(x) \approx y$
-]
+]]
 ???
 For both regression and classification, it’s important to keep in mind the
 concept of generalization.
@@ -392,8 +415,13 @@ from the distribution. We’ll go into much more detail about generalization in
 about a week, when we dive into supervised learning. 
 
 ---
+class: spacious
 
 # Examples of Supervised Learning
+
+- spam detection
+- medical diagnosis
+- add click prediction
 
 ???
 
@@ -501,9 +529,9 @@ class: center, middle
 
 ???
 
-This might be true, but as long as we are trying to solve science and business
-problems, I think supervised learning is our best bet for now. It's probably
-not going to lead us to creating some superhuman general intelligence.
+This is the motto of Yann LeCun. Last year I said this is not true yet, this year it might be,
+in particular for text processing.
+In most cases there is a strong supervised component, though.
 
 ---
 
@@ -556,7 +584,7 @@ Statistics
 .right-column[
 Machine learning
 - data first
-- prediction emphasiz
+- prediction emphasis
 ]
 
 ???
@@ -591,7 +619,7 @@ Statistics
 .right-column[
 Machine learning
 - data first
-- prediction emphasiz
+- prediction emphasis
 ]
 
 ???
@@ -1110,80 +1138,21 @@ firmly on the Python side.
 
 # Python 2 vs Python 3
 
-- “current” : 2.7, 3.4, 3.5, 3.6, 3.7
+- “current” : (2.7), 3.6, 3.7
+
+- Don't use Python 2
 
 ???
 There’s another thing that you could call the two language problem,
 it’s python 2 vs python 3.
 The last version of python 2 is python 2.7, and really no-one should be
-using anything earlier. The commonly used versions of python 3 are 3.4
-and 3.5, 3.6 and 3.7.
-There is really no reason to use python 2 any more. Unless you already
+using anything earlier. The commonly used versions of python 3 are 3.6 and 3.7.
+There is really no reason to use python 2 any more and scikit-learn already doesn't
+support it in it's current development version, same for numpy and matplotlib. Unless you already
 wrote lots of code earlier. If you’re at a company it might not be
 easy to make the  transition, and that’s why python 2 is still around.
 
 So the important part are the changes. Anyone know what changed?
-
---
-
-Changes (that will bite you)
-
-- `print`
-
-- division
-
-- Iterators (range, zip, map, filter, dictionary keys, values, items)
-
-- Strings / unicode
-
-???
-The print statement was removed, now print is a function, so it need
-parenthesis. The most common and trivial change. Division was changed
-to produce floats, so if you devided 2 by 3, it was 2 before, and now
-it’s 2.5
-
-Then, many things that returned lists now return iterators, which is more
-memory efficient, but means you can’t necessarily retrieve things by
-index any more. That’s true for range, which now behaves like xrange
-before, zip, which behaves like izip, map and filter.
-Also, dictionary keys, values and items are now iterables and not
-lists. If you tried to index any of those, you probably had a bug anyhow.
-
-And really the main thing that changed is strings. And they changed
-completely. In 2, there was a string type and a unicode type. Now
-there’s a string type, which is always unicode, and a bytes type that
-is the raw bytes and needs an encoding to interpret.
-The story is really a bit complicated, and I suggest you read up on it.
-If your standard environment is Python2, you should update it to Python3
-today.
-
----
-class: spacious
-
-# Python 2 && Python 3
-
-- `from __future__ import print_function`
-- Six – tools for making 2 and 3 compatible code
-- 2to3 – convert python2 code to python3 code
-
-???
-
-If you write a library or code that you want to have reused, I suggest writing
-code that is compatible with both python 3 and python 2. Hopefully soon we
-can write Python3 only. For the first assignment I’ll make you do that, for
-later assignments the code only needs to run in 3.4 or newer.
-
-Generally it’s easy for code to run on both. You can just always
-use parenthesis on print, it will have no effect in python2. Or you
-can import features, like float division from the future. ` __future__`
-is a module that exists in python2 and python3 and that allows you to
-use certain python3 feature in python 2.
-Some cases are not covered, though, and the `six` package helps out in
-these cases. It provides some common names between python2 and python3.
-If you want to convert a codebase from python2 to python3, there’s an
-automatic converter called 2to3, which can do that for you.
-
-The next thing I want to talk about is managing python packages and environments.
 
 ---
 class: spacious
@@ -1284,7 +1253,7 @@ source activate other-env
 python -m ipykernel install --user --name other-env --display-name "Python (other-env)"
 ```
 ]
-- Even with `nb_conda_kernels`: need to install `ipykernel` package.
+- https://jakevdp.github.io/blog/2017/12/05/installing-python-packages-from-jupyter/
 ]
 .left-column[
 ![:scale 100%](images/kernel_other_env.png)
