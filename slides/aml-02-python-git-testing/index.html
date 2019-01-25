@@ -27,15 +27,9 @@ Andreas C. Müller
 
 Hey. Welcome to the second lecture on applied machine learning. Last
 week we talked a bit about very general and high-level issues in machine
-learning. Today, we’ll go right down to the metal. Actually, things we
-will talk about today are more generally about software engineering and less
-specifically about machine learning. If
-you want to build real-world systems, software engineering practices
-are really incredibly important.
-For those of you from CS, I hope this is a reminder, for those of
-you from DSI, some this is maybe new.
-We’ll talk about version control, in particular git, about some basic
-python, about testing, continuous integration and about documentation.
+learning. Today, we’ll go right down to the metal.
+We’ll talk about version control, in particular git, about testing,
+continuous integration and about documentation.
 Also, I apologize in advance for the slides. There’s a lot of bullet
 points and few diagrams and I don’t really like that.
 ---
@@ -87,40 +81,252 @@ what’s going on.
 
 ---
 
-# Git Basics
+# Version Control with Git
 
-- Repository
 
-`$ git init`
+## What is version control?
 
-`$ rm .git`
+![do you need git](images/do-you-need-git.png)
+---
 
-???
-There are some basic units of git that I want to go through. The first
-is a repository. What’s a repository?
-A folder who’s content we want to track with version control.
-And how can you create one?
-Run git init in a folder.
-And how can you make a folder not a repository any more?
-By removing the .git subfolder. That’s it.
-A repository is entirely self-contained. There is no service or database
-or anything like that, it’s all plain files within that folder. That
-also means if you remove the folder, you lose everything if you don’t
-have a backup.
+## Why do I care about the history of a project?
 
-The next basic concept is a commit. What’s that?
-It’s a snapshot of the state of the folder, with a message attached,
-and identified with an ID. It’s also a node in a graph that describes
-the history of the snapshot, and usually has one or two parents, and
-can have arbitrary many children.
-The ID is a hash of the state and all the parents, so if you change
-anything, you change the hash and therefore the commit.
+![final_doc](images/final_doc.jpg)
+---
+## Configuration
 
-The last basic concept I want to talk about is the remote. That’s just
-a pointer to another repository, often github, but it could also just be
-another folder on your computer.
-You can synchronize with that by pushing or pulling changes. 
---
+
+```bash
+git config --global user.name "Andreas Mueller"
+git config --global user.email "amueller@nyu.edu"
+git config --global color.ui "auto"
+git config --global core.editor "nano"
+```
+
+- git command format: git verb
+- verb: config
+    - who you are
+- --global 
+    - apply everywhere
+- color: color code output
+- editor: set default editor 
+
+You can change these setting at any time.
+Show your configuration:
+
+
+```bash
+git config --list
+```
+
+---
+
+## Creating a repository
+
+- make a directory called planets
+- cd into planets directory
+
+
+```bash
+cd /tmp
+rm -rf planets
+mkdir planets
+cd planets
+```
+
+
+```bash
+git init
+```
+
+- make planets directory a repository 
+
+
+```bash
+ls -a
+
+```
+
+- .git directory is where git stores the history of the project
+
+
+
+```bash
+git status
+```
+---
+
+## Tracking Changes to Files
+
+- Create a file to track
+    - Open your text editor
+    - Type: cold and dry but everything is my favorite color
+    - save file as mars.txt
+- Check in with git
+
+- start tracking file
+
+- Record current state
+
+    - ``-m`` : commit message inline
+
+---
+
+## Exercise 1:
+
+- Create a file called jupiter.txt with a sentence about jupiter in your planets directory
+- start tracking and record the current state of jupiter.txt
+- Put your green post-it up when you are done
+
+
+```bash
+touch filename
+```
+
+
+```bash
+git status
+git add filename
+git commit -m "commit message"
+```
+---
+
+## Viewing your history
+
+
+```bash
+git log
+```
+---
+
+## Changing a File
+
+
+Open your mars.txt file and add:
+>The two moons may be a problem for Wolfman
+
+Check the status of your files
+
+
+```bash
+echo "The two moons may be a problem for Wolfman" >> mars.txt
+```
+
+
+```bash
+git status
+```
+
+View the changes you made
+
+
+```bash
+git diff mars.txt
+```
+
+Tell git which files you want to record changes in
+
+
+```bash
+git add mars.txt
+```
+
+Save changes to revision history
+
+
+```bash
+git commit -m "concerns about Mars' moons"
+```
+---
+
+##  What are we doing?
+
+![git staging area](images/git-staging-area.png)
+---
+
+
+## A note on viewing changes
+
+     
+Changes between working directory and what was last staged
+
+
+```bash
+git diff
+```
+
+Changes between staging area and last commit
+
+
+```bash
+git diff --staged
+```
+
+---
+
+## Referencing different versions
+
+- Shorthand for different versions of a repository (refers to commits)
+    - Current Version (most recent commit): ``HEAD``
+    - Version before current: ``HEAD~1``
+    - Version before that: ``HEAD~2``
+- Each of these also has a commit hash
+    - use ``git log`` to get appropriate hash
+
+---
+
+## Exploring History
+
+Changes made in the last commit         
+
+
+```bash
+git diff HEAD~1
+```
+
+Changes made in the last 2 commits
+
+
+```bash
+git diff HEAD~2
+```
+
+Changes made since commit hash...
+
+
+```bash
+git diff 0b0d55e
+```
+
+- first 7 characters
+- use ``git log`` to find commit you want
+
+---
+
+## Recovering Older Versions
+
+- Overwrite mars.txt:
+
+
+```bash
+echo 'The mummy will like the dry air.' >  mars.txt
+cat mars.txt
+```
+
+Recover last recorded version:
+
+
+```bash
+git checkout HEAD mars.txt
+```
+
+* ``checkout HEAD`` means revert to version in ``HEAD``
+* can use commit hash to revert to even older version
+* ``mars.txt``: tells git which file to revert
+* in ``git status`` they list this option with ``--`` instead of ``HEAD``. This is a shortcut.
+
+---
+
 
 - Commit
 
