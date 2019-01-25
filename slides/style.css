@@ -96,4 +96,5 @@
       .tiny-code .remark-code, .remark-inline-code .tiny-code{
         font-size: 15px;
       }
-      .remark-code, .remark-inline-code { font-family: 'Ubuntu Mono'; }
+      .remark-code, .remark-inline-code  { font-family: 'Ubuntu Mono';}
+      .hljs.remark-code {background: #d0d0d0}

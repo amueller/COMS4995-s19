@@ -15,7 +15,7 @@
 
 class: center, middle
 
-### W4995 Applied Machine Learning
+## W4995 Applied Machine Learning
 
 # Tools and Infrastructure
 
@@ -32,13 +32,23 @@ We’ll talk about version control, in particular git, about testing,
 continuous integration and about documentation.
 Also, I apologize in advance for the slides. There’s a lot of bullet
 points and few diagrams and I don’t really like that.
+
+I'm reusing material from
+http://rogerdudler.github.io/git-guide/
+
+and software carpentry
 ---
 
 class: middle
 
-# So you think you know git?
+# Git and Github
+
+https://guides.github.com/
+
+http://rogerdudler.github.io/git-guide/
 
 ???
+FIXME: logos
 
 So this first part is about git. I assume you all know about git. Who
 here has not used git so far?
@@ -80,28 +90,35 @@ great, but the user interface is horrible. But let’s try and understand
 what’s going on.
 
 ---
+class: center
 
-# Version Control with Git
 
-
-## What is version control?
-
-![do you need git](images/do-you-need-git.png)
+![:scale 90%](images/do-you-need-git.png)
 ---
+class: center
+# Why do I care?
 
-## Why do I care about the history of a project?
-
-![final_doc](images/final_doc.jpg)
+![:scale 40%](images/final_doc.jpg)
+???
+FIXME cutting
 ---
-## Configuration
+# Configuration
 
 
 ```bash
 git config --global user.name "Andreas Mueller"
-git config --global user.email "amueller@nyu.edu"
+git config --global user.email "acm2248@columbia.edu"
 git config --global color.ui "auto"
-git config --global core.editor "nano"
+git config --global core.editor "vim"
 ```
+
+Show your configuration:
+
+
+```bash
+git config --list
+```
+???
 
 - git command format: git verb
 - verb: config
@@ -112,26 +129,14 @@ git config --global core.editor "nano"
 - editor: set default editor 
 
 You can change these setting at any time.
-Show your configuration:
-
-
-```bash
-git config --list
-```
-
 ---
 
-## Creating a repository
-
-- make a directory called planets
-- cd into planets directory
+# Creating a repository
 
 
 ```bash
-cd /tmp
-rm -rf planets
-mkdir planets
-cd planets
+mkdir homework1
+cd homework1
 ```
 
 
@@ -139,24 +144,51 @@ cd planets
 git init
 ```
 
-- make planets directory a repository 
-
-
 ```bash
 ls -a
 
 ```
 
-- .git directory is where git stores the history of the project
-
-
 
 ```bash
 git status
 ```
+???
+- make homework1 directory a repository 
+- .git directory is where git stores the history of the project
+
+you can remove the tracking information by removing the .git folder.
+So deleting homework1 erases everything.
+
+---
+# Cloning a repository
+
+- cd out of planets, create a new directory called planets_collab, and cd into it
+
+
+```bash
+cd ../
+mkdir planets_collab
+cd planets_collab
+```
+
+    
+
+- Clone Dracula's repository
+    - make sure its set to HTTPS
+    
+![clone](images/clone.jpg)
+
+- cd into the planets directory you just downloaded
+- put up your green post-it
 ---
 
-## Tracking Changes to Files
+#  Workflow?
+
+![git staging area](images/git-staging-area.png)
+---
+
+# Tracking Changes to Files
 
 - Create a file to track
     - Open your text editor
@@ -172,26 +204,7 @@ git status
 
 ---
 
-## Exercise 1:
-
-- Create a file called jupiter.txt with a sentence about jupiter in your planets directory
-- start tracking and record the current state of jupiter.txt
-- Put your green post-it up when you are done
-
-
-```bash
-touch filename
-```
-
-
-```bash
-git status
-git add filename
-git commit -m "commit message"
-```
----
-
-## Viewing your history
+# Viewing your history
 
 
 ```bash
@@ -199,7 +212,7 @@ git log
 ```
 ---
 
-## Changing a File
+# Changing a File
 
 
 Open your mars.txt file and add:
@@ -239,13 +252,8 @@ git commit -m "concerns about Mars' moons"
 ```
 ---
 
-##  What are we doing?
 
-![git staging area](images/git-staging-area.png)
----
-
-
-## A note on viewing changes
+# A note on viewing changes
 
      
 Changes between working directory and what was last staged
@@ -264,7 +272,7 @@ git diff --staged
 
 ---
 
-## Referencing different versions
+# Referencing different versions
 
 - Shorthand for different versions of a repository (refers to commits)
     - Current Version (most recent commit): ``HEAD``
@@ -276,7 +284,7 @@ git diff --staged
 
 ---
 
-## Exploring History
+# Exploring History
 
 Changes made in the last commit         
 
@@ -303,7 +311,7 @@ git diff 0b0d55e
 - use `git log` to find commit you want
 ---
 
-## Recovering Older Versions
+# Recovering Older Versions
 
 - Overwrite mars.txt:
 
@@ -325,379 +333,217 @@ git checkout HEAD mars.txt
 * in `git status` they list this option with `--` instead of `HEAD`. This is a shortcut.
 
 
-
 ---
 
-## What is going on here
+# What is going on here
 ![git checkout](images/git-checkout.png)
 ---
 
-    # Git Basics
-    
-    - Repository
-    
-    `$ git init`
-    
-    `$ rm .git`
-    
-    ???
-    There are some basic units of git that I want to go through. The first
-    is a repository. What’s a repository?
-    A folder who’s content we want to track with version control.
-    And how can you create one?
-    Run git init in a folder.
-    And how can you make a folder not a repository any more?
-    By removing the .git subfolder. That’s it.
-    A repository is entirely self-contained. There is no service or database
-    or anything like that, it’s all plain files within that folder. That
-    also means if you remove the folder, you lose everything if you don’t
-    have a backup.
-    
-    The next basic concept is a commit. What’s that?
-    It’s a snapshot of the state of the folder, with a message attached,
-    and identified with an ID. It’s also a node in a graph that describes
-    the history of the snapshot, and usually has one or two parents, and
-    can have arbitrary many children.
-    The ID is a hash of the state and all the parents, so if you change
-    anything, you change the hash and therefore the commit.
-    
-    The last basic concept I want to talk about is the remote. That’s just
-    a pointer to another repository, often github, but it could also just be
-    another folder on your computer.
-    You can synchronize with that by pushing or pulling changes. 
-    --
-
-
-# Collaborating using git & github
-
----
-## Remote repository
-
-- central location everyone can see
-- requires network
-- github, bitbucket
-- public vs private
-
-![git repo first push](images/github-repo-after-first-push.jpg)
----
-
-## Sign into github
-
-- go to github.com
-- sign into your account
-- Put up a green post-it
----
-## Create a new repository
-
-- Press the create a new repo button
-![create repo 1](images/create_repo1.jpg)
-
-- Call your repo planets and "create repository"
-- Follow the directions to push an existing repository
-- put up your green post-it
-
-![create repo 2](images/create_repo2.jpg)
-
----
-
-## Exercise: Explore your remote repository
-
-- at the top of the page click yourname/planets
-- Explore...
-
-![return to repo](images/return_to_repo.jpg)
-
----
-## what is my remote repository?
-
-
-```bash
-git remote -v
-```
-
-default nickname: origin
----
-# Starting your collaboration
-
-- Find a partner
-- Decide who is Dracula and who is Wolfman
-- You will be using Dracula's repository
-- put up your green post-it
-- put up your red post-it if you need a partner
----
-## Wolfman: Cloning a repository
-
-- cd out of planets, create a new directory called planets_collab, and cd into it
-
-
-```bash
-cd ../
-mkdir planets_collab
-cd planets_collab
-```
-
-    
-
-- Clone Dracula's repository
-    - make sure its set to HTTPS
-    
-![clone](images/clone.jpg)
-
-- cd into the planets directory you just downloaded
-- put up your green post-it
----
-## Dracula: adding a collaborator
-
-- Anyone can clone only collaborators can write
-- Dracula only:
-    - Click settings on the RHS
-    ![settings](images/settings.jpg)
-    - Click collaborators on the LHS
-    ![collaborators](images/collaborators.jpg)
-    - Add Wolfman's github username under collaborators
-
-
----
-## Collaborating
-
-
-### Dracula
-
-- modify mars.txt
-- save your changes
-- add and commit your changes
-- push your changes to the remote repository
-    
-> git push origin master
-
-### Wolfman
-
- - pull down your partner's changes
-
-> git pull origin master
-
-- add a line to the end of mars.txt
-- save your changes
-- add and commit your changes
-- push your changes to the remote repository
-    
-> git push origin master
----
-## Merge without conflict
-
-- Dracula: modify the first line of mars.txt, save, add, and commit
-- Wolfman: modify the last line of mars.txt, save, add, and commit
-- Dracula: pull down changes from Wolfman
-    - you will be asked to save a merge commit message in nano
-- Dracula: push your changes to the remote repository
-- Wolfman: pull down changes from Dracula and save the commit message
-- Wolfman: push your changes to the remote repository
-
-
-
----
-## Merge with conflicts
-
-- Dracula: Edit the last line of the mars.txt, save, add, and commit
-- Dracula: try to pull down changes from the remote repository
-
-![conflict message](images/conflict_message.jpg)
-
----
-## Resolving Conflicts
-
-- Dracula: open mars.txt
-![conflict](images/conflict_file.jpg)
-
-
-- Dracula: edit mars.txt to look like correct file
-    - remove extra text
-    - choose which lines you want to keep
-- Dracula: save, add, commit, push
-
----
-## Exercise: Repeat for Wolfman
-
-- Wolfman: pull down Dracula's changes
-- Dracula: change the first line of jupiter.txt
-- Dracula: save, add, commit, push
-- Wolfman: change the first line of jupiter.txt, add, commit
-- Wolfman: pull down Dracula's changes
-    - you will get a conflict
-    - open jupiter.txt and edit to look like final version
-    - save changes to jupiter.txt
-    - add, commit, push
-
-
-    
----
-
-
-# Collaborating using git & github
-
-
-## Remote repository
-
-- central location everyone can see
-- requires network
-- github, bitbucket
-- public vs private
-
-![git repo first push](images/github-repo-after-first-push.jpg)
-
-
-## Sign into github
-
-- go to github.com
-- sign into your account
-- Put up a green post-it
-
-## Create a new repository
-
-- Press the create a new repo button
-![create repo 1](images/create_repo1.jpg)
-
-- Call your repo planets and "create repository"
-- Follow the directions to push an existing repository
-- put up your green post-it
-
-![create repo 2](images/create_repo2.jpg)
-
-
-
-## Exercise: Explore your remote repository
-
-- at the top of the page click yourname/planets
-- Explore...
-
-![return to repo](images/return_to_repo.jpg)
-
-## what is my remote repository?
-
-
-```bash
-git remote -v
-```
-
-default nickname: origin
-
-# Starting your collaboration
-
-- Find a partner
-- Decide who is Dracula and who is Wolfman
-- You will be using Dracula's repository
-- put up your green post-it
-- put up your red post-it if you need a partner
-
-## Wolfman: Cloning a repository
-
-- cd out of planets, create a new directory called planets_collab, and cd into it
-
-
-```bash
-cd ../
-mkdir planets_collab
-cd planets_collab
-```
-
-    
-
-- Clone Dracula's repository
-    - make sure its set to HTTPS
-    
-![clone](images/clone.jpg)
-
-- cd into the planets directory you just downloaded
-- put up your green post-it
-
-## Dracula: adding a collaborator
-
-- Anyone can clone only collaborators can write
-- Dracula only:
-    - Click settings on the RHS
-    ![settings](images/settings.jpg)
-    - Click collaborators on the LHS
-    ![collaborators](images/collaborators.jpg)
-    - Add Wolfman's github username under collaborators
-
-
-
-## Collaborating
-
-
-### Dracula
-
-- modify mars.txt
-- save your changes
-- add and commit your changes
-- push your changes to the remote repository
-    
-> git push origin master
-
-### Wolfman
-
- - pull down your partner's changes
-
-> git pull origin master
-
-- add a line to the end of mars.txt
-- save your changes
-- add and commit your changes
-- push your changes to the remote repository
-    
-> git push origin master
-
-## Merge without conflict
-
-- Dracula: modify the first line of mars.txt, save, add, and commit
-- Wolfman: modify the last line of mars.txt, save, add, and commit
-- Dracula: pull down changes from Wolfman
-    - you will be asked to save a merge commit message in nano
-- Dracula: push your changes to the remote repository
-- Wolfman: pull down changes from Dracula and save the commit message
-- Wolfman: push your changes to the remote repository
-
-
-
-
-## Merge with conflicts
-
-- Dracula: Edit the last line of the mars.txt, save, add, and commit
-- Dracula: try to pull down changes from the remote repository
-
-![conflict message](images/conflict_message.jpg)
-
-## Resolving Conflicts
-
-- Dracula: open mars.txt
-![conflict](images/conflict_file.jpg)
-
-
-- Dracula: edit mars.txt to look like correct file
-    - remove extra text
-    - choose which lines you want to keep
-- Dracula: save, add, commit, push
-
-
-## Exercise: Repeat for Wolfman
-
-- Wolfman: pull down Dracula's changes
-- Dracula: change the first line of jupiter.txt
-- Dracula: save, add, commit, push
-- Wolfman: change the first line of jupiter.txt, add, commit
-- Wolfman: pull down Dracula's changes
-    - you will get a conflict
-    - open jupiter.txt and edit to look like final version
-    - save changes to jupiter.txt
-    - add, commit, push
-
-
-
-- Commit
-
+# Git Basics
+
+- Repository
+
+`$ git init`
+
+`$ rm .git`
+
+???
+There are some basic units of git that I want to go through. The first
+is a repository. What’s a repository?
+A folder who’s content we want to track with version control.
+And how can you create one?
+Run git init in a folder.
+And how can you make a folder not a repository any more?
+By removing the .git subfolder. That’s it.
+A repository is entirely self-contained. There is no service or database
+or anything like that, it’s all plain files within that folder. That
+also means if you remove the folder, you lose everything if you don’t
+have a backup.
+
+The next basic concept is a commit. What’s that?
+It’s a snapshot of the state of the folder, with a message attached,
+and identified with an ID. It’s also a node in a graph that describes
+the history of the snapshot, and usually has one or two parents, and
+can have arbitrary many children.
+The ID is a hash of the state and all the parents, so if you change
+anything, you change the hash and therefore the commit.
+
+The last basic concept I want to talk about is the remote. That’s just
+a pointer to another repository, often github, but it could also just be
+another folder on your computer.
+You can synchronize with that by pushing or pulling changes. 
 --
 
-- Remote
+
+# Collaborating using git & github
+
+---
+# Remote repository
+
+- central location everyone can see
+- requires network
+- github, bitbucket
+- public vs private
+
+![git repo first push](images/github-repo-after-first-push.jpg)
+---
+
+# Sign into github
+
+- go to github.com
+- sign into your account
+- Put up a green post-it
+---
+# Create a new repository
+
+- Press the create a new repo button
+![create repo 1](images/create_repo1.jpg)
+
+- Call your repo planets and "create repository"
+- Follow the directions to push an existing repository
+- put up your green post-it
+
+![create repo 2](images/create_repo2.jpg)
+
+---
+
+# Exercise: Explore your remote repository
+
+- at the top of the page click yourname/planets
+- Explore...
+
+![return to repo](images/return_to_repo.jpg)
+
+---
+# what is my remote repository?
+
+
+```bash
+git remote -v
+```
+
+default nickname: origin
+---
+# Merge without conflict
+
+- Dracula: modify the first line of mars.txt, save, add, and commit
+- Wolfman: modify the last line of mars.txt, save, add, and commit
+- Dracula: pull down changes from Wolfman
+    - you will be asked to save a merge commit message in nano
+- Dracula: push your changes to the remote repository
+- Wolfman: pull down changes from Dracula and save the commit message
+- Wolfman: push your changes to the remote repository
+
+
+
+---
+# Merge with conflicts
+
+- Dracula: Edit the last line of the mars.txt, save, add, and commit
+- Dracula: try to pull down changes from the remote repository
+
+![conflict message](images/conflict_message.jpg)
+
+---
+# Resolving Conflicts
+
+- Dracula: open mars.txt
+![conflict](images/conflict_file.jpg)
+
+
+- Dracula: edit mars.txt to look like correct file
+    - remove extra text
+    - choose which lines you want to keep
+- Dracula: save, add, commit, push
+    
+---
+
+
+# Collaborating using git & github
+
+
+# Remote repository
+
+- central location everyone can see
+- requires network
+- github, bitbucket
+- public vs private
+
+![git repo first push](images/github-repo-after-first-push.jpg)
+
+
+# Sign into github
+
+- go to github.com
+- sign into your account
+- Put up a green post-it
+
+# Create a new repository
+
+- Press the create a new repo button
+![create repo 1](images/create_repo1.jpg)
+
+- Call your repo planets and "create repository"
+- Follow the directions to push an existing repository
+- put up your green post-it
+
+![create repo 2](images/create_repo2.jpg)
+
+
+---
+# Exercise: Explore your remote repository
+
+- at the top of the page click yourname/planets
+- Explore...
+
+![return to repo](images/return_to_repo.jpg)
+
+---
+# what is my remote repository?
+
+
+```bash
+git remote -v
+```
+
+default nickname: origin
+
+---
+
+# Merge without conflict
+
+- Dracula: modify the first line of mars.txt, save, add, and commit
+- Wolfman: modify the last line of mars.txt, save, add, and commit
+- Dracula: pull down changes from Wolfman
+    - you will be asked to save a merge commit message in nano
+- Dracula: push your changes to the remote repository
+- Wolfman: pull down changes from Dracula and save the commit message
+- Wolfman: push your changes to the remote repository
+
+
+
+---
+
+# Merge with conflicts
+
+- Dracula: Edit the last line of the mars.txt, save, add, and commit
+- Dracula: try to pull down changes from the remote repository
+
+![conflict message](images/conflict_message.jpg)
+
+---
+
+# Resolving Conflicts
+
+- Dracula: open mars.txt
+![conflict](images/conflict_file.jpg)
+
+
+- Dracula: edit mars.txt to look like correct file
+    - remove extra text
+    - choose which lines you want to keep
+- Dracula: save, add, commit, push
+
 
 ---
 
