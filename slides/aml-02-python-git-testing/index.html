@@ -270,6 +270,7 @@ git diff --staged
     - Current Version (most recent commit): ``HEAD``
     - Version before current: ``HEAD~1``
     - Version before that: ``HEAD~2``
+
 - Each of these also has a commit hash
     - use ``git log`` to get appropriate hash
 
@@ -299,8 +300,7 @@ git diff 0b0d55e
 ```
 
 - first 7 characters
-- use ``git log`` to find commit you want
-
+- use `git log` to find commit you want
 ---
 
 ## Recovering Older Versions
@@ -315,57 +315,57 @@ cat mars.txt
 
 Recover last recorded version:
 
-
 ```bash
 git checkout HEAD mars.txt
 ```
 
-* ``checkout HEAD`` means revert to version in ``HEAD``
+* `checkout HEAD` means revert to version in `HEAD`
 * can use commit hash to revert to even older version
-* ``mars.txt``: tells git which file to revert
-* in ``git status`` they list this option with ``--`` instead of ``HEAD``. This is a shortcut.
+* `mars.txt`: tells git which file to revert
+* in `git status` they list this option with `--` instead of `HEAD`. This is a shortcut.
+
+
 
 ---
 
 ## What is going on here
 ![git checkout](images/git-checkout.png)
-
 ---
 
-# Git Basics
-
-- Repository
-
-`$ git init`
-
-`$ rm .git`
-
-???
-There are some basic units of git that I want to go through. The first
-is a repository. What’s a repository?
-A folder who’s content we want to track with version control.
-And how can you create one?
-Run git init in a folder.
-And how can you make a folder not a repository any more?
-By removing the .git subfolder. That’s it.
-A repository is entirely self-contained. There is no service or database
-or anything like that, it’s all plain files within that folder. That
-also means if you remove the folder, you lose everything if you don’t
-have a backup.
-
-The next basic concept is a commit. What’s that?
-It’s a snapshot of the state of the folder, with a message attached,
-and identified with an ID. It’s also a node in a graph that describes
-the history of the snapshot, and usually has one or two parents, and
-can have arbitrary many children.
-The ID is a hash of the state and all the parents, so if you change
-anything, you change the hash and therefore the commit.
-
-The last basic concept I want to talk about is the remote. That’s just
-a pointer to another repository, often github, but it could also just be
-another folder on your computer.
-You can synchronize with that by pushing or pulling changes. 
---
+    # Git Basics
+    
+    - Repository
+    
+    `$ git init`
+    
+    `$ rm .git`
+    
+    ???
+    There are some basic units of git that I want to go through. The first
+    is a repository. What’s a repository?
+    A folder who’s content we want to track with version control.
+    And how can you create one?
+    Run git init in a folder.
+    And how can you make a folder not a repository any more?
+    By removing the .git subfolder. That’s it.
+    A repository is entirely self-contained. There is no service or database
+    or anything like that, it’s all plain files within that folder. That
+    also means if you remove the folder, you lose everything if you don’t
+    have a backup.
+    
+    The next basic concept is a commit. What’s that?
+    It’s a snapshot of the state of the folder, with a message attached,
+    and identified with an ID. It’s also a node in a graph that describes
+    the history of the snapshot, and usually has one or two parents, and
+    can have arbitrary many children.
+    The ID is a hash of the state and all the parents, so if you change
+    anything, you change the hash and therefore the commit.
+    
+    The last basic concept I want to talk about is the remote. That’s just
+    a pointer to another repository, often github, but it could also just be
+    another folder on your computer.
+    You can synchronize with that by pushing or pulling changes. 
+    --
 
 
 # Collaborating using git & github
