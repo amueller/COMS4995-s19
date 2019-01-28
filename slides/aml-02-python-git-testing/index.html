@@ -39,6 +39,8 @@ http://rogerdudler.github.io/git-guide/
 and software carpentry
 
 FIXME: slide notes, be consistent with $ for bash commands
+FIXME pytest -> pytest
+FIXME delete some slides, slide order (see recording?)
 ---
 
 class: center
@@ -399,6 +401,34 @@ Switched to branch 'master'
 changes are not present in master..
 ---
 
+# Merge
+
+- Fast-forward merge:
+
+![:scale 90%](images/git_fast_forward_merge.png)
+
+- Merge-commits:
+
+![:scale 90%](images/git_merge_commit.png)
+
+???
+
+Now let's talk about the  the more complex operations to the repository or
+history, merging . They change the commit graph, and possibly the working
+tree. I find it most helpful to think of them as graph operations on the repository.
+
+Let's start with merges.
+There’s two kinds of merging: feed-forward merges, and merges that
+require a commit. If one commit is a descendants of the other and you
+merge them, it will be a feed-forward, and just move the branch.
+That happens for example if you just pull new changes from a remote
+repository that you cloned, if you haven't made any local changes.
+
+However, if one isn’t a descendant of the other, git will create a
+“merge commit” that will unite the two, and have both as its
+parent. Git will attempt its best but if there’s conflicting changes,
+you might need to resolve the conflicts by hand.
+---
 # Collaborating using git & github
 
 ---
@@ -575,7 +605,7 @@ You should also use gitignore. It's a simple text file that allows you to
 ignore certain files or folders or file types. For example, you could ignore
 all .pyc files. Or you could ignore all .ipynb-checkpoints or your dataset
 folder.
-
+FIXME add gitignore example
 ---
 
 # Git log
@@ -611,6 +641,42 @@ class: center, middle
 
 ???
 
+---
+class: center, middle
+
+# git gui
+
+![:scale 80%](images/git_gui.png)
+
+???
+Git gui is basically an interface for git add and git commit. You can
+also use it to push, but not much more.
+This is the way I create most of my commits. You can see very easily
+which files have changed, see the changes, and stage single lines or
+whole files.
+Then you enter the commit message here, and click commit.
+
+---
+class: center, middle
+
+# gitk
+
+![:scale 80%](images/gitk.png)
+
+???
+Another tool that I use all the time is gitk.
+This is basically a graphical interface to git log, showing you the
+history of your project. But you can also use it as a graphical interface
+for reset, and for cherry-picking, which we won’t go into.
+Often I run gitk with gitk –all, which will show you all the
+branches. This is quite similar to the
+Git log –oneline –anotate –graph –all that I did earlier –
+but now in a gui!
+This is usually how I do resets and how I look at the graph before I do
+any merges or rebases.
+You can also use gitk to search commit messages, and there are many option
+on what to display and how. I mostly use the options to selectively show
+some branches that I’m interested in.
 
 ---
 
@@ -692,158 +758,6 @@ It shows how you can propagate changes from the working directory to a remote re
 This is only a small part of all the commands, though. For example reset is missing, and generally
 nothing that moves branches or head is here.
 
----
-
-# Merge
-
-- Fast-forward merge:
-
-![:scale 90%](images/git_fast_forward_merge.png)
-
-- Merge-commits:
-
-![:scale 90%](images/git_merge_commit.png)
-
-???
-
-Now let's talk about the  the more complex operations to the repository or
-history, merging and rebasing. They change the commit graph, and possibly the working
-tree. I find it most helpful to think of them as graph operations on the repository.
-
-Let's start with merges.
-There’s two kinds of merging: feed-forward merges, and merges that
-require a commit. If one commit is a descendants of the other and you
-merge them, it will be a feed-forward, and just move the branch.
-That happens for example if you just pull new changes from a remote
-repository that you cloned, if you haven't made any local changes.
-
-However, if one isn’t a descendant of the other, git will create a
-“merge commit” that will unite the two, and have both as its
-parent. Git will attempt its best but if there’s conflicting changes,
-you might need to resolve the conflicts by hand.
-
----
-
-# Rebase
-
-- Rebase<br/>
-![:scale 50%](images/git_rebase1.png)
-
-- Rebase onto<br />
-`git rebase --onto master next`
-.left-column[
-![:scale 80%](images/git_rebase2.png)
-]
-.right-column[
-![:scale 80%](images/git_rebase3.png)
-]
-
-???
-Rebase is a whole different beast. It allows more or less arbitrary
-modifications of the graph, and therefore rewriting history.
-You should be aware that if you use rebase, you will change a commit's
-hash because the hash depends on the history.
-Basically what rebase does is place a range of commits on top of another
-commit. If you're on branch A and you do git rebase B (or any other commit),
-what will happen is that it will find the common ancestor, take everything
-up to that ancestor, and place it on branch B.
-You can change the commit that it puts the changes on top of by using
-the --onto flag. So if I want to take the last five changes I do git
-rebase HEAD~5 --onto B
-That will take the common ancestor with HEAD~5, which is HEAD~5, and
-place it onto B.
-
-
----
-# Interactive rebase
-
-`git rebase -i <commit>`
-
-![:scale 66%](images/git_interactive_rebase.png)
-
-???
-You can make rebase even more complicated - and powerful, by making it
-interactive. While you could make any rebase interactive, it’s most common to
-rebase on an ancestor with interactive – in this case a non-interactive rebase would have no
-consequences.
-For each commit in the range that you want to rebase, interactive rebase
-allows you to pick the commit, which is leave it alone, squash it,
-which means incorporating it into the previous commit, removing it or
-amending it.
-Interactive can be useful for cleaning up your history after you worked
-on a feature, so that the remaining commits are logical units.
-
----
-class: center, middle
-# Squash before Rebase
-
-???
-Rebasing can also create conflicts that need to be resolved the same way
-as merge conflicts. However, rebasing “plays back” all the commits
-that you moved on top of the target commit. That means that you might
-have to resolve conflicts on the same file multiple times – which you
-probably want to avoid.
-
-A good way to get around that is to squash all the commits you want to
-rebase into a single one, and then rebase that single commit. That means
-you only have to do conflict resolution once.
-
-So before you do a rebase on a different branch, you might do an
-interactive rebase to squash some commits and make conflict resolution easier.
-
----
-
-# Interactive adding
-
-![:scale 55%](images/git_interactive_add.png)
-
-???
-What I find even more important is interactive adding. With git add,
-you usually add whole files to the staging area. I rarely ever do
-that. Usually I want to check line by line what changes I made and what
-changes I want to commit.
-Git add -i allows me to through all the different hunks or lines
-I changed.
-However, the command line interface is a bit clumsy for my taste. Or
-maybe I’m just not as used to it.
-I prefer a gui, which you can summon with git gui on the command line.
-
----
-class: center, middle
-
-# git gui
-
-![:scale 80%](images/git_gui.png)
-
-???
-Git gui is basically an interface for git add and git commit. You can
-also use it to push, but not much more.
-This is the way I create most of my commits. You can see very easily
-which files have changed, see the changes, and stage single lines or
-whole files.
-Then you enter the commit message here, and click commit.
-
----
-class: center, middle
-
-# gitk
-
-![:scale 80%](images/gitk.png)
-
-???
-Another tool that I use all the time is gitk.
-This is basically a graphical interface to git log, showing you the
-history of your project. But you can also use it as a graphical interface
-for reset, and for cherry-picking, which we won’t go into.
-Often I run gitk with gitk –all, which will show you all the
-branches. This is quite similar to the
-Git log –oneline –anotate –graph –all that I did earlier –
-but now in a gui!
-This is usually how I do resets and how I look at the graph before I do
-any merges or rebases.
-You can also use gitk to search commit messages, and there are many option
-on what to display and how. I mostly use the options to selectively show
-some branches that I’m interested in.
 
 ---
 
@@ -975,7 +889,7 @@ project ages.
 
 # How to test?
 
-- py.test – http://doc.pytest.org
+- pytest – http://doc.pytest.org
 
 - Searches for all test_*.py files, runs all test_* methods.
 
@@ -988,7 +902,7 @@ http://pybites.blogspot.com/2011/07/behind-scenes-of-pytests-new-assertion.html
 There are several frameworks to help you with unit testing in
 python. There’s the built-in unittest module, there’s the now somewhat
 abandoned nosetests.
-For the course we’ll be using the py.test module, which is also what
+For the course we’ll be using the pytest module, which is also what
 I’d recommend for any new projects.
 What it does is it searches all files starting with `test`, runs them,
 and reports a summary.
@@ -1004,10 +918,13 @@ can read up on here, if you’re into rewriting the AST.
 .smaller[
 
 ```python
-# content of test_sample.py
+# content of inc.py
 
 def inc(x):
     return x + 2
+
+# content of test_sample.py
+from inc import inc
 
 def test_answer():
     assert inc(3) == 4
@@ -1023,7 +940,7 @@ a number. But there’s a bug: it adds two instead of one.
 And we have a test, which is called `test_answer`, that calls the
 inc function with the number three and checks if three is correctly
 incremented.
-If we call py.test on this file, or on the folder of this file, py.test
+If we call pytest on this file, or on the folder of this file, pytest
 will run the `test_answer` function - because it starts with `test_`.
 It tells us it ran one test, and that test failed. We also get a traceback
 showing us the line and what the actual value was. We got 5 instead of 4.
@@ -1036,10 +953,13 @@ but pytest actually unpacks the `False` and gives us more information.
 # Example
 
 ```python
-# content of test_sample.py
+# content of inc.py
 
 def inc(x):
     return x + 1
+
+# content of test_sample.py
+from inc import inc
 
 
 def test_answer():
@@ -1049,7 +969,7 @@ def test_answer():
 ![:scale 70%](images/pytest_passed.png)
 
 ???
-So now we go back and fix our increment function, and run py.test
+So now we go back and fix our increment function, and run pytest
 again. This time, it tells us the tests passed.
 Does that mean the function is correct?
 No, but we could test more. How? We could do the same with more
@@ -1137,7 +1057,7 @@ def test_inc():
 ]
 
 ???
-So instead of just calling py.test, we specify --cov inc, which means
+So instead of just calling pytest, we specify --cov inc, which means
 we want to test the coverage of the inc module or file.
 Now we get a coverage report that tells us that out of the 6 statements
 in inc.py, two were not covered, resulting in 67% coverage.
@@ -1151,7 +1071,7 @@ html report the most.
 
 .larger[
 ```bash
-$ py.test --cov inc --cov-report=html
+$ pytest --cov inc --cov-report=html
 ```
 ]
 
@@ -1159,7 +1079,7 @@ $ py.test --cov inc --cov-report=html
 .right-column[![:scale 100%](images/pytest_html_report2.png)]
 
 ???
-So we specify --cov-report=html, and py.test will create a html report
+So we specify --cov-report=html, and pytest will create a html report
 for us. We get an overview that contains the same information as before,
 but we’ll also get a detailed view of inc.py, which shows us which
 lines we covered and which lines we missed.
@@ -1196,6 +1116,7 @@ which actually automattically puts new code into production if it passes
 tests. We're not gonna talk about that here. Continuous deployment gets
 somewhat trickier with machine learning algorithms.
 
+FIXME screenshot?!
 ---
 
 # What is Continuous integration?
@@ -1205,7 +1126,7 @@ somewhat trickier with machine learning algorithms.
 - Can act as a build-farm (for binaries or documentation).
 - requires clear declaration of dependencies.
 - Build matrix: Can run on many environments.
-- Standard serviced: TravisCI, Jenkins and CircleCI
+- Standard serviced: TravisCI, Appveyor, Azure Pipelines and CircleCI
 
 ???
 Ok so what’s continuous integration in more detail?
@@ -1296,7 +1217,7 @@ install:
   - pip install -r requirements.txt
 # command to run tests
 script:
-  - pytest # or py.test for Python versions 3.5 and below
+  - pytest # or pytest for Python versions 3.5 and below
 
 ```
 ]
