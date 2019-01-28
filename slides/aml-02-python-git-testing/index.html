@@ -37,8 +37,22 @@ I'm reusing material from
 http://rogerdudler.github.io/git-guide/
 
 and software carpentry
+
+FIXME: slide notes, be consistent with $ for bash commands
 ---
 
+class: center
+# Why do I care?
+
+![:scale 40%](images/final_doc.jpg)
+???
+FIXME cutting
+---
+class: center
+
+
+![:scale 90%](images/do-you-need-git.png)
+---
 class: middle
 
 # Git and Github
@@ -52,10 +66,10 @@ FIXME: logos
 
 So this first part is about git. I assume you all know about git. Who
 here has not used git so far?
-If you haven’t this might be a bit steep for you, and you should read
-up on it later. Let me know if I’m going to fast.
-I assume that you know what version control is and why it’s
-important. You should really use version control any time you work on
+I changed this up a bit from previous years since people seemed not very
+familiar with git, so this will be pretty introductory and less of the crazy
+behind the scenes stuff from before.
+You should really use version control any time you work on
 any code or any other document. And it looks like we’ll have to use
 git for now and some time to come.
 So you all have used git, but who of you thinks they understand git? Ok
@@ -89,18 +103,7 @@ as they might be, are not the best at creating user interfaces. Git is
 great, but the user interface is horrible. But let’s try and understand
 what’s going on.
 
----
-class: center
 
-
-![:scale 90%](images/do-you-need-git.png)
----
-class: center
-# Why do I care?
-
-![:scale 40%](images/final_doc.jpg)
-???
-FIXME cutting
 ---
 # Configuration
 
@@ -133,26 +136,40 @@ You can change these setting at any time.
 
 # Creating a repository
 
-
+.smallest[
 ```bash
-mkdir homework1
-cd homework1
+$ mkdir homework1
+$ cd homework1
 ```
 
 
 ```bash
-git init
+$ git init
+```
+```
+> Initialized empty Git repository in /tmp/homework1/.git/
 ```
 
 ```bash
-ls -a
+$ ls -a
 
 ```
-
+```
+.  ..  .git
+```
 
 ```bash
-git status
+$ git status
 ```
+
+```
+On branch master
+
+No commits yet
+
+nothing to commit (create/copy files and use "git add" to track)
+```
+]
 ???
 - make homework1 directory a repository 
 - .git directory is where git stores the history of the project
@@ -160,97 +177,86 @@ git status
 you can remove the tracking information by removing the .git folder.
 So deleting homework1 erases everything.
 
+Using "git init" is actually less common if you work with github.
 ---
 # Cloning a repository
 
-- cd out of planets, create a new directory called planets_collab, and cd into it
-
+.center[    
+![:scale 70%](images/clone_new.png)
+]
 
 ```bash
-cd ../
-mkdir planets_collab
-cd planets_collab
+$ git clone git@github.com:aml-sprint-19/homework-1
 ```
+???
+SSH requires you to have an ssh key on github. Just do it!
+Otherwise use https.
 
-    
-
-- Clone Dracula's repository
-    - make sure its set to HTTPS
-    
-![clone](images/clone.jpg)
-
-- cd into the planets directory you just downloaded
-- put up your green post-it
+DONT Actually do this for the homework - we'll be using classroom.
+This is the most common way to create a repo, usually not git init.
 ---
 
 #  Workflow?
 
-![git staging area](images/git-staging-area.png)
+![:scale 100%](images/git-staging-area.png)
 ---
 
-# Tracking Changes to Files
+# Changing a File
+.smaller[
+```bash
+$ echo "print('Hello world!')" >> task1.py
+```
 
-- Create a file to track
-    - Open your text editor
-    - Type: cold and dry but everything is my favorite color
-    - save file as mars.txt
-- Check in with git
+```bash
+$ git status
+```
+```
+On branch master
 
-- start tracking file
+No commits yet
 
-- Record current state
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
 
-    - ``-m`` : commit message inline
+	task1.py
 
+nothing added to commit but untracked files present (use "git add" to track)
+```
+
+```bash
+$ git add task1.py
+```
+
+
+
+]
 ---
 
 # Viewing your history
 
 
 ```bash
-git log
+$ git commit -m "say hello"
+```
+```
+
+[master (root-commit) 7d139fb] say hello
+ 1 file changed, 1 insertion(+)
+ create mode 100644 task1.py
+```
+
+```bash
+$ git log
+```
+```
+commit 7d139fb317ecfa7d629654b709747e91ececa444 (HEAD -> master)
+Author: Andreas Mueller <andreas.mueller@columbia.edu>
+Date:   Mon Jan 28 12:37:29 2019 -0500
+
+    say hello
 ```
 ---
 
-# Changing a File
-
-
-Open your mars.txt file and add:
->The two moons may be a problem for Wolfman
-
-Check the status of your files
-
-
-```bash
-echo "The two moons may be a problem for Wolfman" >> mars.txt
-```
-
-
-```bash
-git status
-```
-
-View the changes you made
-
-
-```bash
-git diff mars.txt
-```
-
-Tell git which files you want to record changes in
-
-
-```bash
-git add mars.txt
-```
-
-Save changes to revision history
-
-
-```bash
-git commit -m "concerns about Mars' moons"
-```
----
 
 
 # A note on viewing changes
@@ -306,74 +312,92 @@ Changes made since commit hash...
 ```bash
 git diff 0b0d55e
 ```
-
+???
 - first 7 characters
 - use `git log` to find commit you want
 ---
 
-# Recovering Older Versions
+# Recovering Older Versions of Files
 
-- Overwrite mars.txt:
-
+- Overwrite task1.py:
 
 ```bash
-echo 'The mummy will like the dry air.' >  mars.txt
-cat mars.txt
+$ echo "print('goodbye, cruel world!')" >  task1.py
+$ cat task1.py
+```
+```
+print('goodbye, cruel world!')
 ```
 
 Recover last recorded version:
 
 ```bash
-git checkout HEAD mars.txt
+$ git checkout HEAD task1.py
+$ cat task1.py
 ```
-
-* `checkout HEAD` means revert to version in `HEAD`
-* can use commit hash to revert to even older version
-* `mars.txt`: tells git which file to revert
-* in `git status` they list this option with `--` instead of `HEAD`. This is a shortcut.
-
-
----
-
-# What is going on here
-![git checkout](images/git-checkout.png)
----
-
-# Git Basics
-
-- Repository
-
-`$ git init`
-
-`$ rm .git`
+```
+print('Hello world!')
+```
 
 ???
-There are some basic units of git that I want to go through. The first
-is a repository. What’s a repository?
-A folder who’s content we want to track with version control.
-And how can you create one?
-Run git init in a folder.
-And how can you make a folder not a repository any more?
-By removing the .git subfolder. That’s it.
-A repository is entirely self-contained. There is no service or database
-or anything like that, it’s all plain files within that folder. That
-also means if you remove the folder, you lose everything if you don’t
-have a backup.
+* `checkout HEAD` means revert to version in `HEAD`
+* can use commit hash to revert to even older version
+* `task1.py`: tells git which file to revert
+* in `git status` they list this option with `--` instead of `HEAD`. This is a shortcut.
 
-The next basic concept is a commit. What’s that?
-It’s a snapshot of the state of the folder, with a message attached,
-and identified with an ID. It’s also a node in a graph that describes
-the history of the snapshot, and usually has one or two parents, and
-can have arbitrary many children.
-The ID is a hash of the state and all the parents, so if you change
-anything, you change the hash and therefore the commit.
+---
+# Recovering Older Versions of whole repo
+```bash
+$ echo "print('goodbye, cruel world!')" >  task1.py
+$ git add task1.py
+$ git commit -m " saying goodbye"
+```
+```
+[master 95f3b39]  saying goodbye
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+```
+$ git log
+```
+commit 95f3b39402451c474e3887be94d2cc37a11be511 (HEAD -> master)
+Author: Andreas Mueller <andreas.mueller@columbia.edu>
+Date:   Mon Jan 28 12:44:52 2019 -0500
 
-The last basic concept I want to talk about is the remote. That’s just
-a pointer to another repository, often github, but it could also just be
-another folder on your computer.
-You can synchronize with that by pushing or pulling changes. 
---
+     saying goodbye
 
+commit 7d139fb317ecfa7d629654b709747e91ececa444
+Author: Andreas Mueller <andreas.mueller@columbia.edu>
+Date:   Mon Jan 28 12:37:29 2019 -0500
+
+    say hello
+```
+---
+# Resetting:
+```bash
+$ git reset --hard HEAD~1
+```
+```
+HEAD is now at 7d139fb say hello
+```
+---
+# Branches
+
+```bash
+$ git checkout -b "new_feature"
+```
+```
+Switched to a new branch 'new_feature'
+```
+make some changes, add, commit...
+
+Moving between branches:
+```bash
+$ git checkout master
+```
+```
+Switched to branch 'master'
+```
+changes are not present in master..
+---
 
 # Collaborating using git & github
 
@@ -381,169 +405,113 @@ You can synchronize with that by pushing or pulling changes.
 # Remote repository
 
 - central location everyone can see
-- requires network
+- requires network ?
 - github, bitbucket
 - public vs private
 
 ![git repo first push](images/github-repo-after-first-push.jpg)
 ---
 
-# Sign into github
 
-- go to github.com
-- sign into your account
-- Put up a green post-it
----
-# Create a new repository
+# Github
 
-- Press the create a new repo button
-![create repo 1](images/create_repo1.jpg)
-
-- Call your repo planets and "create repository"
-- Follow the directions to push an existing repository
-- put up your green post-it
-
-![create repo 2](images/create_repo2.jpg)
+???
+I want to just briefly talk about github.
+For the purposes of git, github is just another remote. And it’s really
+nothing special. In terms of being a remote, you can replace github with
+a usb stick that you hand around.
+There is a lot of tools for user management and issue tracking which is
+great, but not really central what we’re talking about here. The main
+thing that’s different in using github from using any other remote,
+is the use of pull requests, and the ability to integrate with remote
+services.
+For now lets talk about pull requests, we'll come back to the services later.
 
 ---
+class: center
 
-# Exercise: Explore your remote repository
+# Github pull request workflow
+<br />
+![:scale 50%](images/forks1.png)
+???
 
-- at the top of the page click yourname/planets
-- Explore...
+So what are pull requests for?
+Basically they allow you to contribute to a repository to which you
+don’t have write permissions.
+Let’s say you want to contribute to scikit-learn. Or to the lecture slides.
 
-![return to repo](images/return_to_repo.jpg)
-
----
-# what is my remote repository?
-
-
-```bash
-git remote -v
-```
-
-default nickname: origin
----
-# Merge without conflict
-
-- Dracula: modify the first line of mars.txt, save, add, and commit
-- Wolfman: modify the last line of mars.txt, save, add, and commit
-- Dracula: pull down changes from Wolfman
-    - you will be asked to save a merge commit message in nano
-- Dracula: push your changes to the remote repository
-- Wolfman: pull down changes from Dracula and save the commit message
-- Wolfman: push your changes to the remote repository
-
-
+There’s the main repository, which we usually call "upstream",
+scikit-learn/scikit-learn. You want to change something there, but you
+don’t have write permissions.
 
 ---
-# Merge with conflicts
+class: center
 
-- Dracula: Edit the last line of the mars.txt, save, add, and commit
-- Dracula: try to pull down changes from the remote repository
+# Github pull request workflow
+<br />
+![:scale 50%](images/forks2.png)
+???
 
-![conflict message](images/conflict_message.jpg)
-
----
-# Resolving Conflicts
-
-- Dracula: open mars.txt
-![conflict](images/conflict_file.jpg)
-
-
-- Dracula: edit mars.txt to look like correct file
-    - remove extra text
-    - choose which lines you want to keep
-- Dracula: save, add, commit, push
-    
----
-
-
-# Collaborating using git & github
-
-
-# Remote repository
-
-- central location everyone can see
-- requires network
-- github, bitbucket
-- public vs private
-
-![git repo first push](images/github-repo-after-first-push.jpg)
-
-
-# Sign into github
-
-- go to github.com
-- sign into your account
-- Put up a green post-it
-
-# Create a new repository
-
-- Press the create a new repo button
-![create repo 1](images/create_repo1.jpg)
-
-- Call your repo planets and "create repository"
-- Follow the directions to push an existing repository
-- put up your green post-it
-
-![create repo 2](images/create_repo2.jpg)
-
+What you can do is "fork" it on github – that’s a github concept,
+not a git concept. It’s just a clone that also lives on github.
 
 ---
-# Exercise: Explore your remote repository
+class: center
 
-- at the top of the page click yourname/planets
-- Explore...
-
-![return to repo](images/return_to_repo.jpg)
-
----
-# what is my remote repository?
-
-
-```bash
-git remote -v
-```
-
-default nickname: origin
+# Github pull request workflow
+<br />
+![:scale 50%](images/forks3.png)
+???
+To actually make any changes, you
+can then clone this fork locally, add a feature branch, make changes
+and push them.
 
 ---
+class: center
 
-# Merge without conflict
+# Github pull request workflow
+<br />
+![:scale 50%](images/forks.png)
+???
 
-- Dracula: modify the first line of mars.txt, save, add, and commit
-- Wolfman: modify the last line of mars.txt, save, add, and commit
-- Dracula: pull down changes from Wolfman
-    - you will be asked to save a merge commit message in nano
-- Dracula: push your changes to the remote repository
-- Wolfman: pull down changes from Dracula and save the commit message
-- Wolfman: push your changes to the remote repository
+Then you can ask the owner of the repository if they want to merge your
+changes. That's a pull request and allows the owner to "pull" in your
+changes into the main repository.
 
-
-
----
-
-# Merge with conflicts
-
-- Dracula: Edit the last line of the mars.txt, save, add, and commit
-- Dracula: try to pull down changes from the remote repository
-
-![conflict message](images/conflict_message.jpg)
+So far, so good. Makes mostly sense, I think.
+There is a slight oddity in this workflow, though.
 
 ---
+class: center
 
-# Resolving Conflicts
+# Github pull request workflow
+<br />
+![:scale 60%](images/forks_master_feature.png)
+???
 
-- Dracula: open mars.txt
-![conflict](images/conflict_file.jpg)
+Usually you pull the current status from the master branch,
+and make some changes that you want to include. So you always pull master
+and push feature branches.
+But the code in the upstream repository changes. How do you get
+these changes onto your laptop? 
+If the original repository gets updated, there is no way to directly update your fork.
 
+---
+class: center
 
-- Dracula: edit mars.txt to look like correct file
-    - remove extra text
-    - choose which lines you want to keep
-- Dracula: save, add, commit, push
-
+# Github pull request workflow
+<br />
+![:scale 60%](images/forks_master_feature2.png)
+???
+You have to add upstream as an additional remote, and then you can pull from
+there. You can create new features on top, and push the feature branches to
+your fork (which is usually the “origin” remote).
+But what happens with the master branch on your fork? It never gets
+updated and there is no point in pushing to it, so it will just sit there
+and rot, staying at the state of the original repository at the time of your fork.
+I think that’s kind of weird, but that’s how github works.
+So you always pull from upstream to get their changes, and push to
+your fork.
 
 ---
 
@@ -924,113 +892,6 @@ repositories and the stash and cherries...
 ---
 class: center, middle
 
-# Github - just another remote
-
-???
-I want to just briefly talk about github.
-For the purposes of git, github is just another remote. And it’s really
-nothing special. In terms of being a remote, you can replace github with
-a usb stick that you hand around.
-There is a lot of tools for user management and issue tracking which is
-great, but not really central what we’re talking about here. The main
-thing that’s different in using github from using any other remote,
-is the use of pull requests, and the ability to integrate with remote
-services.
-For now lets talk about pull requests, we'll come back to the services later.
-
----
-class: center
-
-# Github pull request workflow
-<br />
-![:scale 50%](images/forks1.png)
-???
-
-So what are pull requests for?
-Basically they allow you to contribute to a repository to which you
-don’t have write permissions.
-Let’s say you want to contribute to scikit-learn. Or to the lecture slides.
-
-There’s the main repository, which we usually call "upstream",
-scikit-learn/scikit-learn. You want to change something there, but you
-don’t have write permissions.
-
----
-class: center
-
-# Github pull request workflow
-<br />
-![:scale 50%](images/forks2.png)
-???
-
-What you can do is "fork" it on github – that’s a github concept,
-not a git concept. It’s just a clone that also lives on github.
-
----
-class: center
-
-# Github pull request workflow
-<br />
-![:scale 50%](images/forks3.png)
-???
-To actually make any changes, you
-can then clone this fork locally, add a feature branch, make changes
-and push them.
-
----
-class: center
-
-# Github pull request workflow
-<br />
-![:scale 50%](images/forks.png)
-???
-
-Then you can ask the owner of the repository if they want to merge your
-changes. That's a pull request and allows the owner to "pull" in your
-changes into the main repository.
-
-So far, so good. Makes mostly sense, I think.
-There is a slight oddity in this workflow, though.
-
----
-class: center
-
-# Github pull request workflow
-<br />
-![:scale 60%](images/forks_master_feature.png)
-???
-
-Usually you pull the current status from the master branch,
-and make some changes that you want to include. So you always pull master
-and push feature branches.
-But the code in the upstream repository changes. How do you get
-these changes onto your laptop? 
-If the original repository gets updated, there is no way to directly update your fork.
-
----
-class: center
-
-# Github pull request workflow
-<br />
-![:scale 60%](images/forks_master_feature2.png)
-???
-You have to add upstream as an additional remote, and then you can pull from
-there. You can create new features on top, and push the feature branches to
-your fork (which is usually the “origin” remote).
-But what happens with the master branch on your fork? It never gets
-updated and there is no point in pushing to it, so it will just sit there
-and rot, staying at the state of the original repository at the time of your fork.
-I think that’s kind of weird, but that’s how github works.
-So you always pull from upstream to get their changes, and push to
-your fork.
----
-class: center, middle
-
-# End version control – but github will come back later ;)
-
-???
-Ok, so that’s enough version control for now. But we’ll get back to
-githubs integration of third party services later.
 ---
 class: center, middle
 
