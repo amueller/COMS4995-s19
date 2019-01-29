@@ -25,20 +25,14 @@ Andreas C. Müller
 
 ???
 Hi everybody.
-Some quick announcement. I decided to give everybody that wants to audit access to courseworks,
-mostly so that they can follow the announcements and discussions on piazza. If you're auditing
-and you haven't gotten an invite to courseworks yet, please drop me an email.
-Also, for all of you on the waiting list: Spots that open up in the class are constantly
-being filled from the waiting list, which is still over 100 students. Dropping
-by my office without an appointment or writing me emails or hassling our staff
-will not get you in faster, it might do the opposite, though.
 
-Today we'll pick up where we left of Monday, talking about a bit more software engineering,
-and then diving into visualization and matplotlib. Next time we'll finally actually start
+
+Today we'll be diving into visualization and matplotlib. Next time we'll finally actually start
 with machine learning.
 
 Again, slides and slide notes for this are online.
 
+FIXME lots of screenshots, doing code would be better
 ---
 class: center, middle
 
@@ -318,13 +312,13 @@ though.
 ---
 class: center, middle
 
-# matplotlib v2
+# matplotlib v2 (also v3 now)
 
 update now!
 (you can enable classic style if your really want)
 
 ???
-So matplotlib version 2 has been out for about a year now,
+So matplotlib version 2 has been out for quite a while now,
 though I still see people using matplotlib v1. I would really highly
 encourage you to upgrade. version two changes some of the default
 styles, but you can still enable the classic styles if you want.
@@ -341,6 +335,8 @@ look very differently or might not be comprehensible at all.
 - several ggplot translations / interfaces
 - bqplot
 - plotly
+- altair (the cool new kid)
+- yellowbrik (plotting for sklearn)
 
 ???
 There are some other interface you should look into which I won’t
@@ -369,6 +365,7 @@ called plotly that also provides a plotting interface.
 from matplotlib.pyplot import *
 from pylab import *
 from numpy import *
+
 ```
 
 ???
@@ -405,11 +402,18 @@ YES!
 ]
 .right-column[
 `%matplotlib notebook`
+- interactivity in old notebook
+- doesn't work in jupyter lab
+- need to create separate figures
+- ability to update figures
+]
+.clear-column[
+`%matplotlib widget`
 - interactive widget
 - all figure features
 - need to create separate figures explicitly
 - ability to update figures
-- doesn't work with jupyter lab (right now)
+- installation instructions: https://github.com/matplotlib/jupyter-matplotlib 
 ]
 
 ???
@@ -417,17 +421,25 @@ I highly recommend that you use jupyter to play around with matplotlib
 figures and visualizations.
 To show matplotlib figures embedded in jupyter, you have to call one of
 two magics. Jupyter magics are those that start with a percentage.
-There’s matplotlib inline and matplotlib notebook, and you should run
-one of them, and only one of them, at the very start of the notebook.
+There’s matplotlib inline, there was matplotlib notebook and now there's
+matplotlib widget, and you should run one of them, and only one of them,
+at the very start of the notebook.
 Both will allow you to show the figures inside the the browser, but they
 are quite different. [read/explain table]
+So with inline you're always in the clear but get the least features.
+I recommend using jupytelab, so notebook is not possible.
+Installing the support for widget seems worth it and takes only 5 minutes,
+if you care about interactivity or updating figures.
+
+FIXME: add https://github.com/matplotlib/jupyter-matplotlib/blob/master/matplotlib.gif ??
+Ugly slide, maybe just do screenshots instead?
 ---
 
 # Figures and Axes
 
 figure = one window or one image file
 
-axes = one drawing area with coordinate system
+axes = drawing areas with coordinate system
 
 ![:scale 40%](images/figure_axis.png)
 
