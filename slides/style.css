@@ -82,6 +82,9 @@
       .left-column{
           float: left;
       }
+      .clear-column{
+          clear: both;
+      }
       .narrow-right-column {
           float: right;
           width: 32%
@@ -97,4 +100,4 @@
         font-size: 15px;
       }
       .remark-code, .remark-inline-code  { font-family: 'Ubuntu Mono';}
-      .hljs.remark-code {background: #d0d0d0}
+      .hljs.remark-code {background: #e0e0e0}
