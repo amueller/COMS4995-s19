@@ -33,6 +33,11 @@ with machine learning.
 Again, slides and slide notes for this are online.
 
 FIXME lots of screenshots, doing code would be better
+FIXME do some seaborn
+FIXME more from Jake's book
+FIXME more from Claus Wilke's book
+FIXME 3d animations /interactivity
+FIXME aspect ratio of plots
 ---
 class: center, middle
 
@@ -84,6 +89,8 @@ thesis which has a great introduction, and from which I stole some illustrations
 --
 
 # Explore
+--
+
 # Communicate
 
 ---
@@ -108,10 +115,27 @@ The other quote, from William Cleveland is: Tools matter. I think for
 him the tools are more the visualization methods, but I think also the
 software tools matter, which is why I want to talk about them.
 
+Finally, My 2 cent here are: label stuff. All axis should be labels,
+all elements should have legends. There is not reason not to label something.
+If anyone ever shows me an unlabeled graph, I tell them to do the graph again.
+
+Also: just spend more time on visualizations. A simple graph for a paper usually
+takes me a couple of hours to make. And I do them entirely using python and
+matplotlib. If you hand in any graphs with your homework, don't hand in anything
+you haven't spend at least 10 or 20 minutes on.
+You make a graph to communicate something clearly. That needs thinking about it,
+and spending time making it right.
+
 --
 
 Tools matter.
 .quote_author[W. S. Cleveland]
+
+
+--
+Label stuff.<br />
+Spend more time.
+.quote_author[me]
 
 ---
 class: center, middle
@@ -124,6 +148,8 @@ Before we start with plotting, here’s a quick summary of visual
 channels that I took from the thesis “Systematising glyph design for
 visualization”.
 These are ways in which you can show information.
+Visualization means taking some multivariate data and mapping different aspects
+of the data to different visual channels.
 There is obviously length, as in bar-charts, angle, curvature, shape as
 in graphs and scatter plots.
 There’s area, which is often useful, but it’s important to say whether
@@ -166,6 +192,23 @@ but I think you would agree.
 It’s important to know that the number of different values are important
 to how much something pops out, and if you use too many orientations or
 sizes or colors, this effect is lost.
+---
+class: center
+
+![scale: 100%](images/channels_fuel.png)
+???
+Here's an image from "Fundamentals of visualization" illustrating
+how different quantities can be mapped to different aspects of the data.
+These are fuel efficiencies of cars, and we have five variables we're visualizing
+for each kind of car:
+fuel efficiency, displacement, power, weight, and number of cylinders.
+I think this is a great illustration, and it also shows you what channel "pops"
+more.
+For a real visualization this might be a bit too much information squeezed in for my
+taste. Though given that there's not that many data points, it's maybe fine.
+Using five channels is a lot!
+Usually I would use three channels in most graphs.
+
 ---
 class: center, middle
 
@@ -290,6 +333,7 @@ color space.
 I posted a cool video explaining way more details on this on the course
 website.
 
+
 ---
 class: center, middle
 
@@ -336,7 +380,7 @@ look very differently or might not be comprehensible at all.
 - bqplot
 - plotly
 - altair (the cool new kid)
-- yellowbrik (plotting for sklearn)
+- yellowbrick (plotting for sklearn)
 
 ???
 There are some other interface you should look into which I won’t
@@ -400,6 +444,7 @@ YES!
 - new figure for each cell
 - no changes to previous figures
 ]
+--
 .right-column[
 `%matplotlib notebook`
 - interactivity in old notebook
@@ -407,6 +452,7 @@ YES!
 - need to create separate figures
 - ability to update figures
 ]
+--
 .clear-column[
 `%matplotlib widget`
 - interactive widget
@@ -805,6 +851,143 @@ will look just flat, because it lives on a completely different scale.
 Using the object oriented interface, I can create a twin x axis for the
 revenue to show both time series with their own scales.
 ---
+# Aspect Ratios
+.center[
+![:scale 60%](images/aspect-ratios.png)
+]
+https://eagereyes.org/basics/banking-45-degrees
+
+???
+One very important but often overlooked aspect of plotting is aspect ratios.
+Here are three plots showing the same data with different aspect ratios.
+If you're using jupyter, the aspect ratio is usually given by the figure size
+or subplot size. With interactive plots you can resize them, for non-interactive
+plots you have to usually change the grid or figure size, but it might be worth it.
+I stole this figure from thie interesting blogpost on eagereyes.
+This actually talks about what's called banking to 45 degrees.
+There is a famous paper that showed that it's in some sense perceptually
+optimal to have most of the line segments be around 45 degrees, but later it
+was found there is issues with the study. It seems to be a good idea in general,
+but it also depends on what you want to highlight about the data.
+---
+# Baselines
+.padding-top[
+.center[
+![:scale 80%](images/baselines.png)
+]]
+https://eagereyes.org/basics/baselines
+???
+
+Another very related problem is baselines. Again, these two plots show the same
+data, but they look very different because of where the zero is. And depending
+on what you want to show, either one might be the right one.
+Baselines and aspect ratio issues often show up if we display multiple things
+in the same graph. Because matplotlib automatically adjusts the boundaries,
+showing more things changes the axes ranges.
+The twinx command we just discussed can sometimes help with that.
+Again, there's a cool blogpost here.
+
+FIXME show how adding data distorts exsisting data (i.e. gaussian blob can
+be made to look narrow or wide by adding another gaussian blob at a differnt prosition)
+
+---
+# 3D plotting
+.left-column[
+.smaller[
+```python
+from mpl_toolkits.mplot3d import Axes3D
+
+import matplotlib.pyplot as plt
+import numpy as np
+
+fig = plt.figure()
+ax = fig.gca(projection='3d')
+
+ax.plot(xs, ys, zs, lw=0.5)
+```
+]
+]
+.right-column[
+![:scale 100%](images/lorenz.png)
+]
+???
+Here's how to do 3d plotting. This example looks kind of cool, using only standard line plots,
+but in 3d.
+You have to import Axes3D as shown above, even though it's not used.
+Then you need to set the projection for the axes you're plotting into to "3d", and off you go.
+---
+# 3D Scatters
+.left-column[
+.smaller[
+```python
+from mpl_toolkits.mplot3d import Axes3D 
+import matplotlib.pyplot as plt
+from sklearn.datasets import load_iris
+
+iris = load_iris()
+X, y = iris.data, iris.target
+fig = plt.figure()
+ax = fig.add_subplot(
+    111, projection='3d')
+ax.scatter(X[:, 1], X[:, 2], X[:, 3],
+           c=y)
+```
+]
+]
+.right-column[
+![:scale 100%](images/3dscatter.png)
+]
+???
+However, our plots are more commonly scatterplots and they don't involve some fancy lower-dimensional manifold.
+Here's a plot of the first three features of the iris dataset, and I think doing this in 3d adds nothing.
+If you have interactivity it might add a bit for exploration, but if you show this plot to anyone, it
+is just some arbitrary 2d projection of these three dimensions, and we don't need a 3d plot for that.
+---
+# Just Don't
+.center[
+![:scale 70%](images/3dhist.png)]
+???
+There's some other 3d plots you might be tempted to do, like this.
+Usually 3d is just confusing and hard to read.
+This example of 2d data as a 3d histogram for example is terrible.
+You could easily do this with a heatmap, or maybe an array of bar-charts.
+I hope none of you ever creates a graph like this.
+Some people use these 3d bar charts if the data was originally 1d, that's even worse.
+This is taken from the matplotlib user guide, btw. Just because you can doesn't mean you should.
+
+---
+# Do's and Don't summarized
+## Do
+- take your time
+- label everything
+- thing about questions and story
+
+--
+
+## Don't
+- Use 3D unless really necessary
+- Use piecharts (usually)
+- have non-varying "ink"
+- Edit figure manually
+---
+# More Resources
+.padding-top[
+
+![:scale 23%](images/tufte.jpg)&nbsp;
+![:scale 23%](images/cleveland.jpeg)&nbsp;
+![:scale 23%](images/wilke.png)&nbsp;
+![:scale 23%](images/pdsh.png)
+]
+Also: https://matplotlib.org/tutorials/
+???
+The first two are a bit dated but are definitely classics.
+The last one is still in draft form, it's done using R but all the content is language agnostic.
+For the matplotlib part, look at Jake's Data Science Handbook, which you hopefully all check out yet.
+There's a lot more detail in there than what I covered here.
+The last two are free, the first two are not.
+
+---
+
 class: middle
 
 # Questions ?
