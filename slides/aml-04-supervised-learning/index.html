@@ -19,7 +19,7 @@ class: center, middle
 
 # Introduction to Supervised Learning
 
-01/29/18
+01/30/18
 
 Andreas C. Müller
 
@@ -57,8 +57,9 @@ Let's dive back into supervised learning.
 
 FIXME:
 More details on implementing cross-validation?
-Repeated cross validation?
 Grouped cross-validation?
+FIXME cross_validation function?
+FIXME kick out nearest centroids?
 ---
 
 class: center
@@ -856,7 +857,7 @@ present at all in a particular fold.
 ---
 # Defaults in scikit-learn
 
-- Three-fold is default number of folds
+- 3-fold is the deprecated default, 5-fold in 0.22
 - For classification cross-validation is stratified
 - train_test_split has stratify option:
 train_test_split(X, y, stratify=y)
@@ -1058,6 +1059,7 @@ And finally we can compute the accuracy on the test set, simply but
 using the score method! That will use the retrained model under the hood.
 
 ---
+class: compact
 
 # GridSearchCV Results
 .smallest[
