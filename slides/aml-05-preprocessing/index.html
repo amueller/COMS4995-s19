@@ -19,7 +19,7 @@ class: center, middle
 
 # Preprocessing and Feature Engineering
 
-02/07/18
+02/06/19
 
 Andreas C. Müller
 
@@ -29,12 +29,10 @@ What we’re talking about today mostly applies to linear
 models, and not to tree-based models, but it also applies to
 neural nets and kernel SVMs.
 
-FIXME: Yeo-Johnson FIXME: box-cox fitting
-FIXME: move scaling motivation before scaling
 FIXME: add illustration of why one-hot is better than integer encoding
 FIXME: add rank scaler
+FIXME some slides have screenshots
 FIXME: add binnning stuff?
-FIXME: ColumnTransformer / CAtegoricalEncoder rename
 FIXME: target encoder from dirtycat or categorical encoder contrib package?
 ---
 
@@ -91,6 +89,36 @@ Linear models: the different scales mean different penalty.
 L2 is the same for all!
 
 We can also see non-gaussian distributions here btw!
+---
+# Scaling and Distances
+
+![:scale 90%](images/knn_scaling.png)
+
+???
+Here is an example of the importance of scaling using a
+distance-based algorithm, K nearest neighbors. My favorite
+toy dataset with two classes in two dimensions. The scatter
+plots look identical, but on the left hand side, the two
+axes have very different scales. The x axis has much larger
+values than the y axis. On the right hand side, I used
+standard scaler and so both features have zero mean and unit
+variance. So what do you think will happen if I use k
+nearest neighbors here? Let's see
+---
+# Scaling and Distances
+
+![:scale 90%](images/knn_scaling2.png)
+
+???
+As you can see, the difference is quite dramatic. Because
+the X axis has such a larger magnitude on the left-hand
+side, only distances along the x axis matter. However, the
+important feature for this task is the y axis. So the
+important feature gets entirely ignored because of the
+different scales. And usually the scales don't have any
+meaning - it could be a matter of changing meters to
+kilometers.
+
 ---
 class: center
 
@@ -273,36 +301,7 @@ efficient then using first fit and then transform. The same
 goes for fit_predict.
 
 ---
-# Scaling and Distances
 
-![:scale 90%](images/knn_scaling.png)
-
-???
-Here is an example of the importance of scaling using a
-distance-based algorithm, K nearest neighbors. My favorite
-toy dataset with two classes in two dimensions. The scatter
-plots look identical, but on the left hand side, the two
-axes have very different scales. The x axis has much larger
-values than the y axis. On the right hand side, I used
-standard scaler and so both features have zero mean and unit
-variance. So what do you think will happen if I use k
-nearest neighbors here? Let's see
----
-# Scaling and Distances
-
-![:scale 90%](images/knn_scaling2.png)
-
-???
-As you can see, the difference is quite dramatic. Because
-the X axis has such a larger magnitude on the left-hand
-side, only distances along the x axis matter. However, the
-important feature for this task is the y axis. So the
-important feature gets entirely ignored because of the
-different scales. And usually the scales don't have any
-meaning - it could be a matter of changing meters to
-kilometers.
-
----
 class: smaller, compact
 
 ```python
@@ -694,10 +693,9 @@ Only applicable for positive x!
 
 .reset-column[
 ```python
-# sklearn 0.20-dev
 from sklearn.preprocessing import PowerTransformer
 pt = PowerTransformer(method='box-cox')
-# soon: Yeo-Johnson
+# for any data: Yeo-Johnson
 pt.fit(X)
 ```
 ]
@@ -914,16 +912,19 @@ class: smaller
 
 #Pandas Categorical Columns
 
+.smaller[
 ```python
 import pandas as pd
 df = pd.DataFrame({'salary': [103, 89, 142, 54, 63, 219],
                    'boro': ['Manhattan', 'Queens', 'Manhattan',
                             'Brooklyn', 'Brooklyn', 'Bronx']})
 
-df['boro'] = pd.Categorical(
-    df.boro, categories=['Manhattan', 'Queens', 'Brooklyn', 'Bronx', 'Staten Island'])
+df['boro'] = pd.Categorical(df.boro, categories=['Manhattan', 'Queens', 'Brooklyn',
+                                                'Bronx', 'Staten Island'])
 pd.get_dummies(df)
 ```
+]
+
 ```
    salary  boro_Manhattan  boro_Queens  boro_Brooklyn  boro_Bronx  boro_Staten Island
 0     103               1            0              0           0                   0
@@ -976,7 +977,7 @@ array([[   1.,    0.,    0.,    0.,  103.],
        [   0.,    0.,    0.,    1.,  219.]])
 ```
 
-- Only works for integers right now, not strings.
+- Deprecated mode, don't use.
 
 ???
 You can also do this with scikit-learn. There are two ways
@@ -1015,7 +1016,7 @@ df = pd.DataFrame({'salary': [103, 89, 142, 54, 63, 219],
                    'boro': ['Manhattan', 'Queens', 'Manhattan',
                             'Brooklyn', 'Brooklyn', 'Bronx']})
 
-ce = CategoricalEncoder().fit(df)
+ce = OneHotEncoder().fit(df)
 ce.transform(df).toarray()
 ```
 ```
@@ -1046,20 +1047,19 @@ preprocess = make_column_transformer(
 model = make_pipeline(preprocess, LogisticRegression())
 ```
 ???
-There's this thing that's going to be hopefully in the next
-version of scikit-learn called column transformer, which
+New in scikit-learn 0.20 is the column transformer, which
 allows you to transforms only some of the columns. For
 example, you can call categorical encoder only on the
 categorical columns and call StandardScaler on the
 non-categorical columns, and then use that to preprocess
 your data. Right now using Pandas, make sure your column
-names match up, make everything to an integer, use One Hot
-Encoder or get the development version.
+names match up, make everything to an integer,
+or use column transformer and everything is awesome.
 
 ---
 class: some-space
 
-#OneHot vs Statisticians
+# OneHot vs Statisticians
 
 - One-hot is redundant (last one is 1 – sum of others)
 - Can introduce co-linearity
@@ -1081,7 +1081,7 @@ class: some-space
   - All tree-based models, naive Bayes
 - In scikit-learn:
   - None
-- In scikit-learn soon:
+- In scikit-learn "soon":
   - Decision trees, random forests
 
 
