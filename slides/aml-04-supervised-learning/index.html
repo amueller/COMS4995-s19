@@ -19,7 +19,7 @@ class: center, middle
 
 # Introduction to Supervised Learning
 
-01/30/18
+02/04/19
 
 Andreas C. Müller
 
@@ -28,38 +28,37 @@ Hey everybody.
 Today, we’ll be talking more in-depth about supervised learning,
 model evaluation and model selection.
 
-One note on the homeworks. The current status of the repository within the
-applied-ml-spring-18 org is your submission. You won't have do to anything else.
-There has been some confusion about travis, I think most of it got resolved.
-Just to reiterate what I said on piazza, the class shares a pool of workers on travis.
-Right now we only have a single concurrent instance, meaning that the queue contains
-all your builds and there's only one build running at any time.
-You can see the queue on travis.com.
-I posted on Courseworks about auto-cancelling builds. It's a good idea for you to enable
-auto-cancellation for all future homeworks that use travis. Simply go to the
-settings of your repo and flip the switch.
-What that means is that only the last commit in your repo will be built.
-Otherwise travis will queue all your commits. So if you have 10 commits, it'll
-run 9 builds (or rather 9 builds times the size of your build matrix) before
-it gets to your current commit. And that's how we ended up with such a long queue.
+FIXME:
+More details on implementing cross-validation?
+Grouped cross-validation?
+FIXME cross_validation function?
+FIXME kick out nearest centroids?
+FIXME overfitting the validation set?
+FIXME we have the threefold split before it's introduced?
+FIXME make plot to illustrate overfitting test set? allude to kaggle?
+---
+class: spacious
 
-I'm also trying to get more workers from travis. One other thing you can do is
-test the continuous integration on a repository that belongs to you.
-You can fork the repository you get within the class org, and run travis on that.
-If you do that, you'll have your own private worker and things will go much faster.
-But make sure to keep the repository private. You can get a free account on
-travis.com with your columbia email address.
+# A Note on homeworks
+
+- Submit Zip file
+- Don't include .git
+- `git archive homework1.zip`
+
+???
+
+There was a bit of a misunderstanding. Don't create a PDF with your submission.
+You only need to have a pdf for task0. Submit the whole repo as a zip file to gradescope!
+Starting with homework2 you will submit pdfs, but for this you will submit code.
+
+Also, make sure you don't actually include the zip folder
 
 Ok, so from now on I'll assume you mastered git and version control and github and testing,
 and we'll focus on machine learning.
 
 Let's dive back into supervised learning.
 
-FIXME:
-More details on implementing cross-validation?
-Grouped cross-validation?
-FIXME cross_validation function?
-FIXME kick out nearest centroids?
+
 ---
 
 class: center
@@ -664,7 +663,7 @@ con: high variance, bad use of data
 
 
 ---
-# Implementing threefold split
+# Threefold Split for Hyper-Parameters
 
 .smaller[
 ```python
@@ -802,6 +801,122 @@ and the parameter grid to find the best parameters.
 We use the best parameters and the training set to build a model with
 the best parameters,
 and finally evaluate it on the test set.
+
+
+Because this is such a common pattern, there is a helper class for this
+in scikit-learn, called GridSearch CV, which does most of these steps
+for you.
+---
+# GridSearchCV
+.smaller[
+```python
+from sklearn.model_selection import GridSearchCV
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, stratify=y)
+
+
+param_grid = {'n_neighbors':  np.arange(1, 15, 2)}
+
+grid = GridSearchCV(KNeighborsClassifier(), param_grid=param_grid,
+                    cv=10, return_train_score=True)
+grid.fit(X_train, y_train)
+
+print("best mean cross-validation score: {:.3f}".format(grid.best_score_))
+print("best parameters: {}".format(grid.best_params_))
+
+print("test-set score: {:.3f}".format(grid.score(X_test, y_test)))
+```
+
+```
+best mean cross-validation score: 0.967
+best parameters: {'n_neighbors': 9}
+test-set score: 0.993
+```
+]
+???
+Here is an example.
+We still need to split our data into training and test set.
+We declare the parameters we want to search over as a dictionary. In
+this example the parameter is just n_neighbors and the values we want
+to try out are a range. The keys of the dictionary are the parameter
+names and the values are the parameter settings we want to try. If you
+specify multiple parameters, all possible combinations are tried. This
+is where the name grid-search comes from - it’s an exhaustive search
+over all possible parameter combinations that you specify.
+
+GridSearchCV is a class, and it behaves just like any other model in
+scikit-learn, with a fit, predict and score method.
+It’s what we call a meta-estimator, since you give it one estimator,
+here the KneighborsClassifier, and from that GridSearchCV constructs a
+new estimator that does the parameter search for you.
+You also specify the parameters you want to search, and the
+cross-validation strategy.
+Then GridSearchCV does all the other things we talked about, it does the
+cross-validation and parameter selection, and retrains a model with the
+best parameter settings that were found.
+We can check out the best cross-validation score and the best parameter
+setting with the best_score_ and best_params_ attributes.
+And finally we can compute the accuracy on the test set, simply but
+using the score method! That will use the retrained model under the hood.
+
+---
+class: compact
+
+# GridSearchCV Results
+.tiny[
+```python
+import pandas as pd
+results = pd.DataFrame(grid.cv_results_)
+results.columns
+```
+```
+Index(['mean_fit_time', 'mean_score_time', 'mean_test_score',
+       'mean_train_score', 'param_n_neighbors', 'params', 'rank_test_score',
+       'split0_test_score', 'split0_train_score', 'split1_test_score',
+       'split1_train_score', 'split2_test_score', 'split2_train_score',
+       'split3_test_score', 'split3_train_score', 'split4_test_score',
+       'split4_train_score', 'split5_test_score', 'split5_train_score',
+       'split6_test_score', 'split6_train_score', 'split7_test_score',
+       'split7_train_score', 'split8_test_score', 'split8_train_score',
+       'split9_test_score', 'split9_train_score', 'std_fit_time',
+       'std_score_time', 'std_test_score', 'std_train_score'],
+      dtype='object')
+```
+
+```python
+results.params
+```
+```
+0     {'n_neighbors': 1}
+1     {'n_neighbors': 3}
+2     {'n_neighbors': 5}
+3     {'n_neighbors': 7}
+4     {'n_neighbors': 9}
+5    {'n_neighbors': 11}
+6    {'n_neighbors': 13}
+Name: params, dtype: object
+```
+]
+
+???
+FIXME text size
+GridSearchCV also computes a lot of interesting statistics for you, which
+are stored in the cv_results_ attribute. That attribute is a dictionary,
+but it’s easiest to convert it to a pandas dataframe to look at it.
+Here you can see the columns. Theres mean fit time, mean score time,
+mean test scores, mean training scores, standard deviations and scores
+for each individual split of the data.
+And there is one row for each setting of the parameters we tried out.
+---
+class: center
+# n_neighbors Search Results
+
+![:scale 70%](images/grid_search_n_neighbors.png)
+???
+We can use this for example to plot the results of cross-validation over
+the different parameters.
+Here are the mean training score and mean test score together with one
+standard deviation.
 ---
 # Nested Cross-Validation
 
@@ -954,12 +1069,13 @@ for time-series.
 ---
 # Using Cross-Validation Generators
 
-.smaller[
+.tiny[
 ```python
-from sklearn.model_selection import KFold, StratifiedKFold, ShuffleSplit
+from sklearn.model_selection import KFold, StratifiedKFold, ShuffleSplit, RepeatedStratifiedKFold
 kfold = KFold(n_splits=5)
 skfold = StratifiedKFold(n_splits=5, shuffle=True)
 ss = ShuffleSplit(n_splits=20, train_size=.4, test_size=.3)
+rs = RepeatedStratifiedKFold(n_splits=5, n_repeats=10)
 
 print("KFold:\n{}".format(
       cross_val_score(KNeighborsClassifier(), X, y, cv=kfold)))
@@ -969,20 +1085,28 @@ print("StratifiedKFold:\n{}".format(
 
 print("ShuffleSplit:\n{}".format(
       cross_val_score(KNeighborsClassifier(), X, y, cv=ss)))
+
+print("RepeatedStratifiedKFold:\n{}".format(
+      cross_val_score(KNeighborsClassifier(), X, y, cv=rs)))
 ```
 
 ```
+
 KFold:
-[ 0.93  0.96  0.96  0.98  0.96]
+[0.93 0.96 0.96 0.98 0.96]
 StratifiedKFold:
-[ 0.97  0.95  0.98  0.96  0.96]
+[0.98 0.96 0.96 0.97 0.96]
 ShuffleSplit:
-[ 0.93  0.96  0.95  0.98  0.95  0.98  0.97  0.95  0.96  0.96  0.99  0.96
-  0.96  0.96  0.98  0.96  0.95  0.95  0.96  0.96]
+[0.98 0.96 0.96 0.98 0.94 0.96 0.95 0.98 0.97 0.92 0.94 0.97 0.95 0.92
+ 0.98 0.98 0.97 0.94 0.97 0.95]
+RepeatedStratifiedKFold:
+[0.99 0.96 0.97 0.97 0.95 0.98 0.97 0.98 0.97 0.96 0.97 0.99 0.94 0.96
+ 0.96 0.98 0.97 0.96 0.96 0.97 0.97 0.96 0.96 0.96 0.98 0.96 0.97 0.97
+ 0.97 0.96 0.96 0.95 0.96 0.99 0.98 0.93 0.96 0.98 0.98 0.96 0.96 0.95
+ 0.97 0.97 0.96 0.97 0.97 0.97 0.96 0.96]
 ```
 ]
 ???
-FIXME: repeated kfold
 Ok, so how do we use these cross-validation generators? We can simply
 pass the object to the cv parameter of the cross_val_score function,
 instead of passing a number. Then that generator will be used.
@@ -993,128 +1117,26 @@ We can do the same with StratifiedKFold, and we can also shuffle if we
 like, or we can use Shuffle split.
 
 ---
-class: center, middle
-![:scale 80%](images/gridsearch_workflow.png)
-
-???
-Let’s come back to the general workflow for adjusting hyper-parameters,
-though.
-So we start with hyper parameters we want to adjust and our dataset,
-we split it into training and test set, find the best parameters using
-cross-validation, retrain the model and then do a final evaluation on
-the test set.
-Because this is such a common pattern, there is a helper class for this
-in scikit-learn, called GridSearch CV, which does most of these steps
-for you.
----
-# GridSearchCV
+# cross_validate function
 .smaller[
 ```python
-from sklearn.model_selection import GridSearchCV
-
-X_train, X_test, y_train, y_test = train_test_split(X, y, stratify=y)
-
-
-param_grid = {'n_neighbors':  np.arange(1, 15, 2)}
-
-grid = GridSearchCV(KNeighborsClassifier(), param_grid=param_grid, cv=10)
-grid.fit(X_train, y_train)
-
-print("best mean cross-validation score: {:.3f}".format(grid.best_score_))
-print("best parameters: {}".format(grid.best_params_))
-
-print("test-set score: {:.3f}".format(grid.score(X_test, y_test)))
+from sklearn.model_selection import cross_validate
+res = cross_validate(KNeighborsClassifier(), X, y, return_train_score=True,
+                    cv=5, scoring=["accuracy", "roc_auc"])
+res_df = pd.DataFrame(res)
+```
 ```
 
-```
-best mean cross-validation score: 0.967
-best parameters: {'n_neighbors': 9}
-test-set score: 0.993
+fit_time	score_time	test_accuracy	test_roc_auc	train_accuracy	train_roc_auc
+0.000839	0.010204    0.965217	    0.996609	    0.980176	    0.997654
+0.000870	0.014424    0.956522	    0.983689	    0.975771	    0.998650
+0.000603	0.009298    0.982301	    0.999329	    0.971491	    0.996977
+0.000698	0.006670    0.955752	    0.984071	    0.978070	    0.997820
+0.000611	0.006559    0.964602	    0.994634	    0.978070	    0.998026
 ```
 ]
 ???
-Here is an example.
-We still need to split our data into training and test set.
-We declare the parameters we want to search over as a dictionary. In
-this example the parameter is just n_neighbors and the values we want
-to try out are a range. The keys of the dictionary are the parameter
-names and the values are the parameter settings we want to try. If you
-specify multiple parameters, all possible combinations are tried. This
-is where the name grid-search comes from - it’s an exhaustive search
-over all possible parameter combinations that you specify.
-
-GridSearchCV is a class, and it behaves just like any other model in
-scikit-learn, with a fit, predict and score method.
-It’s what we call a meta-estimator, since you give it one estimator,
-here the KneighborsClassifier, and from that GridSearchCV constructs a
-new estimator that does the parameter search for you.
-You also specify the parameters you want to search, and the
-cross-validation strategy.
-Then GridSearchCV does all the other things we talked about, it does the
-cross-validation and parameter selection, and retrains a model with the
-best parameter settings that were found.
-We can check out the best cross-validation score and the best parameter
-setting with the best_score_ and best_params_ attributes.
-And finally we can compute the accuracy on the test set, simply but
-using the score method! That will use the retrained model under the hood.
-
----
-class: compact
-
-# GridSearchCV Results
-.smallest[
-```python
-import pandas as pd
-results = pd.DataFrame(grid.cv_results_)
-results.columns
-```
-```
-Index(['mean_fit_time', 'mean_score_time', 'mean_test_score',
-       'mean_train_score', 'param_n_neighbors', 'params', 'rank_test_score',
-       'split0_test_score', 'split0_train_score', 'split1_test_score',
-       'split1_train_score', 'split2_test_score', 'split2_train_score',
-       'split3_test_score', 'split3_train_score', 'split4_test_score',
-       'split4_train_score', 'split5_test_score', 'split5_train_score',
-       'split6_test_score', 'split6_train_score', 'split7_test_score',
-       'split7_train_score', 'split8_test_score', 'split8_train_score',
-       'split9_test_score', 'split9_train_score', 'std_fit_time',
-       'std_score_time', 'std_test_score', 'std_train_score'],
-      dtype='object')
-```
-
-```python
-results.params
-```
-```
-0     {'n_neighbors': 1}
-1     {'n_neighbors': 3}
-2     {'n_neighbors': 5}
-3     {'n_neighbors': 7}
-4     {'n_neighbors': 9}
-5    {'n_neighbors': 11}
-6    {'n_neighbors': 13}
-Name: params, dtype: object
-```
-]
-
-???
-GridSearchCV also computes a lot of interesting statistics for you, which
-are stored in the cv_results_ attribute. That attribute is a dictionary,
-but it’s easiest to convert it to a pandas dataframe to look at it.
-Here you can see the columns. Theres mean fit time, mean score time,
-mean test scores, mean training scores, standard deviations and scores
-for each individual split of the data.
-And there is one row for each setting of the parameters we tried out.
----
-class: center
-# n_neighbors Search Results
-
-![:scale 70%](images/grid_search_n_neighbors.png)
-???
-We can use this for example to plot the results of cross-validation over
-the different parameters.
-Here are the mean training score and mean test score together with one
-standard deviation.
+FIXME alignment
 ---
 
 class: middle
