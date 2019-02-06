@@ -1100,7 +1100,26 @@ your data. Right now using Pandas, make sure your column
 names match up, make everything to an integer,
 or use column transformer and everything is awesome.
 
+In contrast to basically all other estimators in sklearn,
+this uses the column information in pandas and allows you to slice
+out different columns based on column names, integer indices or boolean masks.
+In this example I'm constructing a boolean mask
+
 ---
+class:center, middle
+![:scale 100%](images/column_transformer_schematic.png)
+???
+Here's a schematic of the column transformer.
+Most commonly you might want to separate continuous and categorical columns,
+but you can select any subsets of columns you like. They can also overlap.
+Or you can apply multiple transformations to the same set of columns.
+Let's say I want a scaled version of the data, but I also want to
+extract principal components. I can use the same column as inputs to multiple
+transformers, and the results will be concatenated.
+
+FIXME add code
+---
+
 class: some-space
 
 # OneHot vs Statisticians
