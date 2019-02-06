@@ -24,25 +24,33 @@ class: center, middle
 Andreas C. Müller
 
 ???
-Today we’ll talk about preprocessing and featureengineering.
+Today we’ll talk about preprocessing and feature engineering.
 What we’re talking about today mostly applies to linear
 models, and not to tree-based models, but it also applies to
 neural nets and kernel SVMs.
 
 FIXME: add illustration of why one-hot is better than integer encoding
 FIXME: add rank scaler
-FIXME some slides have screenshots
+FIXME: some slides have screenshots
+FIXME remove 3d plots!
 FIXME: add binnning stuff?
 FIXME: target encoder from dirtycat or categorical encoder contrib package?
+FIXME make pandas tables representation in markdown more compact
 ---
+class: center, middle
 
+Coming up with features is difficult, time-consuming, requires expert knowledge.
+"Applied machine learning" is basically feature engineering.
+.quote_author[Andrew Ng]
+
+---
 class: middle
 
 ![:scale 90%](images/boston_scatter.png)
 
 
 ???
-Let’s go back to the boston housing dataset. The idea was to
+Let’s take a look at the the boston housing dataset. The idea was to
 predict house prices. Here are the features on the x axis
 and the response, so price, on the y axis.
 
@@ -82,8 +90,6 @@ class: center, middle
 Let’s start with the different scales.
 
 Many model want data that is on the same scale.
-KNearestNeighbors: If the distance in TAX is between 300 and
-400 then the distance difference in CHArS doesn’t matter!
 
 Linear models: the different scales mean different penalty.
 L2 is the same for all!
@@ -133,8 +139,8 @@ divides by standard deviation. Making all the features have
 a zero mean and a standard deviation of one. One thing about
 this is that it won't guarantee any minimum or maximum
 values. The range can be arbitrarily large. MinMaxScaler
-subtracts minimum and divides by range. Scales between 0 and
-1. So all the features will have an exact minimum at zero
+subtracts minimum and divides by range. Scales between 0 and 1.
+So all the features will have an exact minimum at zero
 and exact maximum at one. This mostly makes sense if there
 are actually minimum and maximum values in your data set.
 If it's actually Gaussian distribution, the scaling might
@@ -171,6 +177,7 @@ class: spacious
 - Only scale, don’t center (use MaxAbsScaler)
 
 ???
+FIXME ugly slide
 There’s another one that's important for sparse data. It’s
 called the MaxAbsScaler in scikit-learn. So sparse data is
 the kind of data that happens actually quite frequently in
@@ -627,147 +634,6 @@ that you have bugs.
 
 ---
 
-class: left, middle
-
-# Feature Distributions
-
-???
-
-Now that we discussed scaling and pipelines, let’s talk
-about some more preprocessing methods. One important aspect
-is dealing with different input distributions.
-
----
-
-class: left, middle
-
-.center[
-![:scale 85%](images/img_17.png)
-]
-
-???
-
-Here is a box plot of the boston housing data after
-transforming it with the standard scaler. Even though the
-mean and standard deviation are the same for all features,
-the distributions are quite different. You can see very
-concentrated distributions like Crim and B, and very skewed
-distribuations like RAD and Tax (and also crim and B).
-
-Many models, in particular linear models and neural
-networks, work better if the features are approximately
-normal distributed.
-
-Let’s also check out the histograms of the data to see a bit
-better what’s going on.
-
----
-
-class: left, middle
-
-.center[
-![:scale 90%](images/boston_hist.png)
-]
-
-???
-
-Clearly CRIM and ZN and B are very peaked, and LSTAT and DIS
-and Age are very asymmetric. Sometimes you can use a hack
-like applying a logarithm to the data to get better behaved
-values. There is slightly more rigorous technique though.
-
----
-
-# Box-Cox Transform
-
-.left-column[
-$$bc_{\lambda}(x) = \cases{\frac{x^\lambda - 1}{\lambda} & \text{if } \lambda \neq 0\cr log(x) & \text{if } \lambda = 0 }$$
-
-
-Only applicable for positive x!
-]
-
-.right-column[
-![:scale 90%](images/img_19.png)
-]
-
-.reset-column[
-```python
-from sklearn.preprocessing import PowerTransformer
-pt = PowerTransformer(method='box-cox')
-# for any data: Yeo-Johnson
-pt.fit(X)
-```
-]
-???
-
-
-The Box-Cox transformation is a family of univariate
-functions to transform your data, parametrized by a
-parameter lambda. For lamda=1 the function is the identity,
-for lambda = 2 it is square, lambda =0 is log and there is
-many other functions in between. For a given dataset, a
-separate parameter lambda is determined for each feature, by
-minimizing the skewdness of the data (making skewdness close
-to zero, not close to -inf), so it is more “gaussian”. The
-skewdness of a function is a measure of the asymmetry of a
-function and is 0 for functions that are symmetric around
-their mean. Unfortunately the Box-Cox transformation is only
-applicable to positive features.
-
-
----
-
-.wide-left-column[
-![:scale 85%](images/boston_hist.png)
-]
-
-.narrow-right-column[Before]
-.clear-column[]
-
-.wide-left-column[![:scale 85%](images/boston_hist_boxcox.png)]
-.narrow-right-column[After]
-
-
-???
-
-Here are the histograms of the original data and the
-transformed data. The title of each subplot shows the
-estimated lambda. If the lambda is close to 1, the
-transformation didn’t change much. If it is away from 1,
-there was a significant transformation.
-
-You can clearly see the effect on “CRIM” which was
-approximately log-transformed, and lstat and nox which were
-approximately transformed by sqrt.
-
-For the binary CHAS the transformation doesn’t make a lot of
-sense, though.
-
----
-
-
-.wide-left-column[
-![:scale 85%](images/boston_scatter.png)
-]
-
-.narrow-right-column[Before]
-.clear-column[]
-
-.wide-left-column[![:scale 85%](images/boston_bc_scaled_scatter.png)]
-.narrow-right-column[After]
-
-
-
-???
-
-Here is a comparison of the feature vs response plot before
-and after the box-cox transformation.
-
-The dis, lstat and crim relationships now look a bit more
-obvious and linear.
-
----
 
 class: left, middle
 
@@ -775,14 +641,29 @@ class: left, middle
 
 ---
 
-class: center, middle
-
 # Categorical Variables
-
-.larger[
-$$ \lbrace 'red', 'green', 'blue' \rbrace \subset ℝ^p ? $$
+.smaller[
+```python
+import pandas as pd
+df = pd.DataFrame(
+    {'boro': ['Manhattan', 'Queens', 'Manhattan', 'Brooklyn', 'Brooklyn', 'Bronx'],
+     'vegan': ['No', 'No','No','Yes', 'Yes', 'No']})
+```
 ]
-
+<table border="1" class="dataframe">
+    <thead>
+      <tr style="text-align: right;">
+        <th></th><th>boro</th><th>vegan</th></tr>
+    </thead>
+    <tbody>
+      <tr><th>0</th><td>Manhattan</td><td>No</td></tr>
+      <tr><th>1</th><td>Queens</td><td>No</td></tr>
+      <tr><th>2</th><td>Manhattan</td><td>No</td></tr>
+      <tr><th>3</th><td>Brooklyn</td><td>Yes</td></tr>
+      <tr><th>4</th><td>Brooklyn</td><td>Yes</td></tr>
+      <tr><th>5</th><td>Bronx</td><td>No</td></tr>
+    </tbody>
+  </table>
 ???
 
 Before we can apply a machine learning algorithm, we first
@@ -798,21 +679,37 @@ First, let me explain how to deal with discrete input
 variables, also known as categorical features. They come up
 in nearly all applications.
 
-Let’s say you have three possible values for a given
-measurement, whether you used setup1 setup2 or setup3. You
-could try to encode these into a single real number, say 0,
-1 and 2, or e, \pi, \tau.
-
-However, that would be a bad idea for algorithms like linear
-regression
-
 ---
+# Ordinal encoding
 
-class: center, middle
+.smaller[
+```python
+df['boro_ordinal'] = df.boro.astype("category").cat.codes
+df
+```
+]
+.left-column[
+<table border="1" class="dataframe">
+    <thead>
+      <tr style="text-align: right;">
+        <th></th><th>boro</th><th>boro_ordinal</th><th>vegan</th></tr>
+    </thead>
+    <tbody>
+      <tr><th>0</th><td>Manhattan</td><td>2</td><td>No</td></tr>
+      <tr><th>1</th><td>Queens</td><td>3</td><td>No</td></tr>
+      <tr><th>2</th><td>Manhattan</td><td>2</td><td>No</td></tr>
+      <tr><th>3</th><td>Brooklyn</td><td>1</td><td>Yes</td></tr>
+      <tr><th>4</th><td>Brooklyn</td><td>1</td><td>Yes</td></tr>
+      <tr><th>5</th><td>Bronx</td><td>0</td><td>No</td></tr>
+    </tbody>
+  </table>
+]
 
-# Categorical Variables
-.center[![:scale 60%](images/img_24.png)]
+--
 
+.right-column[
+![:scale 100%](images/boro_ordinal.png)
+]
 ???
 
 If you encode all three values using the same feature, then
@@ -832,24 +729,92 @@ three features in this example is active at a time.
 
 You could actually get away with n-1 features, but in
 machine learning that usually doesn’t matter
+---
+# Ordinal encoding
 
+.smaller[
+```python
+df['boro_ordinal'] = df.boro.astype("category").cat.codes
+df
+```
+]
+.left-column[
+<table border="1" class="dataframe">
+    <thead>
+      <tr style="text-align: right;">
+        <th></th><th>boro</th><th>boro_ordinal</th><th>vegan</th></tr>
+    </thead>
+    <tbody>
+      <tr><th>0</th><td>Manhattan</td><td>2</td><td>No</td></tr>
+      <tr><th>1</th><td>Queens</td><td>3</td><td>No</td></tr>
+      <tr><th>2</th><td>Manhattan</td><td>2</td><td>No</td></tr>
+      <tr><th>3</th><td>Brooklyn</td><td>1</td><td>Yes</td></tr>
+      <tr><th>4</th><td>Brooklyn</td><td>1</td><td>Yes</td></tr>
+      <tr><th>5</th><td>Bronx</td><td>0</td><td>No</td></tr>
+    </tbody>
+  </table>
+]
+
+.right-column[
+![:scale 100%](images/boro_ordinal_classification.png)
+]
 ---
 
-class: center, middle
+# One-Hot (Dummy) Encoding
 
-.center[![:scale 60%](images/img_25.png)]
-.center[![:scale 60%](images/img_26.png)]
+.narrow-left-column[
+<table border="1" class="dataframe">
+    <thead>
+      <tr style="text-align: right;">
+        <th></th><th>boro</th><th>vegan</th></tr>
+    </thead>
+    <tbody>
+      <tr><th>0</th><td>Manhattan</td><td>No</td></tr>
+      <tr><th>1</th><td>Queens</td><td>No</td></tr>
+      <tr><th>2</th><td>Manhattan</td><td>No</td></tr>
+      <tr><th>3</th><td>Brooklyn</td><td>Yes</td></tr>
+      <tr><th>4</th><td>Brooklyn</td><td>Yes</td></tr>
+      <tr><th>5</th><td>Bronx</td><td>No</td></tr>
+    </tbody>
+  </table>
+]
 
+.wide-right-column[
+.tiny[
+```python
+pd.get_dummies(df)
+```
+<table border="1" class="dataframe">
+    <thead>
+      <tr style="text-align: right;">
+        <th></th><th>boro_Bronx</th><th>boro_Brooklyn</th><th>boro_Manhattan</th><th>boro_Queens</th><th>vegan_No</th><th>vegan_Yes</th></tr>
+    </thead>
+    <tbody>
+      <tr><th>0</th><td>0</td><td>0</td><td>1</td><td>0</td><td>1</td><td>0</td></tr>
+      <tr><th>1</th><td>0</td><td>0</td><td>0</td><td>1</td><td>1</td><td>0</td></tr>
+      <tr><th>2</th><td>0</td><td>0</td><td>1</td><td>0</td><td>1</td><td>0</td></tr>
+      <tr><th>3</th><td>0</td><td>1</td><td>0</td><td>0</td><td>0</td><td>1</td></tr>
+      <tr><th>4</th><td>0</td><td>1</td><td>0</td><td>0</td><td>0</td><td>1</td></tr>
+      <tr><th>5</th><td>1</td><td>0</td><td>0</td><td>0</td><td>1</td><td>0</td></tr>
+    </tbody>
+  </table>
+]
+]
 ???
 One way to do is with Pandas. Here I have an example of a
 data frame where I have the boroughs of New York as a
-categorical variable and variable salary. One to get the
+categorical variable and variable saying whether they are vegan. One to get the
 dummies is to get dummies on this data frame. This will
 create new columns, it will actually replace borough column
 by four columns that correspond to the four different
 values. The get_dummies applies transformation to all
 columns that have a dtype that's either object or
 categorical. 
+
+In this case we didn't actually want to transform the target variable vegan.
+
+---
+
 
 ---
 
@@ -958,7 +923,7 @@ values are actually in the data set.
 ---
 
 #OneHotEncoder
-
+- Deprecated mode, don't use.
 ```python
 from sklearn.preprocessing import OneHotEncoder
 
@@ -977,7 +942,6 @@ array([[   1.,    0.,    0.,    0.,  103.],
        [   0.,    0.,    0.,    1.,  219.]])
 ```
 
-- Deprecated mode, don't use.
 
 ???
 You can also do this with scikit-learn. There are two ways
@@ -1008,7 +972,8 @@ to apply it to a subset of the columns.
 
 ---
 
-# CategoricalEncoder
+# OneHotEncoder
+- New mode: always transforms all columns
 
 ```python
 import pandas as pd
@@ -1028,21 +993,20 @@ array([[ 0.,  0.,  1.,  0.,  0.,  0.,  0.,  1.,  0.,  0.],
        [ 1.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  1.]])
 ```
 
-- Always transforms all columns
 
 ???
 - Fit-transform paradigm ensures train and test-set categories correspond.
 
 ---
-# The Future
-## CategoricalEncoder + ColumnTransformer
+# The Future (it's here)
+## OneHotEncoderEncoder + ColumnTransformer
 
 ```python
 categorical = df.dtypes == object
 
 preprocess = make_column_transformer(
     (StandardScaler(), ~categorical),
-    (CategoricalEncoder(), categorical))
+    (OneHotEncoder(), categorical))
 
 model = make_pipeline(preprocess, LogisticRegression())
 ```
@@ -1093,9 +1057,12 @@ Encoder or you just encode this as integers and treat it as
 a continuous. If you have very high categorical variables
 with many levels, maybe it keeping it as an integer might
 make more sense. 
-
 ---
+class: center, middle
 
+# More encodings for categorical features:
+## http://contrib.scikit-learn.org/categorical-encoding/
+---
 class: some-space
 
 #Count-Based Encoding
@@ -1323,6 +1290,147 @@ and so on. And so now I just have a single feature that
 hopefully encodes the information of the country. 
 ---
 
+class: left, middle
+
+# Feature Distributions
+
+???
+
+Now that we discussed scaling and pipelines, let’s talk
+about some more preprocessing methods. One important aspect
+is dealing with different input distributions.
+
+---
+
+class: left, middle
+
+.center[
+![:scale 85%](images/img_17.png)
+]
+
+???
+
+Here is a box plot of the boston housing data after
+transforming it with the standard scaler. Even though the
+mean and standard deviation are the same for all features,
+the distributions are quite different. You can see very
+concentrated distributions like Crim and B, and very skewed
+distribuations like RAD and Tax (and also crim and B).
+
+Many models, in particular linear models and neural
+networks, work better if the features are approximately
+normal distributed.
+
+Let’s also check out the histograms of the data to see a bit
+better what’s going on.
+
+---
+
+class: left, middle
+
+.center[
+![:scale 90%](images/boston_hist.png)
+]
+
+???
+
+Clearly CRIM and ZN and B are very peaked, and LSTAT and DIS
+and Age are very asymmetric. Sometimes you can use a hack
+like applying a logarithm to the data to get better behaved
+values. There is slightly more rigorous technique though.
+
+---
+
+# Box-Cox Transform
+
+.left-column[
+$$bc_{\lambda}(x) = \cases{\frac{x^\lambda - 1}{\lambda} & \text{if } \lambda \neq 0\cr log(x) & \text{if } \lambda = 0 }$$
+
+
+Only applicable for positive x!
+]
+
+.right-column[
+![:scale 90%](images/img_19.png)
+]
+
+.reset-column[
+```python
+from sklearn.preprocessing import PowerTransformer
+pt = PowerTransformer(method='box-cox')
+# for any data: Yeo-Johnson
+pt.fit(X)
+```
+]
+???
+
+
+The Box-Cox transformation is a family of univariate
+functions to transform your data, parametrized by a
+parameter lambda. For lamda=1 the function is the identity,
+for lambda = 2 it is square, lambda =0 is log and there is
+many other functions in between. For a given dataset, a
+separate parameter lambda is determined for each feature, by
+minimizing the skewdness of the data (making skewdness close
+to zero, not close to -inf), so it is more “gaussian”. The
+skewdness of a function is a measure of the asymmetry of a
+function and is 0 for functions that are symmetric around
+their mean. Unfortunately the Box-Cox transformation is only
+applicable to positive features.
+
+
+---
+
+.wide-left-column[
+![:scale 85%](images/boston_hist.png)
+]
+
+.narrow-right-column[Before]
+.clear-column[]
+
+.wide-left-column[![:scale 85%](images/boston_hist_boxcox.png)]
+.narrow-right-column[After]
+
+
+???
+
+Here are the histograms of the original data and the
+transformed data. The title of each subplot shows the
+estimated lambda. If the lambda is close to 1, the
+transformation didn’t change much. If it is away from 1,
+there was a significant transformation.
+
+You can clearly see the effect on “CRIM” which was
+approximately log-transformed, and lstat and nox which were
+approximately transformed by sqrt.
+
+For the binary CHAS the transformation doesn’t make a lot of
+sense, though.
+
+---
+
+
+.wide-left-column[
+![:scale 85%](images/boston_scatter.png)
+]
+
+.narrow-right-column[Before]
+.clear-column[]
+
+.wide-left-column[![:scale 85%](images/boston_bc_scaled_scatter.png)]
+.narrow-right-column[After]
+
+
+
+???
+
+Here is a comparison of the feature vs response plot before
+and after the box-cox transformation.
+
+The dis, lstat and crim relationships now look a bit more
+obvious and linear.
+
+---
 class: left, middle
 
 #Feature Engineering
