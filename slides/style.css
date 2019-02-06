@@ -52,16 +52,17 @@ margin-bottom: 3px;
     padding-top: 100px;
 }
 .remark-slide-content .smaller p, .remark-slide-content .smaller li,
-.remark-slide-content .smaller .remark-code,  .smaller .remark-code-line,.remark-slide-content .smaller a{
+.remark-slide-content .smaller .remark-code,  .smaller .remark-code-line,.remark-slide-content .smaller a,
+ .remark-slide-content .smaller .dataframe{
     font-size: 25px;
 }
 
 .remark-slide-content .smallest p, .remark-slide-content .smallest li, .remark-slide-content .smallest .remark-code,
-.smallest .remark-code-line{
+.smallest .remark-code-line, .remark-slide-content .smallest .dataframe{
 font-size: 20px;
 }
 .remark-slide-content .tiny p, .remark-slide-content .tiny li, .remark-slide-content .tiny .remark-code,
-.tiny .remark-code-line{
+.tiny .remark-code-line, .remark-slide-content .tiny .dataframe{
 font-size: 16px;
 }
 .normal {
@@ -100,6 +101,15 @@ font-size: 16px;
     float: left;
     width: 65%
 }
+.narrow-left-column {
+    float: left;
+    width: 32%
+}
+.wide-right-column {
+    float: right;
+    width: 65%
+}
+
 .invisible {
     visibility: hidden
 }

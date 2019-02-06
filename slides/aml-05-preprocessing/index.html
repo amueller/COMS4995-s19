@@ -29,13 +29,11 @@ What we’re talking about today mostly applies to linear
 models, and not to tree-based models, but it also applies to
 neural nets and kernel SVMs.
 
-FIXME: add illustration of why one-hot is better than integer encoding
-FIXME: add rank scaler
+FIXME: add quantile transformer
 FIXME: some slides have screenshots
 FIXME remove 3d plots!
 FIXME: add binnning stuff?
 FIXME: target encoder from dirtycat or categorical encoder contrib package?
-FIXME make pandas tables representation in markdown more compact
 ---
 class: center, middle
 
@@ -679,6 +677,11 @@ First, let me explain how to deal with discrete input
 variables, also known as categorical features. They come up
 in nearly all applications.
 
+Scikit-learn requires you to explicitly handle these, and assumes
+in general that all your input is continuous numbers.
+This is different from how many libraries in R do it,
+which deal with categorical variables implicitly.
+
 ---
 # Ordinal encoding
 
@@ -719,16 +722,7 @@ Usually, there is no semantic ordering of the categories,
 and so we shouldn’t introduce one in our representation of
 the data.
 
-Instead, we add one new feature for each category,
 
-And that feature encodes whether a sample belongs to this
-category or not.
-
-That’s called a one-hot encoding, because only one of the
-three features in this example is active at a time.
-
-You could actually get away with n-1 features, but in
-machine learning that usually doesn’t matter
 ---
 # Ordinal encoding
 
@@ -801,6 +795,17 @@ pd.get_dummies(df)
 ]
 ]
 ???
+Instead, we add one new feature for each category,
+
+And that feature encodes whether a sample belongs to this
+category or not.
+
+That’s called a one-hot encoding, because only one of the
+three features in this example is active at a time.
+
+You could actually get away with n-1 features, but in
+machine learning that usually doesn’t matter
+
 One way to do is with Pandas. Here I have an example of a
 data frame where I have the boroughs of New York as a
 categorical variable and variable saying whether they are vegan. One to get the
@@ -814,17 +819,90 @@ categorical.
 In this case we didn't actually want to transform the target variable vegan.
 
 ---
+# One-Hot (Dummy) Encoding
 
+.narrow-left-column[
+<table border="1" class="dataframe">
+    <thead>
+      <tr style="text-align: right;">
+        <th></th><th>boro</th><th>vegan</th></tr>
+    </thead>
+    <tbody>
+      <tr><th>0</th><td>Manhattan</td><td>No</td></tr>
+      <tr><th>1</th><td>Queens</td><td>No</td></tr>
+      <tr><th>2</th><td>Manhattan</td><td>No</td></tr>
+      <tr><th>3</th><td>Brooklyn</td><td>Yes</td></tr>
+      <tr><th>4</th><td>Brooklyn</td><td>Yes</td></tr>
+      <tr><th>5</th><td>Bronx</td><td>No</td></tr>
+    </tbody>
+  </table>
+]
 
----
-
-class: center, middle
-
-.center[![:scale 50%](images/img_27.png)]
-.left-column[![:scale 30%](images/img_28.png)]
-.right-column[![:scale 50%](images/img_29.png)]
-
+.wide-right-column[
+.tiny[
+```python
+pd.get_dummies(df, columns=['boro'])
+```
+<table border="1" class="dataframe">
+    <thead>
+      <tr style="text-align: right;">
+        <th></th><th>vegan</th><th>boro_Bronx</th><th>boro_Brooklyn</th><th>boro_Manhattan</th><th>boro_Queens</th></tr>
+    </thead>
+    <tbody>
+      <tr><th>0</th><td>No</td><td>0</td><td>0</td><td>1</td><td>0</td></tr>
+      <tr><th>1</th><td>No</td><td>0</td><td>0</td><td>0</td><td>1</td></tr>
+      <tr><th>2</th><td>No</td><td>0</td><td>0</td><td>1</td><td>0</td></tr>
+      <tr><th>3</th><td>Yes</td><td>0</td><td>1</td><td>0</td><td>0</td></tr>
+      <tr><th>4</th><td>Yes</td><td>0</td><td>1</td><td>0</td><td>0</td></tr>
+      <tr><th>5</th><td>No</td><td>1</td><td>0</td><td>0</td><td>0</td></tr>
+    </tbody>
+  </table>
+]
+]
 ???
+We can specify selectively which columns to apply the encoding to.
+---
+# One-Hot (Dummy) Encoding
+.narrow-left-column[
+<table border="1" class="dataframe">
+    <thead>
+      <tr style="text-align: right;">
+        <th></th><th>boro</th><th>vegan</th></tr>
+    </thead>
+    <tbody>
+      <tr><th>0</th><td>2</td><td>No</td></tr>
+      <tr><th>1</th><td>3</td><td>No</td></tr>
+      <tr><th>2</th><td>2</td><td>No</td></tr>
+      <tr><th>3</th><td>1</td><td>Yes</td></tr>
+      <tr><th>4</th><td>1</td><td>Yes</td></tr>
+      <tr><th>5</th><td>0</td><td>No</td></tr>
+    </tbody>
+  </table>
+]
+.wide-right-column[
+.tiny[
+
+```python
+pd.get_dummies(df_ordinal, columns=['boro'])
+```
+<table border="1" class="dataframe">
+    <thead>
+      <tr style="text-align: right;">
+        <th></th><th>vegan</th><th>boro_0</th><th>boro_1</th><th>boro_2</th><th>boro_3</th></tr>
+    </thead>
+    <tbody>
+      <tr><th>0</th><td>No</td><td>0</td><td>0</td><td>1</td><td>0</td></tr>
+      <tr><th>1</th><td>No</td><td>0</td><td>0</td><td>0</td><td>1</td></tr>
+      <tr><th>2</th><td>No</td><td>0</td><td>0</td><td>1</td><td>0</td></tr>
+      <tr><th>3</th><td>Yes</td><td>0</td><td>1</td><td>0</td><td>0</td></tr>
+      <tr><th>4</th><td>Yes</td><td>0</td><td>1</td><td>0</td><td>0</td></tr>
+      <tr><th>5</th><td>No</td><td>1</td><td>0</td><td>0</td><td>0</td></tr>
+    </tbody>
+  </table>
+]
+]
+???
+This also helps if the variable was already encoded using integers.
 Sometimes, someone has already encoded the categorical
 variables to integers like here. So here this is exactly the
 same information only except instead of strings you have
@@ -832,26 +910,22 @@ them numbered. If you call the get_dummies on this nothing
 happens because none of them are object data types or
 categorical data types. If you want to look at the One Hot
 Encoding, you can explicitly pass columns equal and this
-will transform into boro_1, boro_2, boro_3. The question is,
-why do I want to have this encoding instead of just
-enumerating them 01234. Making them 01234, you have to put
-an order on them and often there's not a natural order. The
-question is, why do we use a tree. So ideally, if you use a
-tree, then it'll handle categorical variables by itself and
-then it can actually do the split in one go. In scikit-learn
-unfortunately, it cannot. But it's still depends on the
-order. Right now, in scikit-learn, it would be treated as a
-continuous variable. So each individual node could make only
-these splits but you can have multiple nodes and that can
-make arbitrary splits. So doing these two things is not the
-same, but they probably both work. If you didn’t want it One
-Hot Encoding and do it in a tree right now, scikit-learning
-can only split away one class in each note that it does a
-split. Here it can split all the class apart, but only
-according to the numbering. So coming back to how to do this
-with pandas. There's one issue though, if you do this with
-pandas, there’s not four but five boroughs. 
+will transform into boro_1, boro_2, boro_3. 
+In this case get_dummies usually wouldn't do anything, but we can tell
+it which variables are categorical and it will dummy encode those for us.
+---
+class: center, middle
 
+.center[![:scale 50%](images/img_27.png)]
+.left-column[![:scale 30%](images/img_28.png)]
+.right-column[![:scale 50%](images/img_29.png)]
+
+???
+Let's say instead of predicting whether someone is vegan,
+we want to predict their salary.
+That would also be an integer.
+There is no way to a-priory distinguish that one of These
+should be treated as categorical and one as ordinal or continuous.
 
 ---
 
@@ -889,17 +963,22 @@ df['boro'] = pd.Categorical(df.boro, categories=['Manhattan', 'Queens', 'Brookly
 pd.get_dummies(df)
 ```
 ]
-
-```
-   salary  boro_Manhattan  boro_Queens  boro_Brooklyn  boro_Bronx  boro_Staten Island
-0     103               1            0              0           0                   0
-1      89               0            1              0           0                   0
-2     142               1            0              0           0                   0
-3      54               0            0              1           0                   0
-4      63               0            0              1           0                   0
-5     219               0            0              0           1                   0
-```
-
+.tiny[
+<table border="1" class="dataframe">
+    <thead>
+      <tr style="text-align: right;">
+        <th></th><th>salary</th><th>boro_Manhattan</th><th>boro_Queens</th><th>boro_Brooklyn</th><th>boro_Bronx</th><th>boro_Staten Island</th></tr>
+    </thead>
+    <tbody>
+      <tr><th>0</th><td>103</td><td>1</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+      <tr><th>1</th><td>89</td><td>0</td><td>1</td><td>0</td><td>0</td><td>0</td></tr>
+      <tr><th>2</th><td>142</td><td>1</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+      <tr><th>3</th><td>54</td><td>0</td><td>0</td><td>1</td><td>0</td><td>0</td></tr>
+      <tr><th>4</th><td>63</td><td>0</td><td>0</td><td>1</td><td>0</td><td>0</td></tr>
+      <tr><th>5</th><td>219</td><td>0</td><td>0</td><td>0</td><td>1</td><td>0</td></tr>
+    </tbody>
+  </table>
+]
 
 ???
 The way to fix this is by using Pandas categorical types.
@@ -924,6 +1003,7 @@ values are actually in the data set.
 
 #OneHotEncoder
 - Deprecated mode, don't use.
+
 ```python
 from sklearn.preprocessing import OneHotEncoder
 
@@ -945,7 +1025,7 @@ array([[   1.,    0.,    0.,    0.,  103.],
 
 ???
 You can also do this with scikit-learn. There are two ways
-to do this scikit-learn. The old way is One Hot Encoder.
+to do this scikit-learn. Here's the old way.
 It’s a transformer, so you can call fit on something and
 call transform on something else. This fit transform
 paradigm in scikit-learn prevents you from having these
@@ -1429,6 +1509,8 @@ and after the box-cox transformation.
 
 The dis, lstat and crim relationships now look a bit more
 obvious and linear.
+
+---
 
 ---
 class: left, middle
