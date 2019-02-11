@@ -17,7 +17,7 @@ class: center, middle
 
 ### W4995 Applied Machine Learning
 
-# Linear Models for Classification
+# Linear Models for Classification, SVMs
 
 02/05/18
 
@@ -30,6 +30,9 @@ principles and advanced topics surrounding general models,
 both for classification and regression.
 
 FIXME: in regularizing SVM, long vs short normal vectors.
+24 slides on linear models for classfication
+5 slides for solver choiced and EstimatorCV
+11 slides for SGD
 
 ---
 class: center, middle
@@ -880,265 +883,1008 @@ RidgeCV or LassoCV, you can really put any preprocessing
 inside this cross-validation and that's not so great. 
 
 ---
-class: center, middle
-
-# Stochastic Gradient Descent
-
-( see http://leon.bottou.org/projects/sgd
-and http://leon.bottou.org/papers/bottou-bousquet-2008
-and http://scikit-learn.org/stable/modules/scaling_strategies.html )
-
-???
-The last thing I want to talk about today is Stochastic
-Gradient Descent. This is just another solver to solve
-linear models or neural networks. But it's good to
-understand a little bit more in detail because it comes up a
-lot in particular with very large data sets.
-
----
-class: right
-
-# Decomposing Generalization Error
-
-.center[
-![:scale 100%](images/img_13.png)
-]
-
-Bottou et. al.
-
-???
-The idea here is that if you have a lot of data, maybe
-solving the problem exactly isn't as important as looking at
-all of the data. Let's say I want to find a good function
-that generalizes well over to test dataset and I have a
-budget of how many data points I can look at it and I want
-to approximate the best possible function on the training
-set with an accuracy of epsilon. What we want is a model of
-generalized as well, what we do in practice is we pick a
-family of functions, like the linear functions, we estimate
-the best function using the training set, we want one that's
-the best on the true distribution, but instead we're using
-the training set and then we need to have some numeric
-optimization procedure that optimizes it until the error is
-smaller than epsilon for whatever loss, the loss could be
-regularized or anything but still we need to minimize
-optimization problem to some precision and we can only use
-at most as much data points as their dataset. And we've only
-a particular budget of time that it can use. So these are
-sort of the restrictions we have. And we want to find the
-best model.
-
----
-class: center, middle
-
-.center[
-![:scale 100%](images/img_14.png)
-]
-
-???
-So now let's look at what happens to these three errors in
-the time if we increase different parts. If we make the
-family of functions bigger, so let's say we use from linear
-function to neural networks or we go to a high dimensional
-space, the approximation error, that’s the error that we get
-by restricting ourselves to do class goes down because we
-have a richer class. The estimation error which means the
-error we get by using the training set, instead of having
-access to the true distribution gets larger because we have
-more flexibility in our model, so the distance between what
-the ideal will be on the true distribution and the training
-data set becomes bigger. And if we have a larger family of
-functions obviously it's going to take longer. If you have
-more data points, the estimation error will go down. So our
-optimization will be closer to what is the true
-distribution, but it will take more time. The final row
-represents the precision to which I want to optimize, the
-epsilon in which I want to stop optimizing the problem that
-I'm optimizing. The optimization error will go up, but the
-time will go down. It's faster if I optimize less strongly.
-
-
 ---
 class: spacious
-# The Trade-off
 
-.center[
-![:scale 100%](images/img_math_1.png)
-]
-- If `$n_\text{max}$` is large, we are constraint by $T_\max$!
-- Use a worse algorithm but look at more data!
+# Motivation
 
+- Go from linear models to more powerful nonlinear ones.
+- Keep convexity (ease of optimization).
+- Generalize the concept of feature engineering.
 
 ???
-If the number of data points is really large, the thing that
-we really constraint is by the runtime.  If constrained by
-the runtime, can't we just subsample the data? Yes, you
-could. Then you would run faster. But the point that he's
-making is it's better to look at all of the data and so
-we're decreasing estimation error but we don't find a
-precise solution. So now we say it's more important to
-minimize the estimation error, which we can do by looking at
-a lot of data than actually optimizing it very precisely
-because the thing that we are optimizing is a training set
-error, which is not really the thing that we're interested
-in the first place. So we look at the algorithm that does
-worst in terms of optimization, but it's much faster. This
-is the algorithm that’s most commonly used and the algorithm
-is Stochastic Gradient Descent.
-
----
-# Reminder: Gradient Descent
-
-.right-column[![:scale 1-0%](images/img_15.png)]
-
-Want: $$\arg \min_w F(w)$$
-
-Initialize $w_0$
-
-$$w^{(i+1)} \leftarrow w^{(i)} - \eta_i\frac{d}{dw}F(w^{(i)})$$
-
-Converges to local minimum
-
-???
-First, let's talk about Gradient Descent. So we have some
-function we want to minimize here the function is Lasso
-training data set plus the regularizer. F is the objective
-of the model and I want to find the best parameter setting
-w. The way gradient descent works are that we initialize it
-with some W and then we compute a gradient then we walk down
-the gradient by a small step. This converges to a local
-minimum in the function. For linear models, there's only one
-global minimum. Basically, any optimization algorithm you
-can think of will always converge to the same solution, they
-only converge at different speeds.
-
----
-
-# Reminder: Gradient Descent
-
-.center[
-![:scale 40%](images/img_16.png)
-]
-
-$$w^{(i+1)} \leftarrow w^{(i)} - \eta_i\frac{d}{dw}F(w^{(i)})$$
-
-
-???
-
-
----
-
-# Pick a learning rate
-
-.center[
-![:scale 90%](images/img_17.png)
-]
-
-$$w^{(i+1)} \leftarrow w^{(i)} - \eta_i\frac{d}{dw}F(w^{(i)})$$
-
-???
-A little bit of an issue here is picking a learning rate
-which is how big a step are you making. If you make too
-small a step, then you're going to get stuck wherever you're
-started. If you pick the right step size, you can make very
-quick progress. If you pick too a big step size, you're
-going to be missing the target and just jumping around the
-target. This is a very simple optimizer. But it's not great
-and it’s not very fast because you need to compute gradients
-over the whole dataset. What you can do instead is you can
-approximate a gradient by looking only a single data point
-at a time. 
-
----
-
-# Stochastic Gradient Descent
-
-- Logistic Regression:
-
-`$$F(w) = -C \sum_{i=1}^n\log(\exp(-y_iw^T \textbf{x}_i) +1 ) + ||w||_2^2$$`
-
-
-- Pick $x_i$ randomly, then
-
-`$$\frac{d}{dw}F(w) = \frac{d}{dw} -C \log(\exp(-y_iw^T \textbf{x}_i) +1 ) + \frac{1}{n}||w||_2^2$$`
-
-- In practice: just iterate over i.
-
-
-???
-Looking at the Logistic Regression, the functional Logistic
-Regression we want to minimize is the log loss plus the
-regularizer. Instead of looking at the gradient for the
-whole sum here, we can get a stochastic approximation of the
-gradient by looking at only one of the sums at a time. In
-practice, we iterate over the dataset and go one by one
-through all the data points. We make sure we shuffle them
-before. Then we do small gradient steps. This is a very bad
-optimizer compared to the SAG but it can go very quickly
-over a lot of data. 
+The main motivation for kernel support vector machines is
+that we want to go from linear models to nonlinear models
+but we also want to have the same simple kernel optimization
+to solve. So basically, the optimization problem we have to
+solve from a kernel SVM is about as hard as a linear SVM. So
+it's sort of very simple problem to solve. It’s much easier
+than learning in neural networks for example. But we get
+nonlinear decision boundaries. The idea behind this is to
+generalize the concept of feature engineering. We'll see in
+a little bit how, for example, kernels SVM with polynomial
+kernels relate to using polynomials explicitly in your
+feature engineering. Before we talk about kernels, I want to
+talk a little bit more about linear support vector machines,
+which we already discussed last week. 
 
 ---
 class: spacious
 
-# SGD and partial_fit
 
-- SGDClassifier(), SGDRegressor() fast on very large datasets
-- Tuning learning rate and schedule can be tricky.
-- partial_fit allows working with out-of-memory data!
+# Reminder on Linear SVM
+
+`$$ \min_{w \in \mathbb{R}^p} C \sum_{i=1}^n \max(0, 1 - y_i w^T\mathbf{x}) + ||w||^2_2 $$`
+
+$$ \hat{y} = \text{sign}(w^T \mathbf{x})  $$
 
 
 ???
-This is implemented in SGD classifier, and SGD regressor and
-you can use it in very large data sets. It's a little bit
-tricky to tune the learning rate and so you can either pick
-as constant learning rate, or you can pick an exponentially
-decreasing learning rate. There's one that's called optimal.
-If you scale your data to standard division 1, then the
-optimal one will often work well but it's not actually
-optimal on any sense. This will allow you to give you
-something quickly on a big data set. There's also another
-thing you can do, there's a method called partial_fit that
-these models have which allows you to iteratively fit feed
-it data. If you have like streaming data coming in and you
-having infinite data, you can just keep giving it more and
-more data called partial_fit. This method will update the
-model. In scikit-learn, if you call fit multiple times it
-will always forget whatever it saw before. Each fit resets
-the model while partial fit will remember what it saw before
-and keeps fitting the model. SGDClassifier() and
-SGDRegressor both have a whole bunch of different loss
-function penalties so they both can do elastic net penalty
-and the classifier can do logistic loss and hinge loss and
-squared hinge loss and the regressor can do Huber loss and
-squared error and absolute error. So there are many, many
-different choices for different loss functions. 
+The idea behind the linear support vector machine is it's a
+linear classifier, the minimization problem is up a hinge
+loss, which is basically linear in the decision function
+w^x. Basically, as long as you have a distance on the right
+side of the hyper plane, that’s bigger than one, your data
+point does not contribute to the loss. So you want all of
+the points outside of this margin of one around the
+separating hyper plane. 
+---
+
+#Max-Margin and Support Vectors
+
+.center[
+![:scale 75%](images/max_margin.png)
+]
+
+???
+A point is within the margin if 〖y_i w〗^T x is smaller
+than one. That means if you have a smaller w, you basically
+have a smaller margin given that you're on the correct side.
+If you're on the wrong side, you'll have always have a loss.
+If you're in the correct side, if you're w^x is small, then
+you also have a loss. 
+---
+class: center
+
+#Max-Margin and Support Vectors
+`$$ \min_{w \in \mathbb{R}^p} C \sum_{i=1}^n \max(0, 1 - y_i w^T\mathbf{x}) + ||w||^2_2 $$`
+
+$$\text{Within margin} \Leftrightarrow y_iw^T x < 1$$
+
+Smaller $w \Rightarrow$ larger margin
 
 
 ---
-class: center, spacious
+class: center
 
-![:scale 90%](images/img_18.png)
+#Max-Margin and Support Vectors
 
-![:scale 90%](images/img_19.png)
+.left-column[
+![:scale 80%](images/max_margin_C_0.1.png)
+]
+.right-column[
+![:scale 80%](images/max_margin_C_1.png)
+]
 
+???
+Here are two examples on the same dataset. Where I learned
+linear support vector machine with c-0.1, and c=1. With
+c=0.1, you have a wider margin. There are points inside the
+margin and all the points inside the margin are support
+vectors which contribute to the solution. Points that are
+outside of the margin and on the correct side doesn't
+contribute to the solution. These points are sort of
+classified correctly, not when they’re ignored. The normal
+vector is w and basically, the size of the margin is the
+inverse of the length of w. C=0.1 means I have less emphasis
+on the data fitting and more emphasis on the shrinking w.
+This will lead to a smaller w. If I have larger C that means
+less regularization, which will lead to a larger W, larger W
+means a smaller margin. So there are fewer points here, they
+are inside the margin and therefore, fewer support vectors.
+More regularization usually means a larger margin but more
+points inside the margin. Also, more support vectors mean
+there are more data points that actually influence the
+solution.
+
+
+---
+
+# Reformulate Linear Models
+
+.smaller[
+- Optimization Theory
+
+$$ w = \sum_{i=1}^n \alpha_i \mathbf{x}_i $$
+
+(alpha are dual coefficients. Non-zero for support vectors only)
+
+
+$$ \hat{y} = \text{sign}(w^T \mathbf{x})  \Longrightarrow   \hat{y} = \text{sign}\left(\sum_i^{n}\alpha_i (\mathbf{x}_i^T  \mathbf{x})\right) $$
+
+$$ \alpha_i <= C$$
+
+]
+
+???
+Now I want to go from this linear model and extended to a
+nonlinear model. The idea here is that with some
+improvisation theory, you can find out that the W at the
+optimum can be expressed as a linear combination of the data
+points which is relatively straightforward to C. Expressing
+W as a linear combination, these alphas are called dual
+coefficients. Basically, you’re expressing the linear
+weights as a linear combination of the data points with this
+two coefficients alpha and you can show that these alpha are
+only non-zero for the points that contribute to this
+solution. So you can always write W as a linear combination
+of the support vectors with some alphas. If you want you can
+do this optimization problem either in trying to find W or
+you can rewrite the optimization problem and you can try to
+find these alphas. If you do this in terms of alphas, the
+decision function can be rewritten like this. Instead of
+looking at you w^T x, we just replace W transposed by the
+sum over all the training data points x_i and then basically
+we move the sum out of the inner products and we can see
+that it's the sum over all the alpha i in the inner product
+of the training data points  x_i was a test data point x.
+Optimization theory also tells us that if I find the alpha w
+to minimize this problem, then all the alpha i (s) will be
+smaller than c. This is another way to say what I said last
+time that basically c limits the influence of each data
+point. So, if you have a smaller c the alpha i belong to
+each training data point can only be as big as this c, and
+so each of the data points has only limited influence. 
+
+
+---
+class: spacious
+
+# Introducing Kernels
+
+
+$$\hat{y} = \text{sign}\left(\sum_i^{n}\alpha_i (\mathbf{x}_i^T  \mathbf{x})\right) \longrightarrow \hat{y} = \text{sign}\left(\sum_i^{n}\alpha_i (\phi(\mathbf{x}_i)^T  \phi(\mathbf{x}))\right) $$
+
+$$ \phi(\mathbf{x}_i)^T \phi( \mathbf{x}_j) \longrightarrow k(\mathbf{x}_i,  \mathbf{x}_j) $$
+
+k positive definite, symmetric $\Rightarrow$ there exists a $\phi$! (possilby $\infty$-dim)
 
 
 ???
-Fit works just like everywhere else. Partial fit you can
-call it with different batches of data and this will keep
-fitting the model. One thing that you should keep in mind
-for the classifier is that you need to give it the classes
-at the beginning because it doesn't know how many classes
-there are and at the first time, not all the classes might
-be present in the data you give it to. So you need to
-specify how many classes there are. Partial fit doesn't do
-loops over a dataset. So if you want to use a partial fit,
-and you want to loop over dataset multiple times, you have
-to set the loop yourself. If you loop over a dataset, if you
-do more of gradient descent, then you get better results.
-This code is the same code for all combinations of losses
-and regularizers because it’s very simple to write this
-down.
+
+The idea of this rewrite is that now I observed that the
+optimization problem and the prediction problem can be
+written only in terms of these inner products. Let's say I
+want to use the feature function  ∅, like doing a polynomial
+expansion with the polynomial feature transformation and
+while if I use ∅x_i as these inputs then they just replace
+the x and then I just need the inner products between these
+feature vectors, but the only thing I really ever need is
+these inner products. Instead of trying to come up with some
+feature functions that are good to separate the data points,
+I can try it to come up with inner products. I can try to
+engineer this thing here instead of trying to engineer the
+features. If you write down any positive definite quadratic
+form that is symmetric, there's always a ∅. So whenever I
+write down any function that is positive definite and
+symmetric into vectors, there's always a feature function ∅
+so that this is the inner product in this feature space,
+which is kind of interesting. The feature space might be
+infinite dimensional though. So the idea that it might be
+much easier to come up with these kinds of inner products
+than trying to find ∅. So we're now trying to design the k,
+which makes this whole thing a good nonlinear classifier. So
+in this case, obviously, the kernel.
+
+
+---
+
+# Examples of Kernels
+
+
+$$k_\text{linear}(\mathbf{x}, \mathbf{x}') = \mathbf{x}^T\mathbf{x}'$$
+
+$$k_\text{poly}(\mathbf{x}, \mathbf{x}') = (\mathbf{x}^T\mathbf{x}' + c) ^ d$$
+
+$$k_\text{rbf}(\mathbf{x}, \mathbf{x}') = \exp(\gamma||\mathbf{x} -\mathbf{x}'||^2)$$
+
+$$k_\text{sigmoid}(\mathbf{x}, \mathbf{x}') = \tanh\left(\gamma \mathbf{x}^T\mathbf{x}'  + r\right)$$
+
+`$$k_\cap(\mathbf{x}, \mathbf{x}')= \sum_{i=1}^p \min(x_i, x'_i)$$`
+
+- If $k$ and $k'$ are kernels, so are `$k + k', kk', ck', ...$`
+
+???
+There's a couple of kernels that are commonly used. So the
+linear kernel just means I just use the inner product in the
+original space. That is just the original linear SVM. Other
+kernels that are commonly used are like the polynomial
+kernel, in which I take the inner products, I add some
+constant c and I raise it to power d. There's the RVF
+kernel, which is probably the most commonly used kernel,
+which is just a Gaussian function above the curve around the
+distance of the two data points. There's a sigmoid kernel.
+There's the intersection kernel, which computes the minimum.
+And if you have any kernel, you can create a new kernel by
+adding two kernels together or multiplying them or
+multiplying them by constant. The only requirement we have
+is that they're positive, indefinite and symmetric. 
+
+
+What does this look like in practice? So, for example, let's
+look at this polynomial kernel. It's not very commonly used,
+but I think it's one of the ones that are relatively easy to
+understand. So the idea of the polynomial kernel is it does
+the same thing as computing polynomials. But if you compute
+polynomials of a very high degree, your feature vector
+becomes very long. Whereas here, I always just need to
+compute this inner product and raise them to this power. 
+
+---
+# Polynomial Kernel vs Features
+
+
+$$ k_\text{poly}(\mathbf{x}, \mathbf{x}') = (\mathbf{x}^T\mathbf{x}' + c) ^ d $$
+
+Primal vs Dual Optimization<br /><br />
+
+Explicit polynomials $\rightarrow$ compute on `n_samples * n_features ** d`
+
+Kernel trick $\rightarrow$ compute on kernel matrix of shape `n_samples * n_samples`
+<br /><br />
+For a single feature:
+
+$$ (x^2, \sqrt{2}x, 1)^T (x'^2, \sqrt{2}x', 1) = x^2x'^2 + 2xx' + 1 = (xx' + 1)^2 $$
+
+???
+So if I compute explicit polynomials, if I end features and
+then I do all the interactions, my data set becomes number
+of samples times number of features to the power D. So if I
+have 1000 features, and I take D to be 5, this will be
+enormous. If I'm using the kernel trick, which is replacing
+this inner product in the feature space by the kernel, then
+I only need to compute the inner product on the training
+data. So I only need to compute on this inner product matrix
+which is number of samples times number of samples. So this
+is much smaller if number of features to the D is smaller
+than number of samples then I can compute, essentially the
+same result on something that’s a different representation
+of the data. You can see that they're not entirely
+equivalent. So doing the polynomial expansion is not
+entirely equivalent to the polynomial features but it's
+about the same. You can see this quite easily for a single
+feature. If I do this for many features, adding extra
+features would make a very long feature vector, but the
+thing on the right-hand side always stays the same. 
+
+
+---
+
+# Poly kernels with sklearn
+
+.smaller[
+```python
+poly = PolynomialFeatures(include_bias=False)
+X_poly = poly.fit_transform(X)
+print(X.shape, X_poly.shape)
+print(poly.get_feature_names())
+```
+```
+((100, 2), (100, 5))
+['x0', 'x1', 'x0^2', 'x0 x1', 'x1^2']
+```
+]
+
+.center[
+![:scale 70%](images/poly_kernel_features.png)
+]
+
+???
+You can see that they're very similar, by just applying them
+scikit-learn, either the Kernel SVM or the explicit
+polynomial features. Here I have this dataset consisting of
+classes orange and blue. These are not linearly separable.
+So if I use a linear SVM, it wouldn't work. But I can do a
+polynomial transformation to go from two features to five
+features. In here I just added degree two features. And then
+I can learn linear SVM on top of these expanded features
+space. I get a very similar result if I instead of expanding
+the features, I use the original dataset. But now instead of
+learning linear SVM, I use a SVM with the polynomial kernel
+of degree 2, they're not exactly the same because there was
+this factor of squared of two that I mentioned, but they're
+pretty much the same. Question is if we increase the
+capacity of the model and we overfit and we'll talk about
+this in a little bit, but so, for now, we want to increase
+the capacity of a model making more flexible I mean, we
+definitely don't want to increase it infinitely. But we
+really making out model more flexible. So here for the
+polynomial kernel, you could get the same result just by
+expanding. If you have a very high degree polynomial it
+would be a large expansion. If you use one of the other
+kernels, for example, the RVF kernel doing this expansion
+would actually be resolved in infinite dimensional vector,
+so you couldn't actually do this with a feature vector. Now
+I'm looking at this model here on the right-hand side where
+I'm using the polynomial features. 
+
+---
+class: smaller
+# Understanding Dual Coefficiants
+
+```python
+linear_svm.coef_
+#array([[0.139, 0.06, -0.201, 0.048, 0.019]])
+```
+$$ y = \text{sign}(0.139 x_0 + 0.06 x_1 - 0.201 x_0^2 + 0.048 x_0 x_1 + 0.019 x_1^2) $$
+
+```python
+linear_svm.dual_coef_
+#array([[-0.03, -0.003, 0.003, 0.03]])
+linear_svm.support_
+#array([1,26,42,62], dtype=int32)
+```
+`$$ y = \text{sign}(-0.03 \phi(\mathbf{x}_0)^T \phi(x) - 0.003 \phi(\mathbf{x}_{26})^T \phi(\mathbf{x})  +0.003 \phi(\mathbf{x}_{42})^T \phi(\mathbf{x}) + 0.03 \phi(\mathbf{x}_{63})^T \phi(\mathbf{x})) $$`
+
+???
+And so if I look at the linear SVM and I have five
+coefficients corresponding to the five features. And so if I
+make a prediction, its first coefficient times the first
+feature, second coefficient times the second feature and so
+on, and I look at the sine of it. This is just a linear
+prediction if I want to look what this looks like in terms
+of dual coefficients, I can look at the dual coefficients of
+linear SVM and the support. Out of these many data points,
+there's four, they were selected as support vectors by the
+optimization. These are the ones that have these black
+circles around them. And so the solution can be expressed as
+a linear combination of these four support vectors where the
+coefficients are dual coefficients. 
+
+If I want to express this in terms of dual coefficients, I
+can say its dual coefficient -0.03 times the inner product
+of the first data point and my test data point in feature
+space. I do the same thing for the train each point 26 and
+42 and 63 with their respective weights. Now I can look at
+how does this look like for kernel. 
+
+---
+# With Kernel
+`$$y = \text{sign}\left(\sum_i^{n}\alpha_i k(\mathbf{x}_i,  \mathbf{x})\right) $$`
+
+```python
+poly_svm.dual_coef_
+# array([[-0.057, -0. , -0.012, 0.008, 0.062]])
+poly_svm.support_
+# array([1,26,41,42,62], dtype=int32)
+```
+`$$ y = \text{sign}(-0.057 (\mathbf{x}_1^T\mathbf{x} + 1)^2
+         -0.012 (\mathbf{x}_{41}^T \mathbf{x} + 1)^2 \\
+         +0.008 (\mathbf{x}_{42}^T \mathbf{x} + 1)^2 + 0.062 * (\mathbf{x}_{63}, \mathbf{x} + 1)^2
+$$`
+
+???
+So for kernel, the prediction is this. For kernel SVM there
+are no coefficients in the original space, there's only dual
+coefficients. For each of support vectors, I compute the
+kernel of support vector with the test point for which I
+want to make a prediction. This is basically the prediction
+function of the kernel support vector machine. And you can
+see it's very similar to this only that I’ve replaced these
+inner products by the kernels. The original idea behind this
+kernel trick was to make computation faster. In some cases,
+it might be faster.
+
+$$ y = sign(-0.03 * np.inner(poly(X[1]), poly(x)) – 0.003 *
+np.inner(poly(X[26]), poly(x)) +0.003 *
+np.inner(poly(X[42]), poly(x)) + 0.03 *
+np.inner(poly(X[63]), poly(x)) $$
+---
+
+# Runtime Considerations
+
+.center[
+![:scale 85%](images/img_2.png)
+]
+
+???
+So how does it look like in terms of runtime, here I have
+the same plot in linear space and log-log space. This is for
+a fixed number of features, more features make the kernel
+better. But if I fix the number of features, you can see
+which of the two is faster. Log-log space is better for
+this. So you can see that if I have a very small number of
+samples, then linear kernel and doing explicit polynomials
+is slower than doing the kernel because of the matrix that's
+number of samples times the number of samples is very small.
+But if I have a lot of features, then doing the explicit
+expansion is faster since the number of samples is large. In
+the case where we can do explicit feature expansion if we
+have a lot of samples, maybe that's faster. 
+
+---
+class:spacious
+
+# Kernels in Practice
+
+- Dual coefficients less interpretable
+- Long runtime for “large” datasets (100k samples)
+- Real power in infinite-dimensional spaces: rbf!
+- Rbf is “universal kernel” - can learn (aka overfit)
+anything.
+
+???
+So what does this mean for us in practice? One issue is that
+the dual coefficients are usually less interpretable because
+they give you like weightings of inner products with the
+training data points which is maybe less intuitive than
+looking at like five times x squared and if you have large
+data sets they can become very slow. The real power of
+kernels is when the feature space would actually be
+infinite-dimensional. The RBF kernel is called the universal
+kernel, which means you can learn any possible concept or
+you can overfit any possible concept. Same is true for like
+neural networks and trees and nearest neighbors, for
+example, they can learn anything but linear models and even
+polynomial models of a fixed degree cannot learn everything.
+
+
+---
+class:spacious
+
+#Preprocessing
+
+- Kernel use inner products or distances.
+- StandardScaler or MinMaxScaler ftw
+- Gamma parameter in RBF directly relates to scaling
+of data – default only works with zero-mean, unit
+variance.
+
+???
+Nearly all of these kernels use the distance in the original
+space. These inner products are distances and so scaling is
+really important. People use a center scale or min-max
+scalar.
+
+For the RBF kernel or for any of the kernels really the
+default parameters work well for scale data. If you don't
+scale your data default parameters will not work at all. If
+you multiply that by five then the default parameters will
+give you terrible results.
+
+---
+
+# Parameters for RBF Kernels
+
+- Regularization parameter C is limit on alphas
+(for any kernel)
+- Gamma is bandwidth: $k_\text{rbf}(\mathbf{x}, \mathbf{x}') = \exp(\gamma||\mathbf{x} -\mathbf{x}'||^2)$
+
+
+.center[
+![:scale 85%](images/img_3.png)
+]
+
+???
+Support vector machine with RBF kernel has these two
+parameters you need to tune. These both control complexity
+in some way. We already said that the C parameter limits the
+influence of each individual data point and the other one is
+to kernel bandwidth gamma. A smaller gamma means a wider
+kernel. So wider kernel means a simpler model because the
+decision boundary will be smoother. Whereas a larger gamma
+means a much narrower kernel and that means each data point
+will have much more local influence, which means it's more
+like the nearest neighbor algorithm and has more complexity.
+Usually, you should tune both of these parameters to get a
+good tradeoff between fitting and generalization. 
+
+---
+
+.center[
+![:scale 85%](images/img_4.png)
+]
+
+???
+This plot tries to illustrate these two parameters in the
+RBF SVM kernel. On the vertical is C and on the horizontal
+is gamma and support vectors are marked with circles. So the
+simplest model is basically the one with the smallest gamma
+and smallest C. Basically, all data points are support
+vectors, everything gets averaged and have a very broad
+kernel. Now, if I increase C, I overfit the data more, each
+data point can have more influence. And so only the data
+points that are really close to the boundary have influence
+now. If you increase gamma, the area of influence of each
+data point sort of shrinks. So here from it being basically
+linear or having this very little curvature if you increase
+gamma, it gets more and more curvature. And in the end, if
+you make gamma very large, each data point basically has a
+small sort of isolated island of its class around it giving
+a very complicated decision boundary. So here, for example,
+these clearly overfit the training data and so this is
+probably too large gamma. There's sort of a tradeoff between
+the two. Usually, they're multiple combinations of C and
+gamma that will give you similarly good results. 
+
+---
+
+```python
+from sklearn.datasets import load_digits
+digits = load_digits()
+```
+.center[
+![:scale 65%](images/img_5.png)
+]
+
+???
+Looking at the digit dataset. Let's say we want to learn
+kernel support vector machine on this dataset. So set the
+two important parameters to tune is C and gamma.
+---
+
+# Scaling and Default Params
+
+.smaller[
+```
+gamma : float, optional (default = "auto")
+  Kernel coefficient for 'rbf', 'poly' and 'sigmoid'.
+  If gamma is 'auto' then 1/n_features will be used
+```
+```python
+scaled_svc = make_pipeline(StandardScaler(), SVC())
+print(np.mean(cross_val_score(SVC(), X_train, y_train, cv=10)))
+print(np.mean(cross_val_score(scaled_svc, X_train, y_train, cv=10)))
+```
+```
+0.578
+0.978
+```
+```python
+gamma = (1. / (X_train.shape[1] * X_train.std()))
+print(np.mean(cross_val_score(SVC(gamma=gamma), X_train, y_train, cv=10)))
+```
+```
+0.987
+```
+]
+
+???
+Gamma by default in scikit-learn is one over the number of
+features. This really makes sense only if you scale the data
+to have a standard deviation of one, then this is a pretty
+good default. Here if I compare cross-validation, kernel SVM
+with default parameters on this dataset versus kernel SVM
+with the scaled data, the performance is either 57% or 97%.
+There's a giant jump between the scaled data and the upscale
+data. Actually here in this data set, all the pixels are on
+the same scale more or less, so they all are between 0 and
+16. So if we change the gamma to be to take into account the
+standard deviation of the data set, I actually get pretty
+good results. This is actually just a very peculiar dataset
+because I basically I know the scale should be from zero to
+one when it's from 0 to 16. So scaling by the overall
+standard deviation gives me good results here. But in
+principle day, I want to convey is that gamma scales with
+the standard deviation of the features. Usually, each of the
+features has a different standard deviation or a different
+scale and so you want to use a centered scale to estimate
+the scale for each feature and bring it to one. And then the
+default gamma, which is one over number of features will be
+sort of reasonable.
+
+---
+
+# Grid-Searching Parameters
+
+```python
+param_grid = {'svc__C': np.logspace(-3, 2, 6),
+              'svc__gamma': np.logspace(-3, 2, 6) / X_train.shape[0]}
+param_grid
+```
+{'svc_C': array([   0.001,    0.01 ,    0.1  ,    1.   ,   10.   ,  100.   ]),   
+ 'svc_gamma': array([ 0.000001,  0.000007,  0.000074,  0.000742,  0.007424,  0.074239])}
+```python
+grid = GridSearchCV(scaled_svc, param_grid=param_grid, cv=10)
+grid.fit(X_train, y_train)
+```
+???
+To tune them, I use the scaled SVM and both C and gamma
+usually learn auto log space, so here I have a log space for
+C and gamma. I actually divide this by the number of
+features, I could also just change the range, but as I said,
+this is sort of something that scales with the number of
+features and standard deviation. Then I can just do my
+standard grid searchCV with the two-dimensional parameter
+grid.
+
+---
+# Grid-Searching Parameters
+
+.center[
+![:scale 95%](images/img_6.png)
+]
+
+???
+Usually, there's a strong interaction between these two
+parameters. And the SVM is pretty sensitive to the setting
+of these two parameters. So you can see here if you look at
+the scales, balance 10 classification dataset. So chance
+performance is 10% accuracy. And so if I set the parameters
+wrong, I get chance accuracy. If I set them right, I get the
+high 90s. So that's the difference between setting gamma to
+0.007 and  0.000007 or between setting c to 1 and c to
+0.0001.
+
+So usually they're some correlation between the C and gamma
+values which are good. So you can decrease or increase C if
+you decrease gamma and the other way around.
+
+So usually I like to look at grid search results as a 2d
+heat map for this and if your optimum is somewhere on the
+boundary, you want to extend your search space. For example,
+you can see that I wouldn't need to search this very small
+Cs, they don't work at all, but maybe something better might
+be over here. A C of 100 is already like a very big C so if
+I want to use even less regularization, learning the model
+will be even slower. 
+
+---
+
+# Support Vector Regression
+
+.center[
+![:scale 80%](images/img_9.png)
+]
+
+???
+There's also a variant of support vector machines that work
+for regression. This another way to do robust regression. So
+robust to outliers in a sense, and it uses this weird loss,
+which basically says, “I want all my data to be in a tube of
+size εaround my regression line.” So this is inverse of the
+margin. You can do this with linear or you can do this with
+a kernel. Again, only a couple of the data points, support
+vectors will contribute to the solution either way. You have
+now an additional parameter, parameter C. It trades off the
+simplicity of the model versus accuracy on the training data
+set but there's also the parameter ε, which basically says
+how wide the tube that you want is. And usually, people sort
+of set the ε based on domain knowledge. So they say, I want
+my prediction to be this good and then they tune the
+parameter C and whatever the parameters of the kernel are.
+So if you use Support Vector regression with an RBF kernel,
+you probably set your ε to some reasonable value for your
+application and then you're going to tune C and gamma again.
+
+---
+
+# Using SVR
+
+- Fix epsilon based on application /outliers
+- Linear kernel → robust linear regression
+- Ploy / rbf kernel → robust non-linear regression
+.center[
+![:scale 60%](images/img_10.png)
+]
+
+???
+With linear kernel, there's a sort of robust linear
+regression. Only the outliers contribute to the solution.
+For this dataset, orange is the data and I fit both the
+polynomial model and SVR with both the polynomial kernel and
+RBF kernel and the support vectors for these two models and
+you can see the points that are outliers are always support
+vectors. You always pay the most amount of attention to the
+points that are hardest to predict. The reason why I say
+this is robust is because you're looking at the absolute
+value of the error. Basically, you're looking at the
+distance from the tube but the absolute value and so the
+absolute value is more robust than looking at the squared
+error. SVR is linear basically for all our errors. In Huber
+loss, you had a quadratic part around the target and then
+you had the linear part for the outliers. In the SVR, you
+have this tube in which you had to get no error at all. And
+then for the outliers, you have a linear part. This is quite
+related to Huber. Kernelizing this gives nonlinear
+regression that is also robust to outliers, which is nice.
+The reason why kernelizing both of these methods works well
+is that they only depend on a couple of the data points. You
+could do the same trick with dualization and do dual
+coefficients for logistic regression. But if you did it for
+logistic regression, all data points would contribute to the
+solution. 
+
+---
+class: middle, center
+
+## Undoing the Kernel-Trick
+
+???
+Alright, so let's undo the kernel trick. 
+---
+
+# Why undo the kernel trick?
+
+.center[
+![:scale 50%](images/img_11.png)
+]
+
+???
+You need to compute a kernel between all data points and so
+if you have a million data points, large-scale models
+basically don't work. There are some strategies to make the
+work but in general, it's a bad idea to work with an object
+that's square in the size of the number of samples, if
+number of samples grows very large. 
+---
+class:spacious
+
+
+# RKHS vs RKS
+### (Reproducing Kernel Hilbert-Spaces vs Random Kitchen Sinks)
+
+-  Idea: ditch kernel, approximate (infinite-dimensional) feature
+map
+
+$$\phi(x)^T \phi(x') = k(x, x') \approx \hat{\phi}(x)^T \hat{\phi}(x')$$
+
+- For rbf-kernel
+random projection followed by sin/cos
+, higher n_features is better
+
+https://www.microsoft.com/en-us/research/video/random-kitchen-sinks-replacing-optimization-withrandomization-in-learning/
+
+???
+The original idea was we can create features like polynomial
+features and we can expand our feature space, then this
+gives us more powerful models. Then we had the kernel trick
+which said instead of designing features, we're just going
+to design inner products or kernels which will give us even
+more powerful models and it's going to be cheaper. In input
+space, if we have a lot of samples actually completing these
+kernels is too much work and so we're going to use feature
+expansions that approximate the kernel. The RBF kernel is
+very popular, and so we want to use the RBF kernel but if we
+want to have the explicit expansion that would be like an
+infinite-dimensional series and so we're we don't want to do
+that. Instead, we're going to construct some finite
+dimensional approximate feature map that basically says data
+product in this feature space is about the same as the RBF
+kernel. If we do that we are again in the regime having an
+object that's number of samples times number of features and
+we can do a sort of our standard learning strategies which
+are much faster in terms of number of samples because we
+don't need to compute these specs for the kernel. One that's
+popular is called random kitchen sinks. Kernel is often
+called RKHS (Reproducing kernel Hilbert-Spaces). In RKS you
+do you draw a big random matrix, you multiply your data with
+this matrix and then you apply sine and cosine in some
+specific way and this approximates RBF kernel quite well. 
+
+---
+
+# Kernel Approximation in sklearn
+
+```python
+from sklearn.kernel_approximation import RBFSampler
+gamma = 1. / (X_train.shape[1] * X_train.std())
+approx_rbf = RBFSampler(gamma=gamma, n_components=5000)
+print(X_train.shape)
+X_train_rbf = approx_rbf.fit_transform(X_train)
+print(X_train_rbf.shape)
+# (1347, 64)
+# (1347, 5000)
+
+np.mean(cross_val_score(LinearSVC(), X_train, y_train, cv=10))
+# 0.946
+
+np.mean(cross_val_score(SVC(gamma=gamma), X_train, y_train, cv=10))
+# 0.987
+
+np.mean(cross_val_score(LinearSVC(), X_train_rbf, y_train, cv=10))
+# 0.984
+```
+
+???
+I want to apply this I have to specify the gamma for the RBF
+kernel that I want to approximate and I also have to specify
+how many features I want. More features give me a better
+approximation but they’re also slower to compute. Using the
+digit dataset again which is 64 dimensional. I go from the
+64-dimensional initial input space to a transformation using
+an RBF sampler to a 5000-dimensional space in which the
+inner products are about the same as the RBF kernel. So now
+I can compare what happens if I use the linear model on the
+input space with kernel model and with the linear model on
+the approximated space.
+
+In this way, no matter how many data points I have, I can
+always apply an RBF kernel SVM by explicitly transforming
+the data into some randomized space and then use a linear
+model. 
+
+
+---
+
+# Nyström Approximation
+
+- Use low-rank approximation of kernel matrix
+- Select some samples, compute kernel with only
+those, embed all the points.
+- Using all points = full rank = exact
+- For same number of components more expensive
+than RBFSampler, but needs less!
+
+```pythom
+from sklearn.kernel_approximation import Nystroem
+nystroem = Nystroem(gamma=gamma, n_components=200)
+X_train_ny = nystroem.fit_transform(X_train)
+print(X_train_ny.shape)
+# (1347, 200)
+np.mean(cross_val_score(LinearSVC(), X_train_ny, y_train, cv=10))
+# 0.974
+```
+???
+There's another strategy in scikit-learn called Nystrom.
+This RBF sampler only works for RBF kernel while Nystrom
+works for all possible kernels. Basically, you subsample a
+couple of the training data points and you compute kernel
+only on these couple of train data points. This way it
+doesn't grow quadratically in the size of the data points.
+So for example here, I choose randomly 200 data points and
+only compute the kernel on these 200 data points. That gives
+me a projection again. So here I do a projection in this
+200-dimensional space that’s created by evaluating the
+kernel on 200 data points from a training set. In this
+example, for RBF kernel I get the same result as I did
+before. Doing this is like slightly more expensive. To do
+this, you need to compute an SVD of size number of samples
+times 200. So that’s why this is a little bit slower to
+compute whereas for RBF sampler you just need to sample some
+Gaussian noise. If you do n_components = n_samples this will
+actually be exact and so you'll get exactly the same model.
+So you get a transformation in the kernel space that is
+exact, then you can use any linear model you want. For
+example, you could use logistic regression. If you want
+probabilities but you also want to use kernels, you can use
+Nystrom. This will transform your data and then you can use
+logistic regression in kernel space easily, or PCA or K
+means or any other model. It becomes kernelized by
+explicitly transforming the data. 
+
+---
+class: spacious
+
+# Fast Food etc
+
+- Many newer / faster algorithms out there
+- Not in sklearn so far
+- FastFood one of the most prominent ones
+- Current research on selecting good points for
+Nystroem.
+
+???
+There are a couple newer, better models in scikit-learn. For
+example, one is called fast foods. There's like smart
+strategies on how to pick the points in Nystrom.
+
+There's one obvious question you can ask yourself now, which
+is why again that we want to approximate the kernel. So the
+idea was all we want to create features to help us to
+classify and we came up with these kernels instead of the
+features and then we came up with features that approximate
+the kernels. But we only use these kernels because they were
+kind of convenient. So what we are really interested in is
+creating features that help us classify. So we can also just
+create some random features that help us classify, we don't
+really need to relate them to a kernel.
+
+---
+
+# Relation to Random Neural Nets
+
+- Why approximate kernels?
+- Just go random !
+
+```python
+rng = np.random.RandomState(0)
+w = rng.normal(size=(X_train.shape[1], 100))
+X_train_wat = np.tanh(scale(np.dot(X_train, w)))
+print(X_train_wat.shape)
+```
+(1347, 100)
+```python
+np.mean(cross_val_score(LinearSVC(), X_train_wat, y_train, cv=10))
+```
+0.966
+
+???
+For example, I can you use a random neural network which is
+so here again, I just create random normal data that's
+number of features times 100. So just like a 64 times
+hundred random matrix, multiply this with the training data
+set and do a 10 H, which is a thing you're doing in the
+neural network. So this is just like a random projection
+followed by non-linearity and then I train the linear model
+on it and it's like nearly as good as the kernel SVM. This
+shows that maybe it doesn't matter as much what kind of
+transformation you do, as long as it's nonlinear and high
+dimensional enough, you basically blow up your feature space
+and then you can learn more complex models. It seems to work
+quite easily in practice. You can think of this as I
+initialize the neural network, but I only train the output
+layer, I don't train the hidden layer at all. I just make it
+random and so it works.
+
+---
+class: spacious
+
+# Extreme Learning Machine Hoax
+
+- AKA random neural networks
+- Same result published in the 90s
+- Bogus math
+
+???
+There have been a couple papers that call these extreme
+learning machines and I hope no one ever uses the word
+extreme learning machines for two reasons. One, they
+plagiarize work that it was like 20 years older. Secondly,
+their math makes no sense at all.
+---
+class: spacious
+
+# Kernel Approximation in Practice
+
+- SVM: only when 100000 >> n_samples,
+but works for n_features large
+- RBFSampler, Nystroem can allow making anything
+kernelized!
+- Some kernels (like chi2 and intersection) have
+really fast approximation.
+
+???
+Some final remarks on when you might want to use this. If
+you have less than 100,000 samples, you can just train SVM
+and particular SVM really don’t care that much about how
+many features you have. They care more about how many
+samples you have. So RBF sampler or Nystrom can make
+anything kernelized if you want, which is kind of nice. And
+also they can allow you to make kernelized algorithms
+reasonably fast on really big data sets. There are some
+kernels that are really fast and have nice approximations
+that are also implemented in scikit-learn. For example, chi2
+kernel and intersection kernel. If you do computer vision,
+these are really cool and they have like, really good fast
+approximations and that just makes things much better. 
+
+---
+class: spacious
+
+# Summary
+
+- Kernels are cool!
+- Kernels work best for “small” n_samples
+- Approximate kernels or random features for many
+samples
+- Could do even SGD / streaming with kernel
+approximations!
+- Could use Logistic Regression (hurray probabilities)
+???
+One of the other things that you can do with the kernel is
+you can do Stochastic Gradient Descent. So usually, for an
+SVM to work, you would at least need to store all the
+support vectors in your memory. Maybe you need to store your
+whole data set into memory. If you have a very large data
+set that might not be possible. But with kernel
+approximations, the RBF sampler doesn't depend on the data
+at all, it's a transformer, but it doesn't learn anything
+from data. It just does random transformations. So you can
+use it together with Stochastic Gradient Descent and learn
+basically, on infinitely large data. You can just do it on
+streaming data. You can update your model as things come in,
+and you can do this in a nonlinear way. 
 
 ---
 class: center, middle
