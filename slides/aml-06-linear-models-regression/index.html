@@ -30,13 +30,9 @@ where we'll start. But we'll also look into how to tune
 these models, what the trade-offs are, and some more complex
 techniques.
 
-TODO: SVR to robust models? Move path algorithms into this
-lecture instead of robust regression? Add more preprocessing
-and scaling to this lecture? dimensionality -> model
-complexity?
 
 FIXME polynomial features are used in linear model part. Move explanation there?
-Or hold off on poly features at that place and use different data?
+Or hold off on poly features at that place and use different data!!!!
 FIXME remove 3d plots!
 FIXME: add binnning stuff?
 ---
@@ -377,7 +373,230 @@ FIXME better illustration/ graph
 Here's a comparison on the iris dataset again.
 This is a very artificial example and is only meant to illustrate the ideas.
 In practice, using the mean or median is actually quite decent.
+---
+class: left, middle
 
+#Feature Engineering
+
+???
+I want to talk a little bit about feature engineering and in
+particular about interaction features. For linear models,
+interaction features are actually quite interesting. 
+
+---
+
+class: center
+
+#Interaction Features
+
+![:scale 70%](images/img_33.png)
+
+???
+So let's look at this 2 dimensional dataset, 2 classes. 
+---
+
+class: center
+
+#Interaction Features
+
+![:scale 50%](images/img_34.png)
+
+![:scale 70%](images/img_35.png)
+
+???
+If I fit the model, do logistic regression, I get something
+like this, which does very badly. But if I do feature
+engineering, it means I add new features to dataset which
+will make my linear model more powerful. 
+---
+
+class: center, middle
+
+
+![:scale 50%](images/img_36.png)
+
+![:scale 70%](images/img_37.png)
+
+???
+So one idea would be to just add the product of the 2
+existing features. So add a new feature that's like x zero
+times x one, and now I'm in a 3-dimensional space. In the 3
+dimensional space, I can literally separate the data.
+
+---
+
+.center[
+![:scale 60%](images/img_38.png)
+]
+
+.smaller[
+```python
+X_i_train, X_i_test, y_train, y_test = train_test_split(
+	X_interaction, y, random_state=0)
+logreg3 = LogisticRegressionCV().fit(X_i_train, y_train)
+logreg3.score(X_i_test, y_test)
+```
+]
+```
+0.960
+```
+
+???
+If it’s projected down to the original space, it will be
+this black curve which is the logistic regression. So it's a
+linear classifier only in the expanded 3-dimensional feature
+space where it added the interaction. Interactions are one
+way to who blow up the feature space, adding more features
+in particular for linear models makes the model much more
+powerful. So you can do this for continuous features. 
+
+
+---
+
+.center[![:scale 80%](images/img_40.png)]
+
+- One model per gender!
+- Keep original: common model + model for each gender to adjust.
+- Product of multiple categoricals: common model + multiple models to adjust for combinations
+
+
+
+???
+For discrete features, it does something slightly different.
+So assume I have a database of users with an age, how many
+objects they bought, gender, how much money they spend on my
+website, and how much time they spend on my website. So I
+can Hot Encode the gender and they get like gender variable
+at 01. So now if I do interaction features of all the
+different features with the gender feature, it looks like
+this. Now I have age times male, article bought times male,
+males spend time, spend dollar male and so on and likewise
+for female. This is just the interaction features but the
+gender features are either zero or one. And so what this
+means is, these features are only active for men, these
+features only active for women. So learning a model on this
+feature space is basically the same as learning two separate
+models, one for men and one for women. What you might want
+to do is use the original features, and then use the feature
+interaction with men and the feature interaction with women.
+So you have a shared model, and then you have how men and
+women deviate from this model. So now you basically if you
+do that you have three times as many degrees of freedom in
+your linear model. 
+
+---
+# More interactions
+.padding-top[
+```
+age articles_bought gender spend$ time_online
+ + Male * (age articles_bought spend$ time_online )
+ + Female * (age articles_bought spend$ time_online )
+ + (age > 20) * (age articles_bought gender spend$ time_online)
+ + (age <= 20) * (age articles_bought gender spend$ time_online)
+ + (age <= 20) * Male * (age articles_bought gender spend$ time_online)
+```
+]
+
+???
+You can obviously do this with more discrete variables,
+let's say you have the original features, then you have a
+model that has the features only for men, a model that has
+the features only for women, then you can have a model only
+for people above 20, a model for people only below 20, a
+model for people below 20 that are male, and so on. So by
+adding these interaction features to basically create a
+bigger, bigger features space, which allows you to have
+linear models that adjust for a subpopulation of the overall
+dataset. So now I have instead of having six features, I now
+have 36 features and can have a much more powerful model. 
+
+---
+
+class: center
+
+# Polynomial Features
+
+![:scale 60%](images/img_41.png)
+
+
+
+???
+N/A
+
+
+---
+
+class: center
+
+# Polynomial Features
+
+![:scale 60%](images/img_42.png)
+
+
+
+???
+You can also add polynomials. So the thing called polynomial
+features in scikit-learn does interactions between all
+possible features and it adds polynomials. If you do
+interactions only equal to true, it will only do
+interactions and then the order is how many features it
+doesn't interactions with. Order of three means all products
+of three features. By default interactions is false and
+it’ll add also the powers of single feature, which only
+makes sense for continuous features. So for each x it will
+add x squared, x cube and so on. All right, that's all for
+today.
+---
+
+class: spacious
+
+# Polynomial Features
+.small-padding-top[
+- PolynomialFeatures() adds polynomials and interactions.
+- Transformer interface like scalers etc.
+- Create polynomial algorithms with make_pipeline!
+]
+
+???
+N/A
+
+---
+class: smaller
+# Polynomial Features
+
+```python
+from sklearn.preprocessing import PolynomialFeatures
+poly = PolynomialFeatures()
+X_bc_poly = poly.fit_transform(X_bc_scaled)
+print(X_bc_scaled.shape)
+print(X_bc_poly.shape)
+```
+
+```
+(379, 13)
+(379, 105)
+```
+
+```python
+scores = cross_val_score(RidgeCV(), X_bc_scaled, y_train, cv=10)
+np.mean(scores), np.std(scores)
+```
+```
+(0.759, 0.081)
+```
+
+
+```python
+scores = cross_val_score(RidgeCV(), X_bc_poly, y_train, cv=10)
+np.mean(scores), np.std(scores)
+```
+```
+(0.865, 0.080)
+
+```
+
+???
+N/A
 ---
 class: center, middle
 
@@ -917,27 +1136,6 @@ There are some very big coefficients that go to zero very
 quickly and some coefficients here that stay the same for a
 long time. 
 ---
-# Coefficient Paths
-
-![:scale 90%](images/ridge_coefficient_paths.png)
-
-???
-Another interesting way to see the effect of regularization
-is to look at learning curves. The definition of the
-learning curve is it looks at subsets of the training set at
-different size and look how the model performs. Here what
-I'm doing is I hold the number of features constant and I
-look at what happens if I decrease the amount of data. So
-here again, I look at different strengths of regularization,
-alpha to 1, 14, and 100 and I look at aggression, which is
-basically alpha equal to zero. You can see that if I make
-alpha 100, you get a pretty reasonable score for small
-models or even here for 14, it’s the best. If you use the
-whole dataset then linear regression does well. If you have
-had a smaller or subset of the data set regularization would
-help. 
-
----
 # Learning Curves
 
 ![:scale 90%](images/ridge_learning_curve.png)
@@ -1311,255 +1509,8 @@ talk about changing the first part, which was the squared
 loss of the predictions, basically. 
 
 
----
-class: left, middle
 
-#Feature Engineering
 
-???
-I want to talk a little bit about feature engineering and in
-particular about interaction features. For linear models,
-interaction features are actually quite interesting. 
-
----
-
-class: center
-
-#Interaction Features
-
-![:scale 70%](images/img_33.png)
-
-???
-So let's look at this 2 dimensional dataset, 2 classes. 
----
-
-class: center
-
-#Interaction Features
-
-![:scale 50%](images/img_34.png)
-
-![:scale 70%](images/img_35.png)
-
-???
-If I fit the model, do logistic regression, I get something
-like this, which does very badly. But if I do feature
-engineering, it means I add new features to dataset which
-will make my linear model more powerful. 
----
-
-class: center, middle
-
-
-![:scale 50%](images/img_36.png)
-
-![:scale 70%](images/img_37.png)
-
-???
-So one idea would be to just add the product of the 2
-existing features. So add a new feature that's like x zero
-times x one, and now I'm in a 3-dimensional space. In the 3
-dimensional space, I can literally separate the data.
-
----
-
-.center[
-![:scale 60%](images/img_38.png)
-]
-
-.smaller[
-```python
-X_i_train, X_i_test, y_train, y_test = train_test_split(
-	X_interaction, y, random_state=0)
-logreg3 = LogisticRegressionCV().fit(X_i_train, y_train)
-logreg3.score(X_i_test, y_test)
-```
-]
-```
-0.960
-```
-
-???
-If it’s projected down to the original space, it will be
-this black curve which is the logistic regression. So it's a
-linear classifier only in the expanded 3-dimensional feature
-space where it added the interaction. Interactions are one
-way to who blow up the feature space, adding more features
-in particular for linear models makes the model much more
-powerful. So you can do this for continuous features. 
-
-
----
-
-.center[![:scale 80%](images/img_40.png)]
-
-- One model per gender!
-- Keep original: common model + model for each gender to adjust.
-- Product of multiple categoricals: common model + multiple models to adjust for combinations
-
-
-
-???
-For discrete features, it does something slightly different.
-So assume I have a database of users with an age, how many
-objects they bought, gender, how much money they spend on my
-website, and how much time they spend on my website. So I
-can Hot Encode the gender and they get like gender variable
-at 01. So now if I do interaction features of all the
-different features with the gender feature, it looks like
-this. Now I have age times male, article bought times male,
-males spend time, spend dollar male and so on and likewise
-for female. This is just the interaction features but the
-gender features are either zero or one. And so what this
-means is, these features are only active for men, these
-features only active for women. So learning a model on this
-feature space is basically the same as learning two separate
-models, one for men and one for women. What you might want
-to do is use the original features, and then use the feature
-interaction with men and the feature interaction with women.
-So you have a shared model, and then you have how men and
-women deviate from this model. So now you basically if you
-do that you have three times as many degrees of freedom in
-your linear model. 
-
----
-# More interactions
-.padding-top[
-```
-age articles_bought gender spend$ time_online
- + Male * (age articles_bought spend$ time_online )
- + Female * (age articles_bought spend$ time_online )
- + (age > 20) * (age articles_bought gender spend$ time_online)
- + (age <= 20) * (age articles_bought gender spend$ time_online)
- + (age <= 20) * Male * (age articles_bought gender spend$ time_online)
-```
-]
-
-???
-You can obviously do this with more discrete variables,
-let's say you have the original features, then you have a
-model that has the features only for men, a model that has
-the features only for women, then you can have a model only
-for people above 20, a model for people only below 20, a
-model for people below 20 that are male, and so on. So by
-adding these interaction features to basically create a
-bigger, bigger features space, which allows you to have
-linear models that adjust for a subpopulation of the overall
-dataset. So now I have instead of having six features, I now
-have 36 features and can have a much more powerful model. 
-
----
-
-class: center
-
-# Polynomial Features
-
-![:scale 60%](images/img_41.png)
-
-
-
-???
-N/A
-
-
----
-
-class: center
-
-# Polynomial Features
-
-![:scale 60%](images/img_42.png)
-
-
-
-???
-You can also add polynomials. So the thing called polynomial
-features in scikit-learn does interactions between all
-possible features and it adds polynomials. If you do
-interactions only equal to true, it will only do
-interactions and then the order is how many features it
-doesn't interactions with. Order of three means all products
-of three features. By default interactions is false and
-it’ll add also the powers of single feature, which only
-makes sense for continuous features. So for each x it will
-add x squared, x cube and so on. All right, that's all for
-today.
----
-
-class: spacious
-
-# Polynomial Features
-.small-padding-top[
-- PolynomialFeatures() adds polynomials and interactions.
-- Transformer interface like scalers etc.
-- Create polynomial algorithms with make_pipeline!
-]
-
-???
-N/A
-
----
-class: smaller
-# Polynomial Features
-
-```python
-from sklearn.preprocessing import PolynomialFeatures
-poly = PolynomialFeatures()
-X_bc_poly = poly.fit_transform(X_bc_scaled)
-print(X_bc_scaled.shape)
-print(X_bc_poly.shape)
-```
-
-```
-(379, 13)
-(379, 105)
-```
-
-```python
-scores = cross_val_score(RidgeCV(), X_bc_scaled, y_train, cv=10)
-np.mean(scores), np.std(scores)
-```
-```
-(0.759, 0.081)
-```
-
-
-```python
-scores = cross_val_score(RidgeCV(), X_bc_poly, y_train, cv=10)
-np.mean(scores), np.std(scores)
-```
-```
-(0.865, 0.080)
-
-```
-
-???
-N/A
-
----
-
-class: spacious
-
-# Other Features?
-
-- Plot the data, see if there are periodic patterns!
-
-
-???
-N/A
-
----
-
-class: spacious
-
-# Discretization and Binning
-
-- Loses data.
-- Target-independent might be bad
-- Powerful combined with interactions to create new features!
-
-???
-N/A
 ---
 
 class: middle
