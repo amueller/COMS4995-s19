@@ -38,6 +38,9 @@ Or hold off on poly features at that place and use different data!!!!
 FIXME remove 3d plots!
 FIXME add missing value indicator
 FIXME better explanations for imputation
+FIXME L1 explanation unclear
+FIXME alpha=14 vs alpha=31
+FIXME adding features: use pipeline
 ---
 class: center, middle
 # Sidebar: Dealing with Missing Values
@@ -636,7 +639,7 @@ the training data.
 
 $$\hat{y} = w^T \mathbf{x} + b = \sum_{i=1}^p w_i x_i +b $$
 
-`$$\min_{w \in \mathbb{R}^p} \sum_{i=1}^p ||w^T\mathbf{x}_i - y_i||^2$$`
+`$$\min_{w \in \mathbb{R}^p, b\in\mathbb{R}} \sum_{i=1}^n ||w^T\mathbf{x}_i + b - y_i||^2$$`
 
 Unique solution if $\mathbf{X} = (\mathbf{x}_1, ... \mathbf{x}_n)^T$ has full column rank.
 ???
@@ -664,7 +667,7 @@ alternative.
 ---
 # Ridge Regression
 
-`$$ \min_{w \in \mathbb{R}^p} \sum_{i=1}^n ||w^T\mathbf{x}_i - y_i||^2 + \alpha ||w||^2 $$`
+`$$ \min_{w \in \mathbb{R}^p, b\in\mathbb{R}} \sum_{i=1}^n (w^T\mathbf{x}_i + b - y_i)^2 + \alpha ||w||^2 $$`
 
 Always has a unique solution.
 
@@ -1158,7 +1161,7 @@ but then, in the end, they overlap.
 ---
 # Lasso Regression
 
-`$$ \min_{w \in \mathbb{R}^p} \sum_{i=1}^n ||w^T\mathbf{x}_i - y_i||^2 + \alpha ||w||_1 $$`
+`$$ \min_{w \in \mathbb{R}^p, b\in\mathbb{R}} \sum_{i=1}^n ||w^T\mathbf{x}_i + b - y_i||^2 + \alpha ||w||_1 $$`
 
 - Shrinks w towards zero like Ridge
 
@@ -1192,7 +1195,7 @@ number of features that it uses, that would be L0 norm.
 
 .narrow-right-column[
 .smaller[
-`$$ \ell_2(w) = \sum_i \sqrt{w_i ^ 2}$$`
+`$$ \ell_2(w) = \sqrt{\sum_i w_i ^ 2}$$`
 `$$ \ell_1(w) = \sum_i |w_i|$$`
 `$$ \ell_0(w) = \sum_i 1_{w_i != 0}$$`
 ]]
@@ -1352,7 +1355,7 @@ interpretation a little bit harder.
 - two parameters to tune.
 
 
-`$$\min_{w \in \mathbb{R}^p} \sum_{i=1}^n ||w^T\mathbf{x}_i - y_i||^2 + \alpha_1 ||w||_1 +  \alpha_2 ||w||^2_2 $$`
+`$$\min_{w \in \mathbb{R}^p, b\in\mathbb{R}} \sum_{i=1}^n ||w^T\mathbf{x}_i + b - y_i||^2 + \alpha_1 ||w||_1 +  \alpha_2 ||w||^2_2 $$`
 
 ???
 You can also combine them. This actually what works best in
@@ -1380,7 +1383,7 @@ corner. Important things are the corners because that allows
 you to hit the exact zeros.
 ---
 # Parametrization in scikit-learn
-`$$\min_{w \in \mathbb{R}^p} \sum_{i=1}^n ||w^T\mathbf{x}_i - y_i||^2 + \alpha \eta ||w||_1 +  \alpha (1 - \eta) ||w||^2_2 $$`
+`$$\min_{w \in \mathbb{R}^p, b\in\mathbb{R}} \sum_{i=1}^n ||w^T\mathbf{x}_i + b - y_i||^2 + \alpha \eta ||w||_1 +  \alpha (1 - \eta) ||w||^2_2 $$`
 
 Where $\eta$ is the relative amount of l1 penalty (`l1_ratio` in the code).
 ???
