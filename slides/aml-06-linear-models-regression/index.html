@@ -29,12 +29,15 @@ You're probably familiar with some of the basics, and that's
 where we'll start. But we'll also look into how to tune
 these models, what the trade-offs are, and some more complex
 techniques.
+But first we'll start with some more preprocessing that we didn't get
+to last week, in particular dealing with missing values, which you'll need for the homework.
 
 
 FIXME polynomial features are used in linear model part. Move explanation there?
 Or hold off on poly features at that place and use different data!!!!
 FIXME remove 3d plots!
-FIXME: add binnning stuff?
+FIXME add missing value indicator
+FIXME better explanations for imputation
 ---
 class: center, middle
 # Sidebar: Dealing with Missing Values
@@ -1340,36 +1343,6 @@ this model. If you have two features that are identical, one
 of them will be zero and one of them will be not zero and
 it's going to be randomly selected. That makes
 interpretation a little bit harder.
-
----
-.smaller[
-```python
-from sklearn.linear_model import lars_path
-# lars_path computes the exact regularization path which is piecewise linear.
-X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=42)
-alphas, active, coefs = lars_path(X_train, y_train, eps=0.00001, method="lasso")
-
-plt.plot(alphas, coefs.T, alpha=.5)
-plt.xscale("log")
-```
-]
-.center[
-![:scale 55%](images/lars_path.png)
-]
-???
-For this model, you can look at the pass for all the
-different coefficients. Here it's the original data set and
-so we have a little bit fewer curves. There’s actually a way
-to compute this very effectively using lars_ path method. 
-
-The Lasso model is pretty cool because it allows you to
-select features. It really only improves performance when
-you think the model should be sparse. By sparse I mean many
-of the coefficients should be zero. Only then it really
-helps. Think of it as prior knowledge that you assume most
-of the coefficient are zero then this model is good. You can
-actually formalize both of these models as a Bayesian prior
-if you want.
 
 ---
 # Elastic Net
