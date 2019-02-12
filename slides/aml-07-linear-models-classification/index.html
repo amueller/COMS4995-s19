@@ -30,10 +30,7 @@ principles and advanced topics surrounding general models,
 both for classification and regression.
 
 FIXME: in regularizing SVM, long vs short normal vectors.
-24 slides on linear models for classfication
-5 slides for solver choiced and EstimatorCV
-11 slides for SGD
-
+FIXME move "reminder on SVM" slides to front!
 ---
 class: center, middle
 
@@ -99,7 +96,7 @@ misclassifications.
 
 $$\hat{y} = \text{sign}(w^T \textbf{x} + b)$$
 
-`$$\min_{w \in ℝ^{p}} \sum_{i=1}^n 1_{y_i \neq \text{sign}(w^T \textbf{x} + b)}$$`
+`$$\min_{w \in ℝ^{p}, b \in \mathbb{R}} \sum_{i=1}^n 1_{y_i \neq \text{sign}(w^T \textbf{x} + b)}$$`
 
 .center[
 ![:scale 40%](images/binary_loss.png)
@@ -139,17 +136,17 @@ starting with the logistic loss.
 
 
 .left-column[
-$$\log\left(\frac{p(y=1|x)}{p(y=0|x)}\right) = w^T\textbf{x}$$
+$$\log\left(\frac{p(y=1|x)}{p(y=0|x)}\right) = w^T\textbf{x} + b$$
 
-$$p(y|\textbf{x}) = \frac{1}{1+e^{-w^T\textbf{x}}}$$
+$$p(y|\textbf{x}) = \frac{1}{1+e^{-w^T\textbf{x} -b }}$$
 
-`$$\min_{w \in ℝ^{p}} -\sum_{i=1}^n \log(\exp(-y_iw^T \textbf{x}_i) + 1)$$`
+`$$\min_{w \in ℝ^{p}, b \in \mathbb{R}} -\sum_{i=1}^n \log(\exp(-y_i(w^T \textbf{x}_i + b)) + 1)$$`
 
 
 $$\hat{y} = \text{sign}(w^T\textbf{x} + b)$$
 ]
 .right-column[
-![:scale 100%](images/img_3.png)]
+![:scale 90%](images/logit.png)]
 
 
 ???
@@ -193,9 +190,9 @@ care about finding a simple solution.
 
 # Penalized Logistic Regression
 
-`$$\min_{w \in ℝ^{p}}C \sum_{i=1}^n\log(\exp(-y_iw^T \textbf{x}_i) + 1) + ||w||_2^2$$`
+`$$\min_{w \in ℝ^{p}, b \in \mathbb{R}}C \sum_{i=1}^n\log(\exp(-y_i(w^T \textbf{x}_i + b ) + 1) + ||w||_2^2$$`
 
-`$$\min_{w \in ℝ^{p}}C \sum_{i=1}^n\log(\exp(-y_iw^T \textbf{x}_i) + 1) + ||w||_1$$`
+`$$\min_{w \in ℝ^{p}, b \in \mathbb{R}}C \sum_{i=1}^n\log(\exp(-y_i (w^T \textbf{x}_i + b) + 1) + ||w||_1$$`
 
 - C is inverse to alpha (or alpha / n_samples)
 
@@ -249,9 +246,9 @@ we saw last time.
 # (soft margin) linear SVM
 
 .larger[
-`$$\min_{w \in ℝ^{p}}C \sum_{i=1}^n\max(0,1-y_iw^T \textbf{x}_i) + ||w||_2^2$$`
+`$$\min_{w \in ℝ^{p}, b \in \mathbb{R}}C \sum_{i=1}^n\max(0,1-y_i(w^T \textbf{x}_i + b)) + ||w||_2^2$$`
 
-`$$\min_{w \in ℝ^{p}}C \sum_{i=1}^n\max(0,1-y_iw^T \textbf{x}_i)+ ||w||_1$$`
+`$$\min_{w \in ℝ^{p}, b \in \mathbb{R}}C \sum_{i=1}^n\max(0,1-y_i(w^T \textbf{x}_i + b))+ ||w||_1$$`
 ]
 
 - Both versions strongly convex, neither smooth.
@@ -292,10 +289,10 @@ FIXME: motivate SVM? we'll do it in two lectures...
 class: center
 # Logistic Regression vs SVM
 .compact[
-`$$\min_{w \in ℝ^{p}}C \sum_{i=1}^n\log(\exp(-y_iw^T \textbf{x}_i) + 1) + ||w||_2^2$$`
-`$$\min_{w \in ℝ^{p}}C \sum_{i=1}^n\max(0,1-y_iw^T \textbf{x}_i) + ||w||_2^2$$`
+`$$\min_{w \in ℝ^{p}, b \in \mathbb{R}}C \sum_{i=1}^n\log(\exp(-y_i(w^T \textbf{x}_i+b)) + 1) + ||w||_2^2$$`
+`$$\min_{w \in ℝ^{p}, b \in \mathbb{R}}C \sum_{i=1}^n\max(0,1-y_i(w^T \textbf{x}_i + b)) + ||w||_2^2$$`
 
-![:scale 45%](images/binary_loss.png)
+![:scale 35%](images/binary_loss.png)
 ]
 ???
 
@@ -419,6 +416,8 @@ In general:
 n binary classifiers - each on all data
 
 ???
+FIXME terrible slide
+
 Let's start with One vs Rest. here, we learn one binary
 classifier for each class against the remaining classes. So
 let's say we have 4 classes, called 1 to 4.  First we learn
@@ -509,6 +508,7 @@ class: some-space
 
 
 ???
+FIXME terrible slide
 
 The other method of reduction is called one vs one. In one
 vs one, we build one binary model for each pair of classes.
@@ -608,11 +608,11 @@ If original problem was balanced, that is...
 
 Probabilistic multi-class model:
 
-$$p(y=i|x) = \frac{e^{\textbf{w}_i^T\textbf{x}}}{\sum_j e^{\textbf{w}_j^T\textbf{x}}}$$
+`$$p(y=i|x) = \frac{e^{\textbf{w}_i^T\textbf{x} + b_i}}{\sum_{j=1}^k e^{\textbf{w}_j^T\textbf{x} + b_j}}$$`
 
-`$$\min_{w \in ℝ^{p}} \sum_{i=1}^n \log(p(y=y_i|x_i))$$`
+`$$\min_{w \in ℝ^{pk}, b \in \mathbb{R}^k} \sum_{i=1}^n \log(p(y=y_i|x_i, w, b))$$`
 
-$$\hat{y} = \text{arg} \max_{i \in Y} \textbf{w}_i\textbf{x}$$
+$$\hat{y} = \text{arg} \max_{i=1,...,k} \textbf{w}_i\textbf{x} + b_i$$
 
 - Same prediction rule as OvR !
 
@@ -633,9 +633,9 @@ class: some-space
 # In sckit-learn
 
 - OvO: only SVC
-- OvR: default for all linear models, even LogisticRegression
+- OvR: default for all linear models, even LogisticRegression (deprecated)
 - `LogisticRegression(multinomial=True)`
-- `clf.decision_function` = $w^Tx$
+- `clf.decision_function` = $w^Tx + b$
 - `logreg.predict_proba`
 - `SVC(probability=True)` not great
 
@@ -683,13 +683,15 @@ give you the probabilities as given by the model.
 OvR and multinomial LogReg produce one coef per class:
 
 .center[
-![:scale 80%](images/img_9.png)
+![:scale 80%](images/multiclass_coef.png)
 ]
 
 SVC would produce the same shape, but with different semantics!
 
 
 ???
+FIXME screenshots
+
 In practice, I'm using logistic regression on the iris
 dataset. We have 50 data points, 4 features, 3 classes, each
 class has 50 samples, and we’re trying to classify different
@@ -707,14 +709,16 @@ but they have different semantics
 
 class: center
 
-![:scale 80%](images/img_10.png)
+![:scale 80%](images/multiclass_array.png)
 
-![:scale 80%](images/img_11.png)
+![:scale 80%](images/multiclass_barchart.png)
 
 (after centering data, without intercept)
 
 
 ???
+FIXME screenshots
+
 Here I’ve interpreted them. You can see the four features,
 for each feature and for each class, you have a coefficient.
 If the sepal width is big, then the setosa classifier is
@@ -853,36 +857,10 @@ closed form, given the model. So you can’t pick the CV, it
 will always do something that's equivalent to Leave One Out
 but you can pick any grid because it'll just evaluate the
 grid using a for loop.
-
 ---
+class: center, scale
 
-class: center
-
-# Using EstimatorCV
-
-.center[
-![:scale 100%](images/img_12.png)
-]
-
-???
-Here's a very small example of how this would look like.
-Here I use GridSearchCV with Ridge with like. It does 10
-fold cross-validation. This builds 10 models times 10
-parameter settings. RidgeCV by default has the same
-parameter settings but instead of doing 10 times 10 models,
-we only do 10 models because we get the Leave One Out
-cross-validation for free and they come up with the same
-result. They both have the same tested score and they have
-the same alpha that is selected. Only the second one is 10
-times faster. This is pretty helpful. It's a little bit
-tricky if you have multiple pre-processing steps, and we'll
-talk about this later in the course. The problem here is
-that if you have pre-processing, you want to pre-process to
-be inside the cross-validation and if you use something like
-RidgeCV or LassoCV, you can really put any preprocessing
-inside this cross-validation and that's not so great. 
-
----
+# Kernel SVMs
 ---
 class: spacious
 
@@ -914,9 +892,9 @@ class: spacious
 
 # Reminder on Linear SVM
 
-`$$ \min_{w \in \mathbb{R}^p} C \sum_{i=1}^n \max(0, 1 - y_i w^T\mathbf{x}) + ||w||^2_2 $$`
+`$$ \min_{w \in \mathbb{R}^p, b \in \mathbf{R}} C \sum_{i=1}^n \max(0, 1 - y_i (w^T\mathbf{x} +b)) + ||w||^2_2 $$`
 
-$$ \hat{y} = \text{sign}(w^T \mathbf{x})  $$
+$$ \hat{y} = \text{sign}(w^T \mathbf{x} + b)  $$
 
 
 ???
@@ -1210,11 +1188,13 @@ I'm using the polynomial features.
 
 ---
 class: smaller
-# Understanding Dual Coefficiants
+# Understanding Dual Coefficients
 
 ```python
 linear_svm.coef_
-#array([[0.139, 0.06, -0.201, 0.048, 0.019]])
+```
+```
+array([[0.139, 0.06, -0.201, 0.048, 0.019]])
 ```
 $$ y = \text{sign}(0.139 x_0 + 0.06 x_1 - 0.201 x_0^2 + 0.048 x_0 x_1 + 0.019 x_1^2) $$
 
@@ -1227,6 +1207,7 @@ linear_svm.support_
 `$$ y = \text{sign}(-0.03 \phi(\mathbf{x}_0)^T \phi(x) - 0.003 \phi(\mathbf{x}_{26})^T \phi(\mathbf{x})  +0.003 \phi(\mathbf{x}_{42})^T \phi(\mathbf{x}) + 0.03 \phi(\mathbf{x}_{63})^T \phi(\mathbf{x})) $$`
 
 ???
+FIXME formula goes over
 And so if I look at the linear SVM and I have five
 coefficients corresponding to the five features. And so if I
 make a prediction, its first coefficient times the first
@@ -1284,7 +1265,7 @@ np.inner(poly(X[63]), poly(x)) $$
 # Runtime Considerations
 
 .center[
-![:scale 85%](images/img_2.png)
+![:scale 85%](images/svm_runtime.png)
 ]
 
 ???
@@ -1362,7 +1343,7 @@ give you terrible results.
 
 
 .center[
-![:scale 85%](images/img_3.png)
+![:scale 85%](images/svm_gamma.png)
 ]
 
 ???
@@ -1382,7 +1363,7 @@ good tradeoff between fitting and generalization.
 ---
 
 .center[
-![:scale 85%](images/img_4.png)
+![:scale 85%](images/svm_c_gamma.png)
 ]
 
 ???
@@ -1414,7 +1395,7 @@ from sklearn.datasets import load_digits
 digits = load_digits()
 ```
 .center[
-![:scale 65%](images/img_5.png)
+![:scale 65%](images/digits_images.png)
 ]
 
 ???
@@ -1502,7 +1483,7 @@ grid.
 # Grid-Searching Parameters
 
 .center[
-![:scale 95%](images/img_6.png)
+![:scale 95%](images/svm_c_gamma_heatmap.png)
 ]
 
 ???
@@ -1534,7 +1515,7 @@ will be even slower.
 # Support Vector Regression
 
 .center[
-![:scale 80%](images/img_9.png)
+![:scale 80%](images/svr_epsilon.png)
 ]
 
 ???
@@ -1565,7 +1546,7 @@ application and then you're going to tune C and gamma again.
 - Linear kernel → robust linear regression
 - Ploy / rbf kernel → robust non-linear regression
 .center[
-![:scale 60%](images/img_10.png)
+![:scale 60%](images/svr_poly.png)
 ]
 
 ???
@@ -1607,7 +1588,7 @@ Alright, so let's undo the kernel trick.
 # Why undo the kernel trick?
 
 .center[
-![:scale 50%](images/img_11.png)
+![:scale 50%](images/large_scale_kernel_machines.png)
 ]
 
 ???
