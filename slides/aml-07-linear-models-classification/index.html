@@ -196,11 +196,12 @@ care about finding a simple solution.
 
 - C is inverse to alpha (or alpha / n_samples)
 
+
+???
+
 - Both versions strongly convex, l2 version smooth (differentiable).
 
 - All points contribute to $w$ (dense solution to dual).
-
-???
 
 So we can do the same we did for regression: we can add
 regularization terms using the L1 and L2 norm. The effects
@@ -239,97 +240,12 @@ the hinge loss we'll discuss next is that each data point
 contributes to the loss, so each data point has an effect on
 the solution. That's also true for all the regression models
 we saw last time.
-
 ---
-
-
-# (soft margin) linear SVM
-
-.larger[
-`$$\min_{w \in ℝ^{p}, b \in \mathbb{R}}C \sum_{i=1}^n\max(0,1-y_i(w^T \textbf{x}_i + b)) + ||w||_2^2$$`
-
-`$$\min_{w \in ℝ^{p}, b \in \mathbb{R}}C \sum_{i=1}^n\max(0,1-y_i(w^T \textbf{x}_i + b))+ ||w||_1$$`
-]
-
-- Both versions strongly convex, neither smooth.
-
-- Only some points contribute (the support vectors) to $w$ (sparse solution to dual).
-
-???
-Moving from logistic regression to linear SVMs is just a
-matter of changing the loss from the log loss to the hinge
-loss. The hinge-loss is defined as ... And we can penalize
-using either l1 or l2 norm, or again, in principle also
-elastic net. This formulation with the hinge loss doesn't
-really make sense without the penalty, because of the
-formulation of the hinge loss. What this loss says is
-basically "if you predict the right class with a margin of
-1, there is no loss". Otherwise the loss is linear in the
-decision function. So you need to be on the right side of
-the hyperplane by a given amount, and then there is no more
-loss. That's the reason you need the penalty, for the 1 to
-make sense. Otherwise you could just scale up $w$ to make it
-far enough on the right side. But the regularization
-penalizes growing $w$.
-
-The hinge loss has a kink, same as the l1 norm, and so it's
-not a smooth optimization problem any more, but that's not
-really a big deal. What's interesting is that all the points
-that are classified correctly with a margin of at least 1
-have a loss of zero, and so they don't influence the
-solution any more. All the point that are not classified
-correctly by this margin are the ones that do influence the
-solution and they are called the support vectors.
-
-FIXME graph of not influencing the solution?
-
-FIXME: motivate SVM? we'll do it in two lectures...
-
----
-class: center
-# Logistic Regression vs SVM
-.compact[
-`$$\min_{w \in ℝ^{p}, b \in \mathbb{R}}C \sum_{i=1}^n\log(\exp(-y_i(w^T \textbf{x}_i+b)) + 1) + ||w||_2^2$$`
-`$$\min_{w \in ℝ^{p}, b \in \mathbb{R}}C \sum_{i=1}^n\max(0,1-y_i(w^T \textbf{x}_i + b)) + ||w||_2^2$$`
-
-![:scale 35%](images/binary_loss.png)
-]
-???
-
-So this is the main difference between logistic regression
-and linear SVMs: Does it penalize misclassifications
-according to the green line, or according to the blue line?
-In practice it doesn't make a big difference.
-
----
-
-
-# SVM or LogReg?
-
-.center[
-![:scale 80%](images/svm_or_lr.png)
-]
-
-- Need compact model or believe solution is sparse? Use L1
-
-???
-So which one of them should you use? If you need probability
-estimates, you should use logistic regression. If you don't,
-you can pick either, and it doesn't really matter. Logistic
-regression can be a bit faster to optimize in theory. If
-you're in a setting where there's many more feature than
-samples, it might make sense to use linear SVMs and solve
-the dual, but you can actually solve either of the problems
-in the dual, and we'll talk about what that means in
-practice in a little bit.
-
----
-
 # Effect of regularization
 
 
 .center[
-![:scale 90%](images/linear_svm_regularization.png)
+![:scale 90%](images/logreg_regularization.png)
 ]
 
 - Small C (a lot of regularization) limits the influence of individual points!
@@ -356,9 +272,150 @@ increase the regularization, what happens is that the
 influence of these outlier points becomes limited, and the
 other points get more influence.
 
-FIXME illustration for support vectors?
 
 ---
+
+#Max-Margin and Support Vectors
+
+.center[
+![:scale 75%](images/max_margin.png)
+]
+
+???
+A point is within the margin if 〖y_i w〗^T x is smaller
+than one. That means if you have a smaller w, you basically
+have a smaller margin given that you're on the correct side.
+If you're on the wrong side, you'll have always have a loss.
+If you're in the correct side, if you're w^x is small, then
+you also have a loss. 
+---
+class: center
+
+#Max-Margin and Support Vectors
+`$$ \min_{w \in \mathbb{R}^p, b \in \mathbb{R}} C \sum_{i=1}^n \max(0, 1 - y_i (w^T\mathbf{x} + b) + ||w||^2_2 $$`
+
+$$\text{Within margin} \Leftrightarrow y_i(w^T x  + b)< 1$$
+
+Smaller $w \Rightarrow$ larger margin
+
+
+---
+class: center
+
+#Max-Margin and Support Vectors
+
+.left-column[
+![:scale 80%](images/max_margin_C_0.1.png)
+]
+.right-column[
+![:scale 80%](images/max_margin_C_1.png)
+]
+
+???
+Here are two examples on the same dataset. Where I learned
+linear support vector machine with c-0.1, and c=1. With
+c=0.1, you have a wider margin. There are points inside the
+margin and all the points inside the margin are support
+vectors which contribute to the solution. Points that are
+outside of the margin and on the correct side doesn't
+contribute to the solution. These points are sort of
+classified correctly, not when they’re ignored. The normal
+vector is w and basically, the size of the margin is the
+inverse of the length of w. C=0.1 means I have less emphasis
+on the data fitting and more emphasis on the shrinking w.
+This will lead to a smaller w. If I have larger C that means
+less regularization, which will lead to a larger W, larger W
+means a smaller margin. So there are fewer points here, they
+are inside the margin and therefore, fewer support vectors.
+More regularization usually means a larger margin but more
+points inside the margin. Also, more support vectors mean
+there are more data points that actually influence the
+solution.
+---
+class: center
+# Logistic Regression vs SVM
+.compact[
+`$$\min_{w \in ℝ^{p}, b \in \mathbb{R}}C \sum_{i=1}^n\log(\exp(-y_i(w^T \textbf{x}_i+b)) + 1) + ||w||_2^2$$`
+`$$\min_{w \in ℝ^{p}, b \in \mathbb{R}}C \sum_{i=1}^n\max(0,1-y_i(w^T \textbf{x}_i + b)) + ||w||_2^2$$`
+
+![:scale 35%](images/binary_loss.png)
+]
+???
+
+So this is the main difference between logistic regression
+and linear SVMs: Does it penalize misclassifications
+according to the green line, or according to the blue line?
+In practice it doesn't make a big difference.
+
+---
+
+
+# (soft margin) linear SVM
+
+.larger[
+`$$\min_{w \in ℝ^{p}, b \in \mathbb{R}}C \sum_{i=1}^n\max(0,1-y_i(w^T \textbf{x}_i + b)) + ||w||_2^2$$`
+
+`$$\min_{w \in ℝ^{p}, b \in \mathbb{R}}C \sum_{i=1}^n\max(0,1-y_i(w^T \textbf{x}_i + b))+ ||w||_1$$`
+]
+
+
+???
+
+
+- Both versions strongly convex, neither smooth.
+
+- Only some points contribute (the support vectors) to $w$ (sparse solution to dual).
+
+Moving from logistic regression to linear SVMs is just a
+matter of changing the loss from the log loss to the hinge
+loss. The hinge-loss is defined as ... And we can penalize
+using either l1 or l2 norm, or again, in principle also
+elastic net. This formulation with the hinge loss doesn't
+really make sense without the penalty, because of the
+formulation of the hinge loss. What this loss says is
+basically "if you predict the right class with a margin of
+1, there is no loss". Otherwise the loss is linear in the
+decision function. So you need to be on the right side of
+the hyperplane by a given amount, and then there is no more
+loss. That's the reason you need the penalty, for the 1 to
+make sense. Otherwise you could just scale up $w$ to make it
+far enough on the right side. But the regularization
+penalizes growing $w$.
+
+The hinge loss has a kink, same as the l1 norm, and so it's
+not a smooth optimization problem any more, but that's not
+really a big deal. What's interesting is that all the points
+that are classified correctly with a margin of at least 1
+have a loss of zero, and so they don't influence the
+solution any more. All the point that are not classified
+correctly by this margin are the ones that do influence the
+solution and they are called the support vectors.
+
+FIXME graph of not influencing the solution?
+---
+
+
+# SVM or LogReg?
+
+.center[
+![:scale 80%](images/svm_or_lr.png)
+]
+
+- Need compact model or believe solution is sparse? Use L1
+
+???
+So which one of them should you use? If you need probability
+estimates, you should use logistic regression. If you don't,
+you can pick either, and it doesn't really matter. Logistic
+regression can be a bit faster to optimize in theory. If
+you're in a setting where there's many more feature than
+samples, it might make sense to use linear SVMs and solve
+the dual, but you can actually solve either of the problems
+in the dual, and we'll talk about what that means in
+practice in a little bit.
+
+---
+
 
 class: center, middle
 
@@ -435,9 +492,7 @@ class: spacious
 
 "Class with highest score"
 
-$$\hat{y} = \text{arg}\max_{i \in Y} \textbf{w}_i\textbf{x}$$
-
-Unclear why it works, but work well.
+$$\hat{y} = \text{arg}\max_{i \in Y} \textbf{w}_i\textbf{x} + b_i$$
 
 
 ???
@@ -796,69 +851,8 @@ solution but only at different speeds. I want to talk about
 some tips for getting cross-validation. There are some
 built-in tools for doing quicker cross-validation for linear
 models. 
-
 ---
-
-class: middle
-
-
-# Efficient Cross-Validation
-
-
-???
-The idea is that we can exploit the model in doing
-cross-validation. 
----
-class: spacious
-
-# Models with build-in cross-validation
-
-- LarsCV(), LassoLarsCV(), ElasticNetCV()<br/>Use path-algorithms to compute the full solution path.
-- LogisticRegressionCV() uses warm-starts, doesn’t support all solvers.
-- All have reasonable build-in parameter grids.
-- RidgeCV() - does GCV, approximation to LOO<br />
-So you can’t pick the “cv”!
-
-
-???
-There’s a couple of models that have that. Lars, LassoLars,
-Elastic Net, Logistic Regression and Ridge have a thing
-called named “the model name”+ “CV”. It means it has
-built-in cross-validation to adjust the parameters. They do
-different things behind the scenes and they always make
-things much faster. For the Lars, Lasso Lars, Elastic Net
-they compute this coefficient passes that we looked at. They
-compute the solution for all possible values of the
-parameter by computing the whole path and that means it's
-much faster to fit this than trying for each parameter
-setting to fit it individually. For Logistic Regression that
-uses warm-starts which means it starts with one parameter
-setting like C equal to very small with a lot of
-regularization that’s fast to compute. Then once it has a
-solution it'll use the solution as a starting point for the
-solution for the next biggest C. But that only works with
-some of us solvers. All of them have sort of reasonable
-built-in parameter grids so you don't need to actually worry
-too much about how to set the parameters. RidgeCV actually
-works differently. For the discussed four, you can tell it
-what cross-validation to use and it will use that
-cross-validation but it will use something like a path
-algorithm to compute the solution for many of the
-regularization parameters at once. On the contrary, RidgeCV
-independently solves each regularization parameter, but it
-has a trick to make the cross-validation go faster. You can
-actually approximate Leave One Out Cross-Validation in Ridge
-in closed form. Leave One Out cross-validation is basically
-Leave One Out at one point at a time and built a model. So
-to compute these exactly, usually, I need to build the
-number of samples, many models. Also, it has a very high
-variance. For Ridge, I can actually compute exactly in
-closed form, given the model. So you can’t pick the CV, it
-will always do something that's equivalent to Leave One Out
-but you can pick any grid because it'll just evaluate the
-grid using a for loop.
----
-class: center, scale
+class: center, middle
 
 # Kernel SVMs
 ---
@@ -906,64 +900,6 @@ side of the hyper plane, that’s bigger than one, your data
 point does not contribute to the loss. So you want all of
 the points outside of this margin of one around the
 separating hyper plane. 
----
-
-#Max-Margin and Support Vectors
-
-.center[
-![:scale 75%](images/max_margin.png)
-]
-
-???
-A point is within the margin if 〖y_i w〗^T x is smaller
-than one. That means if you have a smaller w, you basically
-have a smaller margin given that you're on the correct side.
-If you're on the wrong side, you'll have always have a loss.
-If you're in the correct side, if you're w^x is small, then
-you also have a loss. 
----
-class: center
-
-#Max-Margin and Support Vectors
-`$$ \min_{w \in \mathbb{R}^p} C \sum_{i=1}^n \max(0, 1 - y_i w^T\mathbf{x}) + ||w||^2_2 $$`
-
-$$\text{Within margin} \Leftrightarrow y_iw^T x < 1$$
-
-Smaller $w \Rightarrow$ larger margin
-
-
----
-class: center
-
-#Max-Margin and Support Vectors
-
-.left-column[
-![:scale 80%](images/max_margin_C_0.1.png)
-]
-.right-column[
-![:scale 80%](images/max_margin_C_1.png)
-]
-
-???
-Here are two examples on the same dataset. Where I learned
-linear support vector machine with c-0.1, and c=1. With
-c=0.1, you have a wider margin. There are points inside the
-margin and all the points inside the margin are support
-vectors which contribute to the solution. Points that are
-outside of the margin and on the correct side doesn't
-contribute to the solution. These points are sort of
-classified correctly, not when they’re ignored. The normal
-vector is w and basically, the size of the margin is the
-inverse of the length of w. C=0.1 means I have less emphasis
-on the data fitting and more emphasis on the shrinking w.
-This will lead to a smaller w. If I have larger C that means
-less regularization, which will lead to a larger W, larger W
-means a smaller margin. So there are fewer points here, they
-are inside the margin and therefore, fewer support vectors.
-More regularization usually means a larger margin but more
-points inside the margin. Also, more support vectors mean
-there are more data points that actually influence the
-solution.
 
 
 ---
@@ -1138,7 +1074,7 @@ thing on the right-hand side always stays the same.
 
 ---
 
-# Poly kernels with sklearn
+# Poly kernels vs explicit features
 
 .smaller[
 ```python
@@ -1204,7 +1140,9 @@ linear_svm.dual_coef_
 linear_svm.support_
 #array([1,26,42,62], dtype=int32)
 ```
+.smallest[
 `$$ y = \text{sign}(-0.03 \phi(\mathbf{x}_0)^T \phi(x) - 0.003 \phi(\mathbf{x}_{26})^T \phi(\mathbf{x})  +0.003 \phi(\mathbf{x}_{42})^T \phi(\mathbf{x}) + 0.03 \phi(\mathbf{x}_{63})^T \phi(\mathbf{x})) $$`
+]
 
 ???
 FIXME formula goes over
@@ -1318,8 +1256,7 @@ class:spacious
 - Kernel use inner products or distances.
 - StandardScaler or MinMaxScaler ftw
 - Gamma parameter in RBF directly relates to scaling
-of data – default only works with zero-mean, unit
-variance.
+of data and n_features – new default is `1/(X.std() * n_features)` but should be `1/X.var() * n_features)` 😞
 
 ???
 Nearly all of these kernels use the distance in the original
@@ -1422,7 +1359,7 @@ print(np.mean(cross_val_score(scaled_svc, X_train, y_train, cv=10)))
 0.978
 ```
 ```python
-gamma = (1. / (X_train.shape[1] * X_train.std()))
+gamma = (1. / (X_train.shape[1] * X_train.var()))
 print(np.mean(cross_val_score(SVC(gamma=gamma), X_train, y_train, cv=10)))
 ```
 ```

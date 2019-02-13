@@ -51,13 +51,13 @@ margin-bottom: 3px;
 .padding-top {
     padding-top: 100px;
 }
-.remark-slide-content .smaller p, .remark-slide-content .smaller li,
+.remark-slide-content .smaller p, .remark-slide-content .smaller p .MathJax, .remark-slide-content .smaller li,
 .remark-slide-content .smaller .remark-code,  .smaller .remark-code-line,.remark-slide-content .smaller a,
  .remark-slide-content .smaller .dataframe{
     font-size: 25px;
 }
 
-.remark-slide-content .smallest p, .remark-slide-content .smallest li, .remark-slide-content .smallest .remark-code,
+.remark-slide-content .smallest p, .remark-slide-content .smallest .MathJax, .remark-slide-content .smallest li, .remark-slide-content .smallest .remark-code,
 .smallest .remark-code-line, .remark-slide-content .smallest .dataframe{
 font-size: 20px;
 }
