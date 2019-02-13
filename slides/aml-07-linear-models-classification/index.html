@@ -30,7 +30,8 @@ principles and advanced topics surrounding general models,
 both for classification and regression.
 
 FIXME: in regularizing SVM, long vs short normal vectors.
-FIXME move "reminder on SVM" slides to front!
+FIXME do we need ovo? we kinda do, right?
+
 ---
 class: center, middle
 
@@ -190,9 +191,9 @@ care about finding a simple solution.
 
 # Penalized Logistic Regression
 
-`$$\min_{w \in ℝ^{p}, b \in \mathbb{R}}C \sum_{i=1}^n\log(\exp(-y_i(w^T \textbf{x}_i + b ) + 1) + ||w||_2^2$$`
+`$$\min_{w \in ℝ^{p}, b \in \mathbb{R}}-C \sum_{i=1}^n\log(\exp(-y_i(w^T \textbf{x}_i + b )) + 1) + ||w||_2^2$$`
 
-`$$\min_{w \in ℝ^{p}, b \in \mathbb{R}}C \sum_{i=1}^n\log(\exp(-y_i (w^T \textbf{x}_i + b) + 1) + ||w||_1$$`
+`$$\min_{w \in ℝ^{p}, b \in \mathbb{R}}-C \sum_{i=1}^n\log(\exp(-y_i (w^T \textbf{x}_i + b)) + 1) + ||w||_1$$`
 
 - C is inverse to alpha (or alpha / n_samples)
 
@@ -292,7 +293,7 @@ you also have a loss.
 class: center
 
 #Max-Margin and Support Vectors
-`$$ \min_{w \in \mathbb{R}^p, b \in \mathbb{R}} C \sum_{i=1}^n \max(0, 1 - y_i (w^T\mathbf{x} + b) + ||w||^2_2 $$`
+`$$ \min_{w \in \mathbb{R}^p, b \in \mathbb{R}} C \sum_{i=1}^n \max(0, 1 - y_i (w^T\mathbf{x} + b)) + ||w||^2_2 $$`
 
 $$\text{Within margin} \Leftrightarrow y_i(w^T x  + b)< 1$$
 
@@ -331,22 +332,6 @@ More regularization usually means a larger margin but more
 points inside the margin. Also, more support vectors mean
 there are more data points that actually influence the
 solution.
----
-class: center
-# Logistic Regression vs SVM
-.compact[
-`$$\min_{w \in ℝ^{p}, b \in \mathbb{R}}C \sum_{i=1}^n\log(\exp(-y_i(w^T \textbf{x}_i+b)) + 1) + ||w||_2^2$$`
-`$$\min_{w \in ℝ^{p}, b \in \mathbb{R}}C \sum_{i=1}^n\max(0,1-y_i(w^T \textbf{x}_i + b)) + ||w||_2^2$$`
-
-![:scale 35%](images/binary_loss.png)
-]
-???
-
-So this is the main difference between logistic regression
-and linear SVMs: Does it penalize misclassifications
-according to the green line, or according to the blue line?
-In practice it doesn't make a big difference.
-
 ---
 
 
@@ -392,6 +377,23 @@ correctly by this margin are the ones that do influence the
 solution and they are called the support vectors.
 
 FIXME graph of not influencing the solution?
+---
+
+class: center
+# Logistic Regression vs SVM
+.compact[
+`$$\min_{w \in ℝ^{p}, b \in \mathbb{R}}-C \sum_{i=1}^n\log(\exp(-y_i(w^T \textbf{x}_i+b)) + 1) + ||w||_2^2$$`
+`$$\min_{w \in ℝ^{p}, b \in \mathbb{R}}C \sum_{i=1}^n\max(0,1-y_i(w^T \textbf{x}_i + b)) + ||w||_2^2$$`
+
+![:scale 35%](images/binary_loss.png)
+]
+???
+
+So this is the main difference between logistic regression
+and linear SVMs: Does it penalize misclassifications
+according to the green line, or according to the blue line?
+In practice it doesn't make a big difference.
+
 ---
 
 
@@ -665,7 +667,7 @@ Probabilistic multi-class model:
 
 `$$p(y=i|x) = \frac{e^{\textbf{w}_i^T\textbf{x} + b_i}}{\sum_{j=1}^k e^{\textbf{w}_j^T\textbf{x} + b_j}}$$`
 
-`$$\min_{w \in ℝ^{pk}, b \in \mathbb{R}^k} \sum_{i=1}^n \log(p(y=y_i|x_i, w, b))$$`
+`$$\min_{w \in ℝ^{pk}, b \in \mathbb{R}^k} -\sum_{i=1}^n \log(p(y=y_i|x_i, w, b))$$`
 
 $$\hat{y} = \text{arg} \max_{i=1,...,k} \textbf{w}_i\textbf{x} + b_i$$
 
@@ -1179,7 +1181,7 @@ poly_svm.support_
 ```
 `$$ y = \text{sign}(-0.057 (\mathbf{x}_1^T\mathbf{x} + 1)^2
          -0.012 (\mathbf{x}_{41}^T \mathbf{x} + 1)^2 \\
-         +0.008 (\mathbf{x}_{42}^T \mathbf{x} + 1)^2 + 0.062 * (\mathbf{x}_{63}, \mathbf{x} + 1)^2
+         +0.008 (\mathbf{x}_{42}^T \mathbf{x} + 1)^2 + 0.062 * (\mathbf{x}_{63}, \mathbf{x} + 1)^2)
 $$`
 
 ???
