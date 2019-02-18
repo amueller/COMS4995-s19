@@ -30,14 +30,15 @@ categorical data split?
 predition animation tree?
 min impurity decrease missing
 extra tree: only one thereshold per feature?
-
+FIXME: saw 1d tree explanation somewhere that was really neat?
+FIXME: short? Not if I actually explain the bullet points.
 ---
 class: spacious, middle
 # Why Trees?
 ???
 Trees are really very powerful models both for
 classification and regression, they're very commonly used.
-Trees are very popular in the industry. Only beaten out by
+Trees are very popular in the industry. Only beaten by
 deep neural networks. Tree-based models are one of the main
 tools in the toolbox of most machine learning practitioners.
 
@@ -252,9 +253,7 @@ from sklearn.tree import DecisionTreeClassifier, export_graphviz
 tree = DecisionTreeClassifier(max_depth=2)
 tree.fit(X_train, y_train) 
 
-# tree visualization
-tree_dot = export_graphviz(tree, out_file=None, feature_names=cancer.feature_names)
-print(tree_dot)```
+```
 ]
 
 ???
@@ -279,53 +278,6 @@ a tree of depth 2 and I gave it the feature names.
 
 ---
 # Visualizing trees with sklearn
-.smaller[
-```
-digraph Tree {
-node [shape=box] ;
-0 [label="worst perimeter <= 106.1\ngini = 0.468\nsamples = 426\nvalue = [159, 267]"];
-1 [label="worst concave points <= 0.134\ngini = 0.081\nsamples = 259\nvalue = [11, 248]"];
-0 -> 1 [labeldistance=2.5, labelangle=45, headlabel="True"];
-2 [label="gini = 0.008\nsamples = 240\nvalue = [1, 239]"];
-1 -> 2;
-3 [label="gini = 0.499\nsamples = 19\nvalue = [10, 9]"];
-1 -> 3;
-4 [label="worst concave points <= 0.142\ngini = 0.202\nsamples = 167\nvalue = [148, 19]"];
-0 -> 4 [labeldistance=2.5, labelangle=-45, headlabel="False"];
-5 [label="gini = 0.497\nsamples = 37\nvalue = [20, 17]"];
-4 -> 5;
-6 [label="gini = 0.03\nsamples = 130\nvalue = [128, 2]"];
-4 -> 6;
-}
-```
-]
-???
-In graph expression language, this is what the tree looks
-like.
----
-
-
-# Showing dot files in Jupyter
-Requires graphviz C library and Python library
-
-`conda install graphviz python-graphviz`
-<br />
-<br />
- .center[
- ![:scale 60%](images/img_12.png)
- ]
-
-???
-You can show them in Jupiter quite easily if you use
-graphviz. Graphviz is a library that does the graph layout
-thing from the subscriptions. Here, the output is the
-graphviz object. If you're not using Anaconda installing
-graphviz is really complicated, because it has a C library
-and Python library.
----
-# Easier visualization
-
-[PR #9251](https://github.com/scikit-learn/scikit-learn/pull/9251) (or [a gist](https://gist.github.com/amueller/1f8d3c03305642ab3bad677d9b443b80) )
 
 ```python
 from tree_plotting import plot_tree
