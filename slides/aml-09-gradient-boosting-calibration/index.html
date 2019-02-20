@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Gradient Boosting; Stacking</title>
+    <title>Gradient Boosting</title>
     <meta charset="utf-8">
         <style>
        @import url(https://fonts.googleapis.com/css?family=Garamond);
@@ -17,23 +17,25 @@ class: center, middle
 
 ### W4995 Applied Machine Learning
 
-# Boosting, Stacking, Calibration
+# (Gradient) Boosting, Calibration
 
-02/21/18
+02/20/19
 
 Andreas C. Müller
 
 ???
 We'll continue tree-based models, talking about boosting.
-Another ensemble technique called stacking. Finally, a
-technique called calibration that looks somewhat similar to
+Finally, a technique called calibration that looks somewhat similar to
 ensembles but has the goal of obtaining good probability
 estimates from any classifier.
 
-FIXME: XGBOOST!! FIXME early stopping FIXME GBRT: better
-explain log-loss FIXME: add example of calibrated and
-inaccurate vs accurate but not calibrated! FIXME:
-calibration: what are the estimators fit to, and why does
+FIXME: XGBOOST!!
+FIXME: Binning
+FIXME early stopping
+FIXME GBRT: better explain log-loss
+FIXME: add example of calibrated and
+inaccurate vs accurate but not calibrated!
+FIXME: calibration: what are the estimators fit to, and why does
 fitting it to 0 and 1 create probabilities in between
 
 Partial dependence plot. how is that different from feature
@@ -41,6 +43,7 @@ importances. calibration curve plotting: bins are different
 for hist and calibration curve? slide 27: maybe put
 probabilities on x axis? calibration curve: blue histogram
 is number of total points, y axis not labeled
+
 ---
 class: centre,middle
 # Gradient Boosting
@@ -263,7 +266,8 @@ For multi-class, the default thing to do is One Versus Rest.
 class:spacious
 # Gradient Boosting Advantages
 
-- Slower to train than RF (serial), but much faster to predict
+- Slower to train than RF (if using "old" GradientBoostingRegressor), but much faster to predict
+- Very fast using XGBoost, LightGBM, pygbm, new scikit-learn implementation [#12807](https://github.com/scikit-learn/scikit-learn/pull/12807)
 - Small model size
 - Typically more accurate than Random Forests
 ???
@@ -319,143 +323,33 @@ tree-based model, the prediction is a linear combination of
 trees, you can look at feature importance like the same way
 we did for random forest and trees. 
 
+---
+class: middle
+# Improvements: Binning and "extreme" gradient boosting
+---
+class: spacious
+
+# A better split criterion (?)
+- Optimize "weights" in leave (not just counting)
+- Include second order (hessian) and regularizer
+![:scale 100%](images/xgboost-criterion.png)
 
 ---
-
-# Partial Dependence Plots
-- Marginal dependence of prediction on one or two features
-
-.smaller[
-```python
-from sklearn.ensemble.partial_dependence import plot_partial_dependence
-boston = load_boston()
-X_train, X_test, y_train, y_test = train_test_split(
-    boston.data, boston.target,random_state=0)
-
-gbrt = GradientBoostingRegressor().fit(X_train, y_train)
-
-fig, axs = plot_partial_dependence(
-    gbrt, X_train, np.argsort(gbrt.feature_importances_)[-6:],
-    feature_names=boston.feature_names, n_jobs=3,
-    grid_resolution=50)
-```
+# Binning
+.left-column[
+![:scale 100%](images/xgboost-exact.png)
 ]
-
-???
-But there's also something else that's quite interesting,
-which is called Partial Dependence Plots that's actually
-possible for all trees. Unfortunately, in scikit-learn, it’s
-available only for the gradient boosting. So the idea here
-is to not only see what parameters are important but how
-will they influence the target. And so after you fit your
-model, I'm using the Boston data set to the gradient
-boosting regressor, there's a thing called plot partial
-dependence, which gets the model and the training data set
-and then the features for which I want to make the partial
-dependence plots.
-
-So here, I'm looking at the six most important features. The
-feature importance is important according to the trees. So I
-sort this and take the six most important ones. 
-
----
-# Partial Dependence Plots
-
-.center[
-![:scale 70%](images/feat_impo_part_dep.png)
+--
+.right-column[
+![:scale 100%](images/xgboost-binning.png)
 ]
-
-???
-And so this is what the partner dependence plots look like.
-So this is the most important feature, the second most
-important feature and so on. This is sort of the marginal
-contribution of each feature. Basically, in each tree,
-you're summing out the contribution of all the other
-features, and you look only at what is the contribution of
-this particular feature. In general, this would be hard to
-compute. For tree-based models you can compute is a very
-efficient way because you can basically just sum up over the
-whole space by traversing the tree. 
-
-Here with increased room size, the price increases and you
-can see how it increases and you can see that there's like a
-big step function here. And you can see that for increased
-LSTAT, the price decreases. For the others, there aren’t any
-drastic effect. There seems to be some threshold for NOX.
-And something funky going on DIS. 
-
-The question is, so I said for random forest, you can't find
-out the direction of which way the feature influences. But
-that was for the feature importance. So the feature
-importance tells the impurity decrease. So here I also look
-at the feature importance and they're just numbers so they
-don't give you the direction. For both gradient boosting and
-random forest, you can look at partial dependency plot, and
-they will give you a non-parametric model of how a single
-feature influences it. Unfortunately, it’s not available in
-scikit-learn. You could do the same thing for random
-forests. Because in the end, the way they predict is quite
-similar.
-
----
-# Bivariate Partial Dependence Plots
-.smaller[
-```python
-plot_partial_dependence(
-    gbrt, X_train, [np.argsort(gbrt.feature_importances_)[-2:]],
-    feature_names=boston.feature_names, n_jobs=3, grid_resolution=50)
-```
-]
-.center[
-![:scale 80%](images/feature_importance.png)
-]
-
-???
-You can also do this in bivariate. So here, looking at the
-two most important features in a bivariate plot, I'm
-actually not giving it a list of features, but I'm giving it
-a list of list of features. And so the two most important
-features, LSTAT, and ROOM. 
-
-You can see there’s no very complex interaction. As you can
-see, the effect of these two features taking into account
-all the other features. 
-
-This is something you can usually do for linear model
-easily. If you do this for the linear model, you would have
-lines everywhere but for more complicated models this is
-very hard to do. Way more tricky to do in neural networks.
-
----
-# Partial Dependence for Classification
-.tiny-code[
-```python
-from sklearn.ensemble.partial_dependence import plot_partial_dependence
-for i in range(3):
-    fig, axs = plot_partial_dependence(gbrt, X_train, range(4), n_cols=4,
-                                       feature_names=iris.feature_names, grid_resolution=50, label=i)
-```
-]
-.center[
-![:scale 50%](images/feat_impo_part_dep_class.png)
-]
-???
-We can do the same for classification. Here is a partial
-dependency plot for the iris dataset. 
-
-As I said, for classification we’re usually using One Versus
-Rest. So here, we have three classifiers.
-
-One classifier for sertosa, one for Versicolor and one for
-virginica.
-
-You can see that for the first two features they're like
-flat. But for sertosa the decision function is high for
-small part petal length, medium peddling for versicolor and
-large for virginca. These are all put through logistic
-function and then normalized. 
 ---
 
+# Agressive sub-sampling
+.padding-top[
+According to user feedback, using column sub-sampling prevents over-fitting even more so than the traditional row sub-sampling. (XGBoost: A Scalable Tree Boosting System, 2016)
+]
+---
 # XGBoost
 `conda install -c conda-forge xgboost`
 
@@ -523,16 +417,15 @@ And that will make your computation much faster.
 - Scikit-learn compatible interface
 
 ---
-class: spacious
-
 .center[
 ![:scale 50%](images/xgboost_sklearn_bench.png)
 ]
 - Exact splits ~5x faster on single core
 - Appoximate splits, multi-core -> more speed!
-- Also check lightGBM (even faster?)
+- Also check lightGBM
 - Both have GPU support
 - https://github.com/szilard/GBM-perf
+- Nicolas' PR for sklearn [#12807](https://github.com/scikit-learn/scikit-learn/pull/12807)
 ???
 Here is actually for the exact version of XGBoost the
 comparison in terms of time and accuracy. This is for
@@ -563,7 +456,7 @@ speeds, you want to use one of these two.
 
 - Adding trees can lead to overfitting
 - Stop adding trees when validation accuracy stops increasing
-- Optional in XGBoost and sklearn >= 0.20 (development)
+- Optional in XGBoost and sklearn >= 0.20
 
 ???
 As I said earlier, if you add more and more trees, the
@@ -588,7 +481,17 @@ data to train your model because you need to the validation
 set for early stopping. You’ll still need a separate test
 set to see how well the model actually does. You can't use
 the same set for early stopping and for evaluation. 
-
+---
+class:spacious
+# More Tuning of Gradient Boosting
+- Tune max_features
+- Tune column subsampling, row subsampling
+- Typically strong pruning via max_depth
+- Regularization
+- Pick learning rate and do early stopping?
+---
+class: middle
+# Concluding tree-based models
 ---
 class:spacious
 # When to use tree-based models
@@ -638,265 +541,7 @@ ensembles, different way to put together multiple models.
 
 
 ---
-class: centre,middle
-# More ensembles: Stacking
-???
-That's called stacking. So last time, we talked about
-bagging and model averaging. And stacking basically goes a
-little beyond that, in that it tries to stack models on top
-of each other. 
----
-# Simplified Stacking
- .tiny-code[
-```python
-from sklearn.neighbors import KNeighborsClassifier
 
-X, y = make_moons(noise=.4, random_state=16, n_samples=300)
-X_train, X_test, y_train, y_test = train_test_split(X, y, stratify=y, random_state=0)
-
-voting = VotingClassifier(
-   [('logreg', LogisticRegression(C=100)),
-    ('tree', DecisionTreeClassifier(max_depth=3)),
-    ('knn', KNeighborsClassifier(n_neighbors=3))],
-    voting='soft')
-voting.fit(X_train, y_train)
-lr, tree, knn = voting.estimators_
-```
-]
-
-.center[
-![:scale 90%](images/average_voting.png)
-]
-
-???
-This is not simplified stacking. This is basically just
-averaging models. This is one of the simplest ensemble we
-saw last time. 
-
-So here, I have this two-class data set and I trained a
-logistic regression, a decision tree, and KNN. So in simple
-ensemble, I just average all the probabilities and then take
-the arg max as a prediction. And that's implemented in the
-voting classifier that we saw last time. 
-
-But instead of just taking an average, what we could do is
-take a weighted average, for example. And so the way to do
-that would be….
-
----
-# Simplified Stacking
-.tiny-code[
-```python
-stacking = make_pipeline(voting, LogisticRegression(C=100))
-stacking.fit(X_train, y_train)
-print(stacking.score(X_train, y_train))
-print(stacking.score(X_test, y_test))
-```
-
-```
-0.90
-0.77
-```
-
-```python
-stacking.named_steps.logisticregression.coef_
-```
-
-```
-array([[ 0.487,  1.519,  3.686]])
-```
-]
-.left-column[
-<br />
-<br />
-![:scale 90%](images/average_voting.png)
-]
-.right-column[
-![:scale 90%](images/simple_stacking_result.png)
-]
-
-???
----
-class:centre,middle
-
-## Problem : Overfitting!
-???
-One way is simplified stacking, where you take the
-probability estimates by all of the models as an input, and
-you train logistic regression on these probability estimates
-in an effort to predict the class. 
-
-This is basically weights for each of these probability
-estimates. And then you can take the weight average. 
-
-So here, I used a pipeline out of voting classifier logistic
-regression. If I used the voting classifier as a
-transformer, it'll just transform into the probabilities. 
-
-So here are the coefficients, there are three coefficients,
-one for each of the models. You can see that it trusts the
-logistic regression the least, the decision tree a little
-bit more, and the KNN the most. Instead of just averaging,
-you get something like this.
-
-Instead of using logistic regression, we could use any model
-we want, you could use a decision tree, random forest,
-gradient boosting neural network, I can train whatever model
-I want on the probabilities created by these 3 models.
-
-The question is why don't we just simply take the most
-accurate model? 
-
-Because averaging them is often better.
-
-There’s a problem with doing this, though, which is that you
-basically overfit the trained data a lot. The thing is that
-here we train logistic regression on the training data and
-we train the logistic regression on the probability
-estimates of these other models on the training data. So the
-more the model overfit well it will be on the training data.
-
-The KNN for example, overfit quite a bit. If you do this on
-trained data set, the model that overfit most is the most
-informative on the training dataset, because it does
-perfectly. So then the second stage model will learn to
-trust the one most that overfits most. And clearly, you
-don't want that. 
-
-There are two ways to overcome this. 
-
----
-class:spacious
-# Stacking
-- Use cross-validation (even LOO!) to produce probability estimates on training set.
-- Train second step estimator on held-out estimates
-- No overfitting of second step!
-- For testing: as usual
-???
-While you can either just hold the hold-out set and use a
-single hold-out set to train a second stage model. So then
-on the hold-out set, the model that overfits obviously
-doesn't do as well on the hold-out model. And so the second
-stage will not trust the overfitting model.
----
-# Hold-out estimates of Probabilities
-![:scale 100%](images/holdout_estimate.png)
-
-- Split 1 produces probabilities for Fold 1, split2 for Fold 2 etc.
-- Get a probability estimate for each data point!
-- Unbiased estimates (like on the test set) for the whole training set!
-- Without it: The best estimator is the one that memorized the training set.
-
-
-
-???
-The other way is to use cross-validation. And basically,
-now, instead of having a single hold-out set, you have
-multiple hold-out sets. So for each data point, you need to
-compute the features. And the way you compute the features
-of the first stage on the training set is you train the
-model on the remaining folds and then you do probabilistic
-predictions or probabilistic estimates on this data point in
-the training set. But the model that you're using for this
-probabilistic estimates was not trained on this data. You
-can do leave one out, for example, and you can train a model
-on all of the other data and then predict probabilities for
-one point. Obviously, that's going to be very slow.
-
-You can also do something like 5 fold cross-validation,
-wherein the first stage, you have to train the model five
-times and then get hold-out probability estimates for each
-of these. 
-
-This way, you have unbiased probability estimate for all
-training data points. 
-
-The output of the first stage with cross-validation would be
-just the features which are probability estimates of the
-underlying model. Only now, instead of being biased, their
-unbiased estimates because it's hold-out data.
-
-The benefit of doing this compared to single hold-out set is
-that the second stage now has much more training data
-because the training dataset is the same size. I have
-unbiased probability estimates for my models for all data
-points. So I have the same size training set only without
-overfitting now. 
-
----
-
-.tiny-code[
-```python
-from sklearn.model_selection import cross_val_predict
-# take only probabilities of positive classes for more interpretable coefficients
-first_stage = make_pipeline(voting, FunctionTransformer(lambda X: X[:, 1::2]))
-transform_cv = cross_val_predict(first_stage, X_train, y_train, cv=10, method="transform")
-second_stage = LogisticRegression(C=100).fit(transform_cv, y_train)
-print(second_stage.coef_)
-```
-```
-[[ 2.192  1.402  1.012]]
-```
-
-```python
-print(second_stage.score(transform_cv, y_train))
-print(second_stage.score(first_stage.transform(X_test), y_test))
-```
-
-```
-0.813
-0.800
-```
-]
-.center[
-![:scale 40%](images/simple_stacking_result.png)
-![:scale 40%](images/stacking_result.png)
-]
-
-
-???
-And so here is the result of this. There is a pull request
-in scikit-learn to do this directly. I do it slightly
-differently using cross_val_predict, cross_val_predict
-allows me to apply any method inside cross-validation. 
-
-Here, I'm using the transform method of the voting
-classifier, and I'm using 10 fold cross-validation to always
-just use transform on the hold-out set. So computing the
-probabilities of the voting classifier on the hold-out set.
-
-TransformCV is something of the same number of samples as a
-training data set. And it has 3 dimensions, which are the 3
-probability estimates. And then again, here I train logistic
-regression on it and I get coefficients.
-
-And so now you can see that here in the coefficients, the
-first model was logistic regression, it trusts this more.
-The trust for the coefficient of the trees is similar. The
-last one, the nearest neighbor now has the lowest weight. 
-
-So here's the model that we had just doing a logistic
-regression, training on the training dataset. And here's
-with proper stacking where you use hold-out probability
-estimates. And you can see here, there's much less
-overfitting going on and they're sort of much more
-uncertainty here.
-
-For prediction, this cross-validation doesn't really change
-anything, if you apply this to the test set… The standard
-way is to train a model on the whole training set, and then
-use this to estimate the probabilities on the test set. So
-this cross-validation is only to get probability estimates
-on the training set to train the second stage. 
-
-The next thing I want to talk about is similar stacking but
-actually has a different goal. The goal in stacking is
-really to blend different models in a smart way. And so you
-take multiple models, you try to build a stronger, more
-expressive model by blending these models using some
-weighting.
-
----
 class:spacious
 #Calibration
 .center[
@@ -1368,7 +1013,411 @@ pretty pictures.
 class: center, middle
 
 # Questions ?
+---
 
+# Don't look these are for later!
+---
+
+# Partial Dependence Plots
+- Marginal dependence of prediction on one or two features
+
+.smaller[
+```python
+from sklearn.ensemble.partial_dependence import plot_partial_dependence
+boston = load_boston()
+X_train, X_test, y_train, y_test = train_test_split(
+    boston.data, boston.target,random_state=0)
+
+gbrt = GradientBoostingRegressor().fit(X_train, y_train)
+
+fig, axs = plot_partial_dependence(
+    gbrt, X_train, np.argsort(gbrt.feature_importances_)[-6:],
+    feature_names=boston.feature_names, n_jobs=3,
+    grid_resolution=50)
+```
+]
+
+???
+But there's also something else that's quite interesting,
+which is called Partial Dependence Plots that's actually
+possible for all trees. Unfortunately, in scikit-learn, it’s
+available only for the gradient boosting. So the idea here
+is to not only see what parameters are important but how
+will they influence the target. And so after you fit your
+model, I'm using the Boston data set to the gradient
+boosting regressor, there's a thing called plot partial
+dependence, which gets the model and the training data set
+and then the features for which I want to make the partial
+dependence plots.
+
+So here, I'm looking at the six most important features. The
+feature importance is important according to the trees. So I
+sort this and take the six most important ones. 
+
+---
+# Partial Dependence Plots
+
+.center[
+![:scale 70%](images/feat_impo_part_dep.png)
+]
+
+???
+And so this is what the partner dependence plots look like.
+So this is the most important feature, the second most
+important feature and so on. This is sort of the marginal
+contribution of each feature. Basically, in each tree,
+you're summing out the contribution of all the other
+features, and you look only at what is the contribution of
+this particular feature. In general, this would be hard to
+compute. For tree-based models you can compute is a very
+efficient way because you can basically just sum up over the
+whole space by traversing the tree. 
+
+Here with increased room size, the price increases and you
+can see how it increases and you can see that there's like a
+big step function here. And you can see that for increased
+LSTAT, the price decreases. For the others, there aren’t any
+drastic effect. There seems to be some threshold for NOX.
+And something funky going on DIS. 
+
+The question is, so I said for random forest, you can't find
+out the direction of which way the feature influences. But
+that was for the feature importance. So the feature
+importance tells the impurity decrease. So here I also look
+at the feature importance and they're just numbers so they
+don't give you the direction. For both gradient boosting and
+random forest, you can look at partial dependency plot, and
+they will give you a non-parametric model of how a single
+feature influences it. Unfortunately, it’s not available in
+scikit-learn. You could do the same thing for random
+forests. Because in the end, the way they predict is quite
+similar.
+
+
+FIXME: Partial dependence plot. how is that different from feature
+importances. calibration curve plotting: bins are different
+for hist and calibration curve? slide 27: maybe put
+probabilities on x axis? calibration curve: blue histogram
+is number of total points, y axis not labeled
+
+
+---
+# Bivariate Partial Dependence Plots
+.smaller[
+```python
+plot_partial_dependence(
+    gbrt, X_train, [np.argsort(gbrt.feature_importances_)[-2:]],
+    feature_names=boston.feature_names, n_jobs=3, grid_resolution=50)
+```
+]
+.center[
+![:scale 80%](images/feature_importance.png)
+]
+
+???
+You can also do this in bivariate. So here, looking at the
+two most important features in a bivariate plot, I'm
+actually not giving it a list of features, but I'm giving it
+a list of list of features. And so the two most important
+features, LSTAT, and ROOM. 
+
+You can see there’s no very complex interaction. As you can
+see, the effect of these two features taking into account
+all the other features. 
+
+This is something you can usually do for linear model
+easily. If you do this for the linear model, you would have
+lines everywhere but for more complicated models this is
+very hard to do. Way more tricky to do in neural networks.
+
+---
+# Partial Dependence for Classification
+.tiny-code[
+```python
+from sklearn.ensemble.partial_dependence import plot_partial_dependence
+for i in range(3):
+    fig, axs = plot_partial_dependence(gbrt, X_train, range(4), n_cols=4,
+                                       feature_names=iris.feature_names, grid_resolution=50, label=i)
+```
+]
+.center[
+![:scale 50%](images/feat_impo_part_dep_class.png)
+]
+???
+We can do the same for classification. Here is a partial
+dependency plot for the iris dataset. 
+
+As I said, for classification we’re usually using One Versus
+Rest. So here, we have three classifiers.
+
+One classifier for sertosa, one for Versicolor and one for
+virginica.
+
+You can see that for the first two features they're like
+flat. But for sertosa the decision function is high for
+small part petal length, medium peddling for versicolor and
+large for virginca. These are all put through logistic
+function and then normalized. 
+---
+class: centre,middle
+# More ensembles: Stacking
+???
+That's called stacking. So last time, we talked about
+bagging and model averaging. And stacking basically goes a
+little beyond that, in that it tries to stack models on top
+of each other. 
+---
+# Simplified Stacking
+ .tiny-code[
+```python
+from sklearn.neighbors import KNeighborsClassifier
+
+X, y = make_moons(noise=.4, random_state=16, n_samples=300)
+X_train, X_test, y_train, y_test = train_test_split(X, y, stratify=y, random_state=0)
+
+voting = VotingClassifier(
+   [('logreg', LogisticRegression(C=100)),
+    ('tree', DecisionTreeClassifier(max_depth=3)),
+    ('knn', KNeighborsClassifier(n_neighbors=3))],
+    voting='soft')
+voting.fit(X_train, y_train)
+lr, tree, knn = voting.estimators_
+```
+]
+
+.center[
+![:scale 90%](images/average_voting.png)
+]
+
+???
+This is not simplified stacking. This is basically just
+averaging models. This is one of the simplest ensemble we
+saw last time. 
+
+So here, I have this two-class data set and I trained a
+logistic regression, a decision tree, and KNN. So in simple
+ensemble, I just average all the probabilities and then take
+the arg max as a prediction. And that's implemented in the
+voting classifier that we saw last time. 
+
+But instead of just taking an average, what we could do is
+take a weighted average, for example. And so the way to do
+that would be….
+
+---
+# Simplified Stacking
+.tiny-code[
+```python
+stacking = make_pipeline(voting, LogisticRegression(C=100))
+stacking.fit(X_train, y_train)
+print(stacking.score(X_train, y_train))
+print(stacking.score(X_test, y_test))
+```
+
+```
+0.90
+0.77
+```
+
+```python
+stacking.named_steps.logisticregression.coef_
+```
+
+```
+array([[ 0.487,  1.519,  3.686]])
+```
+]
+.left-column[
+<br />
+<br />
+![:scale 90%](images/average_voting.png)
+]
+.right-column[
+![:scale 90%](images/simple_stacking_result.png)
+]
+
+???
+---
+class:centre,middle
+
+## Problem : Overfitting!
+???
+One way is simplified stacking, where you take the
+probability estimates by all of the models as an input, and
+you train logistic regression on these probability estimates
+in an effort to predict the class. 
+
+This is basically weights for each of these probability
+estimates. And then you can take the weight average. 
+
+So here, I used a pipeline out of voting classifier logistic
+regression. If I used the voting classifier as a
+transformer, it'll just transform into the probabilities. 
+
+So here are the coefficients, there are three coefficients,
+one for each of the models. You can see that it trusts the
+logistic regression the least, the decision tree a little
+bit more, and the KNN the most. Instead of just averaging,
+you get something like this.
+
+Instead of using logistic regression, we could use any model
+we want, you could use a decision tree, random forest,
+gradient boosting neural network, I can train whatever model
+I want on the probabilities created by these 3 models.
+
+The question is why don't we just simply take the most
+accurate model? 
+
+Because averaging them is often better.
+
+There’s a problem with doing this, though, which is that you
+basically overfit the trained data a lot. The thing is that
+here we train logistic regression on the training data and
+we train the logistic regression on the probability
+estimates of these other models on the training data. So the
+more the model overfit well it will be on the training data.
+
+The KNN for example, overfit quite a bit. If you do this on
+trained data set, the model that overfit most is the most
+informative on the training dataset, because it does
+perfectly. So then the second stage model will learn to
+trust the one most that overfits most. And clearly, you
+don't want that. 
+
+There are two ways to overcome this. 
+
+---
+class:spacious
+# Stacking
+- Use cross-validation (even LOO!) to produce probability estimates on training set.
+- Train second step estimator on held-out estimates
+- No overfitting of second step!
+- For testing: as usual
+???
+While you can either just hold the hold-out set and use a
+single hold-out set to train a second stage model. So then
+on the hold-out set, the model that overfits obviously
+doesn't do as well on the hold-out model. And so the second
+stage will not trust the overfitting model.
+---
+# Hold-out estimates of Probabilities
+![:scale 100%](images/holdout_estimate.png)
+
+- Split 1 produces probabilities for Fold 1, split2 for Fold 2 etc.
+- Get a probability estimate for each data point!
+- Unbiased estimates (like on the test set) for the whole training set!
+- Without it: The best estimator is the one that memorized the training set.
+
+
+
+???
+The other way is to use cross-validation. And basically,
+now, instead of having a single hold-out set, you have
+multiple hold-out sets. So for each data point, you need to
+compute the features. And the way you compute the features
+of the first stage on the training set is you train the
+model on the remaining folds and then you do probabilistic
+predictions or probabilistic estimates on this data point in
+the training set. But the model that you're using for this
+probabilistic estimates was not trained on this data. You
+can do leave one out, for example, and you can train a model
+on all of the other data and then predict probabilities for
+one point. Obviously, that's going to be very slow.
+
+You can also do something like 5 fold cross-validation,
+wherein the first stage, you have to train the model five
+times and then get hold-out probability estimates for each
+of these. 
+
+This way, you have unbiased probability estimate for all
+training data points. 
+
+The output of the first stage with cross-validation would be
+just the features which are probability estimates of the
+underlying model. Only now, instead of being biased, their
+unbiased estimates because it's hold-out data.
+
+The benefit of doing this compared to single hold-out set is
+that the second stage now has much more training data
+because the training dataset is the same size. I have
+unbiased probability estimates for my models for all data
+points. So I have the same size training set only without
+overfitting now. 
+
+---
+
+.tiny-code[
+```python
+from sklearn.model_selection import cross_val_predict
+# take only probabilities of positive classes for more interpretable coefficients
+first_stage = make_pipeline(voting, FunctionTransformer(lambda X: X[:, 1::2]))
+transform_cv = cross_val_predict(first_stage, X_train, y_train, cv=10, method="transform")
+second_stage = LogisticRegression(C=100).fit(transform_cv, y_train)
+print(second_stage.coef_)
+```
+```
+[[ 2.192  1.402  1.012]]
+```
+
+```python
+print(second_stage.score(transform_cv, y_train))
+print(second_stage.score(first_stage.transform(X_test), y_test))
+```
+
+```
+0.813
+0.800
+```
+]
+.center[
+![:scale 40%](images/simple_stacking_result.png)
+![:scale 40%](images/stacking_result.png)
+]
+
+
+???
+And so here is the result of this. There is a pull request
+in scikit-learn to do this directly. I do it slightly
+differently using cross_val_predict, cross_val_predict
+allows me to apply any method inside cross-validation. 
+
+Here, I'm using the transform method of the voting
+classifier, and I'm using 10 fold cross-validation to always
+just use transform on the hold-out set. So computing the
+probabilities of the voting classifier on the hold-out set.
+
+TransformCV is something of the same number of samples as a
+training data set. And it has 3 dimensions, which are the 3
+probability estimates. And then again, here I train logistic
+regression on it and I get coefficients.
+
+And so now you can see that here in the coefficients, the
+first model was logistic regression, it trusts this more.
+The trust for the coefficient of the trees is similar. The
+last one, the nearest neighbor now has the lowest weight. 
+
+So here's the model that we had just doing a logistic
+regression, training on the training dataset. And here's
+with proper stacking where you use hold-out probability
+estimates. And you can see here, there's much less
+overfitting going on and they're sort of much more
+uncertainty here.
+
+For prediction, this cross-validation doesn't really change
+anything, if you apply this to the test set… The standard
+way is to train a model on the whole training set, and then
+use this to estimate the probabilities on the test set. So
+this cross-validation is only to get probability estimates
+on the training set to train the second stage. 
+
+The next thing I want to talk about is similar stacking but
+actually has a different goal. The goal in stacking is
+really to blend different models in a smart way. And so you
+take multiple models, you try to build a stronger, more
+expressive model by blending these models using some
+weighting.
+
+---
     </textarea>
     <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
