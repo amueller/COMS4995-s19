@@ -35,6 +35,9 @@ FIXME: short? Not if I actually explain the bullet points.
 FIXME: bias variance plot replace by two kinds of error (approximation, generalization)
 FIXME: length actually good. so more of a note than fixme lol
 FIXME: test curve mislabeled warm start
+FIXME explain "values" in figure in slide notes
+
+
 ---
 class: spacious, middle
 # Why Trees?
@@ -283,7 +286,7 @@ a tree of depth 2 and I gave it the feature names.
 # Visualizing trees with sklearn
 
 ```python
-from tree_plotting import plot_tree
+from sklearn.tree import plot_tree
 tree_dot = plot_tree(tree, feature_names=cancer.feature_names)
 ```
 .center[
