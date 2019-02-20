@@ -16,7 +16,7 @@ import mosspy
 # m, url = submit_moss()
 # mosspy.download_report(url, "hw1_report/", connections=8, log_level=20)
 
-def clone_repos(pattern="homework-1", store_at="/tmp/homework"):
+def clone_repos(pattern="homework-1", store_at="/tmp/homework", org="aml-spring-19"):
     if not os.path.exists(store_at):
         os.mkdir(store_at)
     os.chdir(store_at)
@@ -25,7 +25,7 @@ def clone_repos(pattern="homework-1", store_at="/tmp/homework"):
         token = f.read().strip()
 
     g = Github(token)
-    org = g.get_organization("applied-ml-spring-18")
+    org = g.get_organization(org)
     repos_list = org.get_repos()
     these = [repo for repo in repos_list if pattern in repo.full_name]
     for repo in tqdm.tqdm(these):
