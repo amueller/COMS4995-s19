@@ -37,6 +37,8 @@ FIXME: add example of calibrated and
 inaccurate vs accurate but not calibrated!
 FIXME: calibration: what are the estimators fit to, and why does
 fitting it to 0 and 1 create probabilities in between
+FIXME: brier score decomposition
+FIXME calibration scores
 
 Partial dependence plot. how is that different from feature
 importances. calibration curve plotting: bins are different
@@ -904,9 +906,19 @@ class:spacious
 # Building the model
 - Using the training set is bad
 - Either use hold-out set or cross-validation
-- Cross-validation can be use as in stacking to make unbiased probability predictions, use that as training set.
+- Cross-validation can be used to make unbiased probability predictions, use that as training set.
 
 ???
+---
+class: center
+# Fitting the calibration model
+![:scale 70%](images/calibration_val_scores.png)
+---
+class: center
+
+# Fitting the calibration model
+![:scale 70%](images/calibration_val_scores_fitted.png)
+
 ---
 # CalibratedClassifierCV
 .tiny-code[
