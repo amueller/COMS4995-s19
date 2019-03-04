@@ -28,7 +28,7 @@ Today we’ll talk about working with imbalanced data. We
 already talked about how accuracy is a bad measure and what
 are the other measures we can use.
 
-FIXME add AP for all evaluations, add more roc / pr curves
+FIXME add more roc / pr curves
 FIXME better illustration for sampling
 FIXME better motivation for sampling / why we want to change things
 FIXME TOO SHORT
@@ -759,6 +759,7 @@ class: spacious
 
 - Random resampling separate for each instance in
 an ensemble!
+- Chen, Liaw, Breiman: “Using random forest to learn imbalanced data.” 
 - Paper: “Exploratory Undersampling for Class Imbalance Learning”
 - Not in sklearn (yet)
 - Easy with imblearn
@@ -779,6 +780,9 @@ imbalance learn.
 
 from sklearn.tree import DecisionTreeClassifier
 from imblearn.ensemble import BalancedBaggingClassifier
+
+# from imblearn.ensemble import BalancedRandomForestClassifier
+# resampled_rf = BalancedRandomForestClassifier()
 
 tree = DecisionTreeClassifier(max_features='auto')
 resampled_rf = BalancedBaggingClassifier(base_estimator=tree,
@@ -942,17 +946,21 @@ help as much. It might help us in terms of accuracy.
 ```python
 enn_pipe = make_imb_pipeline(EditedNearestNeighbours(n_neighbors=5),
                              LogisticRegression())
-scores = cross_val_score(enn_pipe, X_train, y_train, cv=10, scoring='roc_auc')
-np.mean(scores)
+scores = cross_validate(enn_pipe, X_train, y_train, cv=10,
+                        scoring=('roc_auc', 'average_precision'))
+scores['test_roc_auc'].mean(), scores['test_average_precision'].mean()
+# baseline was 0.920, 0.630
 ```
-0.920
+0.920, 0.627
 ```python
 enn_pipe_rf = make_imb_pipeline(EditedNearestNeighbours(n_neighbors= 5),
-                                  RandomForestClassifier(n_estimators=100))
-scores = cross_val_score(enn_pipe_rf, X_train, y_train, cv=10, scoring='roc_auc')
-np.mean(scores)
+                                RandomForestClassifier(n_estimators=100))
+scores = cross_validate(enn_pipe_rf, X_train, y_train, cv=10,
+                        scoring=('roc_auc', 'average_precision'))
+scores['test_roc_auc'].mean(), scores['test_average_precision'].mean()
+# baseline was 0.939, 0.722
 ```
-0.944
+0.940, 0.687
 ]
 ???
 
@@ -1009,17 +1017,27 @@ this might not be computationally feasible.
 .smaller[
 ```python
 cnn_pipe = make_imb_pipeline(CondensedNearestNeighbour(), LogisticRegression())
-scores = cross_val_score(cnn_pipe, X_train, y_train, cv=10, scoring='roc_auc')
-np.mean(scores)
+scores = cross_validate(cnn_pipe, X_train, y_train, cv=10,
+                        scoring=('roc_auc', 'average_precision'))
+pd.DataFrame(scores)[['test_roc_auc', 'test_average_precision']].mean()
+# baseline was 0.920, 0.630
 ```
-0.919
+```
+test_roc_auc              0.920
+test_average_precision    0.606
+```
 ```python
-cnn_pipe = make_imb_pipeline(CondensedNearestNeighbour(),
-                              RandomForestClassifier(n_estimators=100))
-scores = cross_val_score(cnn_pipe, X_train, y_train, cv=10, scoring='roc_auc')
-np.mean(scores)
+cnn_pipe_rf = make_imb_pipeline(CondensedNearestNeighbour(),
+                                RandomForestClassifier(n_estimators=100))
+scores = cross_validate(cnn_pipe_rf, X_train, y_train, cv=10,
+                        scoring=('roc_auc', 'average_precision'))
+pd.DataFrame(scores)[['test_roc_auc', 'test_average_precision']].mean()
+# baseline was 0.939, 0.722
 ```
-0.948
+```
+test_roc_auc              0.953
+test_average_precision    0.701
+```
 ]
 ???
 If you’re unlucky doing this condensing might actually be
@@ -1045,7 +1063,7 @@ interviewer will expect you to know is SMOTE.
 - Adds synthetic interpolated data to smaller class
 - For each sample in minority class:</br>
   – Pick random neighbor from k neighbors.</br>
-  – Pick point on line connecting the two uniformly</br>
+  – Pick point on line connecting the two uniformly (or within rectangle)</br>
   – Repeat.</br>
 
 
@@ -1085,7 +1103,7 @@ So you oversample basically until the classes are balanced.
 class: center, middle
 
 .center[
-![:scale 100%](images/smote_3.png)
+![:scale 100%](images/smote_mammography.png)
 ]
 
 
@@ -1107,21 +1125,23 @@ dimensions, it's not entirely clear how well this will work.
 .smaller[
 ```python
 smote_pipe = make_imb_pipeline(SMOTE(), LogisticRegression())
-scores = cross_val_score(smote_pipe, X_train, y_train, cv=10, scoring='roc_auc')
-np.mean(scores)
+scores = cross_validate(smote_pipe, X_train, y_train, cv=10,
+                        scoring=('roc_auc', 'average_precision'))
+pd.DataFrame(scores)[['test_roc_auc', 'test_average_precision']].mean()
+# baseline was 0.920, 0.630
 ```
-0.919
+0.919, 0.585
+
 ```python
-smote_pipe_rf = make_imb_pipeline(SMOTE(),RandomForestClassifier(n_estimators=100))
-scores = cross_val_score(smote_pipe_rf,X_train,y_train, cv=10, scoring='roc_auc')
-np.mean(scores)
+smote_pipe_rf = make_imb_pipeline(SMOTE(),
+                                  RandomForestClassifier(n_estimators=100))
+scores = cross_validate(smote_pipe_rf, X_train, y_train, cv=10,
+                        scoring=('roc_auc', 'average_precision'))
+pd.DataFrame(scores)[['test_roc_auc', 'test_average_precision']].mean()
+# baseline was 0.939, 0.722
 ```
-0.947
-```python
-param_grid = {'smote__k_neighbors': [3, 5, 7, 9, 11, 15, 31]}
-search = GridSearchCV(smote_pipe_rf, param_grid, cv=10, scoring="roc_auc")
-search.fit(X_train, y_train)
-```
+0.946, 0.688
+
 ]
 
 ???
@@ -1130,9 +1150,18 @@ dataset or the random sampling.
 Performing nearest neighbors, I found 11 to be best. 
 
 ---
-
+.smaller[
+```python
+param_grid = {'smote__k_neighbors': [3, 5, 7, 9, 11, 15, 31]}
+search = GridSearchCV(smote_pipe_rf, param_grid, cv=10,
+                      scoring="average_precision")
+search.fit(X_train, y_train)
+results = pd.DataFrame(search.cv_results_)
+results.plot("param_smote__k_neighbors", ["mean_test_score", "mean_train_score"])
+```
+]
 .center[
-![:scale 90%](images/param_smote_k_neighbours.png)
+![:scale 60%](images/param_smote_k_neighbors.png)
 ]
 
 ???
@@ -1149,7 +1178,7 @@ a big difference.
 
 
 .center[
-![:scale 100%](images/smote_k_neighbours.png)
+![:scale 100%](images/smote_k_neighbors.png)
 ]
 
 ???
@@ -1159,12 +1188,12 @@ class: spacious
 
 # Summary
 
-- Always check roc_auc, look at curve
+- Always check roc_auc an AP, look at curves
 - Undersampling is very fast and can help!
-- Undersampling + Ensembles is very powerful!
+- Undersampling + Ensembles worth a try.
 - Many smart sampling strategies, mixed outcomes
-- SMOTE allows adding new interpolated samples,
-works well in practice
+- SMOTE allows adding new interpolated samples
+- Mixed outcomes with SMOTE, also definition a bit unclear
 - More advanced variants of SMOTE available
 
 ???
@@ -1195,7 +1224,7 @@ Unfortunately, most of the datasets we have come from
 machine learning researchers. And so there's really not a
 lot of interesting data sets that are very balanced.
 
-The other thing I should have covered is you can directly
+The other thing I could have covered is you can directly
 optimize particular metrics. So you can train a model to
 optimize precision at K or area under the curve or something
 like that, at least for linear model, that's relatively
@@ -1203,8 +1232,6 @@ straightforward. I'm not sure what the outcome was if
 someone tried it with trees. But I think the most common is
 just reweighting to samples. 
 
-
----
     </textarea>
     <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
