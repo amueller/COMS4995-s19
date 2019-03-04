@@ -34,6 +34,9 @@ FIXME TOO SHORT
 FIXME Add estimators minimizing loss directly?
 FIXME add more on imbalanced forest
 FIXME remove weird sampling? better benchmarking for SMOTE
+FIXME show grid-search results
+FIXME grid-search SMOTE show uncertainty
+FIXME research comparison papers more
 ---
 class: center, middle
 
@@ -664,9 +667,9 @@ class: spacious
 
 # Class-weights in linear models
 
-`$$\min_{w \in ℝ^{p}}-C \sum_{i=1}^n\log(\exp(-y_iw^T \textbf{x}_i) + 1) + ||w||_2^2$$`
+`$$\min_{w \in ℝ^{p}, b \in \mathbb{R}}-C \sum_{i=1}^n\log(\exp(-y_i(w^T \textbf{x}_i + b )) + 1) + ||w||_2^2$$`
 
-`$$ \min_{w \in \mathbb{R}^p} -C \sum_{i=1}^n c_{y_i} \log(\exp(-y_i w^T \mathbf{x}_i) + 1) + ||w||^2_2 $$`
+`$$\min_{w \in ℝ^{p}, b \in \mathbb{R}}-C \sum_{i=1}^n c_{y_i}  \log(\exp(-y_i(w^T \textbf{x}_i + b )) + 1) + ||w||_2^2$$`
 
 Similar for linear and non-linear SVM
 
