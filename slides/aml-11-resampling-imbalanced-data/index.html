@@ -19,18 +19,21 @@ class: center, middle
 
 # Working with Imbalanced Data
 
-02/28/18
+03/04/19
 
 Andreas C. Müller
 
 ???
 Today we’ll talk about working with imbalanced data. We
 already talked about how accuracy is a bad measure and what
-are the other measures we can use. FIXME add AP for all
-evaluations, add more roc / pr curves FIXME better
-illustration for sampling FIXME better motivation for
-sampling / why we want to change things FIXME TOO SHORT
+are the other measures we can use.
+
+FIXME add AP for all evaluations, add more roc / pr curves
+FIXME better illustration for sampling
+FIXME better motivation for sampling / why we want to change things
+FIXME TOO SHORT
 FIXME Add estimators minimizing loss directly?
+FIXME imbforest add slide + paper
 ---
 class: center, middle
 
@@ -140,6 +143,7 @@ the ones that I'm very certain predicted as class 1.
 If you have given actual a cost function of how much each
 mistake costs, you can optimize this threshold.
 
+FIXME new classification report!!
 
 ---
 
@@ -168,21 +172,23 @@ account the asymmetric costs, or asymmetric data.
 ---
 # Mammography Data
 
-.smaller[
+.smallest[
 .left-column[
 ```python
-import openml
-# mammography dataset
-# https://www.openml.org/d/310
-data = openml.datasets.get_dataset(310)
-X, y = data.get_data(target='class')
+from sklearn.datasets import fetch_openml
+# mammography https://www.openml.org/d/310
+data = fetch_openml('mammography')
+X, y = data.data, data.target
+y = (y.astype(np.int) + 1) // 2
 X.shape
 ```
 (11183, 6)
 ```python
 np.bincount(y)
 ```
+```
 array([10923,   260])
+```
 ]
 .right-column[
 .center[
@@ -203,8 +209,15 @@ can see that these are much skewed distributions and there's
 really a lot more of one class than the other. 
 
 
-Note: Split one slide to two due to size constraints.
+---
 
+# Mammography Data
+
+.center[
+![:scale 85%](images/mammography_features23.png)
+]
+
+???
 ---
 
 # Mammography Data
@@ -215,14 +228,16 @@ from sklearn.model_selection import cross_validate
 from sklearn.linear_model import LogisticRegression
 
 scores = cross_validate(LogisticRegression(),
-                        X_train, y_train, cv=10, scoring=('roc_auc', 'average_precision'))
+                        X_train, y_train, cv=10,
+                        scoring=('roc_auc', 'average_precision'))
 scores['test_roc_auc'].mean(), scores['test_average_precision'].mean()
 ```
 0.920, 0.630 
 ```python
 from sklearn.ensemble import RandomForestClassifier
 scores = cross_validate(RandomForestClassifier(n_estimators=100),
-                        X_train, y_train, cv=10, scoring=('roc_auc', 'average_precision'))
+                        X_train, y_train, cv=10,
+                        scoring=('roc_auc', 'average_precision'))
 scores['test_roc_auc'].mean(), scores['test_average_precision'].mean()
 ```
 0.939, 0.722
@@ -230,15 +245,6 @@ scores['test_roc_auc'].mean(), scores['test_average_precision'].mean()
 
 ???
 
----
-
-# Mammography Data
-
-.center[
-![:scale 85%](images/mammography_features23.png)
-]
-
-???
 So as a baseline here is just evaluating logistic regression
 and the random forest on this. Actually, I ran it under ROC
 curve and average precision. I’ve used a cross-validate
@@ -265,7 +271,7 @@ precision.
 
 .left-column[
 .center[
-![:scale 85%](images/basic_approaches.png)
+![:scale 100%](images/basic_approaches.png)
 ]
 ]
 
@@ -273,6 +279,8 @@ precision.
 </br>
 </br>
 </br>
+</br>
+
 Change the training procedure
 ]
 
@@ -405,7 +413,6 @@ doing that.
 - Loses data !
 
 ---
-
 # Random Undersampling
 
 .smaller[
@@ -414,9 +421,10 @@ from imblearn.pipeline import make_pipeline as make_imb_pipeline
 
 undersample_pipe = make_imb_pipeline(RandomUnderSampler(), LogisticRegressionCV())
 scores = cross_validate(undersample_pipe,
-                        X_train, y_train, cv=10, scoring=('roc_auc', 'average_precision'))
+                        X_train, y_train, cv=10,
+                        scoring=('roc_auc', 'average_precision'))
 scores['test_roc_auc'].mean(), scores['test_average_precision'].mean()
-# was 0.920, 0.630 without
+# baseline was 0.920, 0.630
 ```
 ```
 0.927, 0.527
@@ -428,9 +436,10 @@ scores['test_roc_auc'].mean(), scores['test_average_precision'].mean()
 undersample_pipe_rf = make_imb_pipeline(RandomUnderSampler(),
                                         RandomForestClassifier())
 scores = cross_validate(undersample_pipe_rf,
-                        X_train, y_train, cv=10, scoring=('roc_auc', 'average_precision'))
+                        X_train, y_train, cv=10,
+                        scoring=('roc_auc', 'average_precision'))
 scores['test_roc_auc'].mean(), scores['test_average_precision'].mean()
-# was 0.939, 0.722 without
+# baseline was 0.939, 0.722
 ```
 ```
 0.951, 0.629
@@ -500,8 +509,10 @@ print(np.bincount(y_train_oversample))
 ```python
 oversample_pipe = make_imb_pipeline(RandomOverSampler(), LogisticRegression())
 scores = cross_validate(oversample_pipe,
-                        X_train, y_train, cv=10, scoring=('roc_auc', 'average_precision'))
+                        X_train, y_train, cv=10,
+                        scoring=('roc_auc', 'average_precision'))
 scores['test_roc_auc'].mean(), scores['test_average_precision'].mean()
+# baseline was 0.920, 0.630
 ```
 0.917, 0.585
 ]
@@ -511,8 +522,10 @@ scores['test_roc_auc'].mean(), scores['test_average_precision'].mean()
 oversample_pipe_rf = make_imb_pipeline(RandomOverSampler(),
                                        RandomForestClassifier())
 scores = cross_validate(oversample_pipe_rf,
-                        X_train, y_train, cv=10, scoring=('roc_auc', 'average_precision'))
+                        X_train, y_train, cv=10,
+                        scoring=('roc_auc', 'average_precision'))
 scores['test_roc_auc'].mean(), scores['test_average_precision'].mean()
+# baseline was 0.939, 0.722
 ```
 0.926, 0.715
 ]
@@ -708,14 +721,19 @@ you can do a weighted vote.
 .smaller[
 ```python
 scores = cross_validate(LogisticRegression(class_weight='balanced'),
-                        X_train, y_train, cv=10, scoring=('roc_auc', 'average_precision'))
+                        X_train, y_train, cv=10,
+                        scoring=('roc_auc', 'average_precision'))
 scores['test_roc_auc'].mean(), scores['test_average_precision'].mean()
+# baseline was 0.920, 0.630
 ```
 0.918, 0.587
 ```python
-scores = cross_validate(RandomForestClassifier(n_estimators=100, class_weight='balanced'),
-                        X_train, y_train, cv=10, scoring=('roc_auc', 'average_precision'))
+scores = cross_validate(RandomForestClassifier(n_estimators=100,
+                                               class_weight='balanced'),
+                        X_train, y_train, cv=10,
+                        scoring=('roc_auc', 'average_precision'))
 scores['test_roc_auc'].mean(), scores['test_average_precision'].mean()
+# baseline was 0.939, 0.722
 ```
 0.917, 0.701
 ]
@@ -766,8 +784,10 @@ tree = DecisionTreeClassifier(max_features='auto')
 resampled_rf = BalancedBaggingClassifier(base_estimator=tree,
                                          n_estimators=100, random_state=0)
 scores = cross_validate(resampled_rf,
-                        X_train, y_train, cv=10, scoring=('roc_auc', 'average_precision'))
+                        X_train, y_train, cv=10,
+                        scoring=('roc_auc', 'average_precision'))
 scores['test_roc_auc'].mean(), scores['test_average_precision'].mean()
+# baseline was 0.939, 0.722
 ```
 0.957, 0.654
 
@@ -916,6 +936,7 @@ So definitely, in terms of computation, this doesn't really
 help as much. It might help us in terms of accuracy. 
 
 ---
+# Edited Nearest Neighbours
 
 .smaller[
 ```python
