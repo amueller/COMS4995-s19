@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Imputation & Feature Selection</title>
+    <title>Feature Selection and Model Interpretation</title>
     <meta charset="utf-8">
         <style>
        @import url(https://fonts.googleapis.com/css?family=Garamond);
@@ -17,22 +17,137 @@ class: center, middle
 
 ### W4995 Applied Machine Learning
 
-# Imputation and Feature Selection
+# Model Interpretation and Feature Selection
 
-02/12/18
+03/06/18
 
 Andreas C. Müller
 
 ???
-Alright, everybody. Today we will talk about Imputation and
-Feature selection, look to do this in general, and how to do
-it with scikit-learn. We're also going to look into a couple
-of other Python libraries that help doing these two things. 
+Alright, everybody. Today we will talk about
+Feature selection and model interpretation, look at how to do this in general,
+and how to doit with scikit-learn. We're also going to look into a couple
+of other Python libraries that help doing these two things.
+
+
+
 FIXME random forest code is confusing because I tried to
 simplify it. Also: we haven't seen those yet?!
+
 FIXME mutual information needs better explanation
+FIXME lasso show random between correlated, same for tree, compare to RF
+
+---
+
+# Model Interpretation (post-hoc)?
+
+- Not inference!
+- Not causality!
+- still useful?
+
+???
+Possibly useful for feature selection, feature engineering, model debugging, explaining predictions.
+Alternatively: use model that are easy to interpret!
+OR: derive a simpler explainable model from a non-explainable one (model compression)
+
+Caveat: if your model is bad, interpreting it makes no sense!
+
+---
+# Types of explanations
+
+##Explain model globally
+- How does the output depend on the input?
+- Often: some form of marginals
 
 
+## Explain model locally
+- Why did it classify this point this way?
+- Explanation could look like a "global" one but be different for each point.
+- "What is the minimum change to classify it differently?"
+
+???
+Marginals: how does the prediction change as function of a particular Features?
+---
+# "Features important to the model"?
+
+Sklearn uses:
+- `coef_` for linear models (abs value or norm for multi-class)
+- `feature_importances_` for tree-based models 
+
+Heuristic at best!
+---
+# Side-note: CV Estimators
+
+- Exist for most linear models, i.e. RidgeCV, LogisticRegressionCV
+- perform efficient cross validation by exploiting algorithm properties (often warm-starting)
+- have build-in parameter grids
+- are a bit weird with pipelines
+---
+# Caveats: L1-based feature selection
+---
+# Caveats: L2 and unpenalized models
+---
+# Caveats: Single trees
+---
+# Caveats: Tree ensembles 
+---
+class: spacious
+
+# Iterative Model-Based Selection
+
+- Fit model, find least important feature, remove, iterate.
+- Or: Start with single feature, find most important feature, add, iterate.
+
+???
+But maybe dropping multiple features at once is not a good
+idea because the importance of the features might change
+once we dropped some of them. What we can do is, we can
+iteratively build models. And we could either start with a
+single feature then add more important ones or we could
+start with all features and discard some. 
+
+We'll talk about these two strategies which are slightly
+different. 
+---
+# Drop Feature Importance
+---
+
+# Permutation importance
+
+---
+
+
+# Permutation importance
+
+---
+
+# Partial Dependence
+
+---
+
+# Partial Dependence
+
+---
+
+# Ice Box?
+
+---
+
+# LIME 
+
+---
+
+# Shapely value
+
+---
+
+
+# SHAP
+
+---
+
+# For neural nets ?
+---
 
 class: center, middle
 
@@ -380,9 +495,10 @@ feature is.
 
 ---
 
+
 # Model based (single fit)
 .smaller[
-- Build a model, select features important to model
+- Build a model, select "features important to model"
 - Lasso, other linear models, tree-based Models
 - Multivariate - linear models assume linear relation
 ]
@@ -492,10 +608,8 @@ np.mean(cross_val_score(pipe_lasso, X_train, y_train, cv=10))
 ```
 
 ???
-
-The way to do this SelectFromModel. SelectFromModel is a
-meta-estimator model that gives you feature importance. So
-that’s any linear model or tree based model. It uses this to
+SelectFrom model will work with any model with coef_ or feature_importances_.
+So that’s any linear model or tree based model. It uses this to
 select the features. So this will fit lasso and then if you
 call transform, it will discard all the features that lasso
 thought are not important. And you can change the threshold
@@ -512,27 +626,8 @@ these parameters, drop two of the features and 11 after 13
 remains. If I put it in a pipeline the performance is about
 the same. 
 
-
 ---
-class: spacious
 
-# Iterative Model-Based Selection
-
-- Fit model, find least important feature, remove, iterate.
-- Or: Start with single feature, find most important feature, add, iterate.
-
-???
-But maybe dropping multiple features at once is not a good
-idea because the importance of the features might change
-once we dropped some of them. What we can do is, we can
-iteratively build models. And we could either start with a
-single feature then add more important ones or we could
-start with all features and discard some. 
-
-We'll talk about these two strategies which are slightly
-different. 
-
----
 class: spacious
 
 # Recursive Feature Elimination
@@ -770,6 +865,7 @@ features are important and here's how I make the prediction”
 
 ---
 
+---
 
 class: center, middle
 
