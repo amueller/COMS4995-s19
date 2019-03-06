@@ -55,6 +55,10 @@ Caveat: if your model is bad, interpreting it makes no sense!
 ---
 # Types of explanations
 
+## Explain "kind of model"
+- How would the model change if this feature was dropped?
+- Doesn't explain this particular fitted model
+
 ##Explain model globally
 - How does the output depend on the input?
 - Often: some form of marginals
@@ -70,11 +74,66 @@ Marginals: how does the prediction change as function of a particular Features?
 ---
 # "Features important to the model"?
 
-Sklearn uses:
+Naive:
 - `coef_` for linear models (abs value or norm for multi-class)
 - `feature_importances_` for tree-based models 
 
-Heuristic at best!
+Use with care!
+---
+# Drop Feature Importance
+
+```python
+def drop_feature_importance(est, X, y):
+    base_score = np.mean(cross_val_score(est, X, y, cv=5))
+    scores = []
+    for feature in range(X.shape[1]):
+        mask = np.ones(X.shape[1], 'bool')
+        mask[feature] = False
+        X_new = X[:, mask]
+        this_score = np.mean(cross_val_score(est, X_new, y, cv=5))
+        scores.append(base_score - this_score)
+    return np.array(scores)
+```
+- Can't deal with correlated features well
+- Very slow
+???
+on it's own not very useful, we'll see it later
+rebuilds many models, not explaining this particular model!
+---
+# Permutation importance
+Idea: measure marginal influence of one feature
+
+```python
+def permutation_importance(est, X, y, n_bootstrap=100):
+  baseline_score = estimator.score(X, y)
+  for f_idx in range(X.shape[1]):
+      for b_idx in range(n_bootstrap):
+          X_new = X.copy()
+          X_new[:, f_idx] = np.random.shuffle(X[:, f_idx])
+          feature_score = estimator.score(X_new, y)
+          scores[f_idx, b_idx] = baseline_score - feature_score
+```
+- Applied on validation set given trained estimator.
+- Also kinda slow.
+- Implementation: ELI5,<br> https://github.com/scikit-learn/scikit-learn/pull/13146
+---
+# LIME
+- Build sparse linear local model around each data point.
+- Explain prediction for each point locally.
+- Paper: "Why Should I Trust You?" Explaining the Predictions of Any Classifier
+- Implementation: ELI5, https://github.com/marcotcr/lime
+---
+# SHAP
+- Build around idea of Shaply values
+- very roughly: does drop-out importance for every subset of features
+- intractable, sampling approximations exit
+- fast variants for linear and tree-based models
+- awesome vis and tools: https://github.com/slundberg/shap
+- allows local / per sample explanations
+---
+class: middle
+
+# Case Study
 ---
 # Side-note: CV Estimators
 
@@ -82,6 +141,10 @@ Heuristic at best!
 - perform efficient cross validation by exploiting algorithm properties (often warm-starting)
 - have build-in parameter grids
 - are a bit weird with pipelines
+???
+FIXME add small code example
+---
+# Toy data
 ---
 # Caveats: L1-based feature selection
 ---
@@ -89,65 +152,163 @@ Heuristic at best!
 ---
 # Caveats: Single trees
 ---
-# Caveats: Tree ensembles 
+# Caveats: Tree ensembles
 ---
-class: spacious
+class: middle
+# More model inspection
 
-# Iterative Model-Based Selection
+---
 
-- Fit model, find least important feature, remove, iterate.
-- Or: Start with single feature, find most important feature, add, iterate.
+# Partial Dependence Plots
+- Marginal dependence of prediction on one or two features
+
+.smaller[
+```python
+from sklearn.ensemble.partial_dependence import plot_partial_dependence
+boston = load_boston()
+X_train, X_test, y_train, y_test = train_test_split(
+    boston.data, boston.target,random_state=0)
+
+gbrt = GradientBoostingRegressor().fit(X_train, y_train)
+
+fig, axs = plot_partial_dependence(
+    gbrt, X_train, np.argsort(gbrt.feature_importances_)[-6:],
+    feature_names=boston.feature_names, n_jobs=3,
+    grid_resolution=50)
+```
+]
 
 ???
-But maybe dropping multiple features at once is not a good
-idea because the importance of the features might change
-once we dropped some of them. What we can do is, we can
-iteratively build models. And we could either start with a
-single feature then add more important ones or we could
-start with all features and discard some. 
+But there's also something else that's quite interesting,
+which is called Partial Dependence Plots that's actually
+possible for all trees. Unfortunately, in scikit-learn, it’s
+available only for the gradient boosting. So the idea here
+is to not only see what parameters are important but how
+will they influence the target. And so after you fit your
+model, I'm using the Boston data set to the gradient
+boosting regressor, there's a thing called plot partial
+dependence, which gets the model and the training data set
+and then the features for which I want to make the partial
+dependence plots.
 
-We'll talk about these two strategies which are slightly
-different. 
----
-# Drop Feature Importance
----
-
-# Permutation importance
-
----
-
-
-# Permutation importance
+So here, I'm looking at the six most important features. The
+feature importance is important according to the trees. So I
+sort this and take the six most important ones. 
 
 ---
+# Partial Dependence Plots
 
+.center[
+![:scale 70%](images/feat_impo_part_dep.png)
+]
+
+???
+And so this is what the partner dependence plots look like.
+So this is the most important feature, the second most
+important feature and so on. This is sort of the marginal
+contribution of each feature. Basically, in each tree,
+you're summing out the contribution of all the other
+features, and you look only at what is the contribution of
+this particular feature. In general, this would be hard to
+compute. For tree-based models you can compute is a very
+efficient way because you can basically just sum up over the
+whole space by traversing the tree. 
+
+Here with increased room size, the price increases and you
+can see how it increases and you can see that there's like a
+big step function here. And you can see that for increased
+LSTAT, the price decreases. For the others, there aren’t any
+drastic effect. There seems to be some threshold for NOX.
+And something funky going on DIS. 
+
+The question is, so I said for random forest, you can't find
+out the direction of which way the feature influences. But
+that was for the feature importance. So the feature
+importance tells the impurity decrease. So here I also look
+at the feature importance and they're just numbers so they
+don't give you the direction. For both gradient boosting and
+random forest, you can look at partial dependency plot, and
+they will give you a non-parametric model of how a single
+feature influences it. Unfortunately, it’s not available in
+scikit-learn. You could do the same thing for random
+forests. Because in the end, the way they predict is quite
+similar.
+---
 # Partial Dependence
+- Idea: Get marginal predictions given feature.
+- How? "integrate out" other features using validation data
+- Fast methods available for trees!
+- Nonsensical for linear models.
+- sklearn master: only gradient boosting
+- Next sklearn: fast for gradient boosting, slow for everything else
+- future: fast for all tree-based models
+
+---
+# Bivariate Partial Dependence Plots
+.smaller[
+```python
+plot_partial_dependence(
+    gbrt, X_train, [np.argsort(gbrt.feature_importances_)[-2:]],
+    feature_names=boston.feature_names, n_jobs=3, grid_resolution=50)
+```
+]
+.center[
+![:scale 80%](images/feature_importance.png)
+]
+
+???
+You can also do this in bivariate. So here, looking at the
+two most important features in a bivariate plot, I'm
+actually not giving it a list of features, but I'm giving it
+a list of list of features. And so the two most important
+features, LSTAT, and ROOM. 
+
+You can see there’s no very complex interaction. As you can
+see, the effect of these two features taking into account
+all the other features. 
+
+This is something you can usually do for linear model
+easily. If you do this for the linear model, you would have
+lines everywhere but for more complicated models this is
+very hard to do. Way more tricky to do in neural networks.
+
+---
+# Partial Dependence for Classification
+.tiny-code[
+```python
+from sklearn.ensemble.partial_dependence import plot_partial_dependence
+for i in range(3):
+    fig, axs = plot_partial_dependence(gbrt, X_train, range(4), n_cols=4,
+                                       feature_names=iris.feature_names, grid_resolution=50, label=i)
+```
+]
+.center[
+![:scale 50%](images/feat_impo_part_dep_class.png)
+]
+???
+We can do the same for classification. Here is a partial
+dependency plot for the iris dataset. 
+
+As I said, for classification we’re usually using One Versus
+Rest. So here, we have three classifiers.
+
+One classifier for sertosa, one for Versicolor and one for
+virginica.
+
+You can see that for the first two features they're like
+flat. But for sertosa the decision function is high for
+small part petal length, medium peddling for versicolor and
+large for virginca. These are all put through logistic
+function and then normalized. 
+---
+---
+
+# Ice Box
+- like partial dependence plots, without the `.mean(axis=0)`
+- looks cool. maybe useful.
 
 ---
 
-# Partial Dependence
-
----
-
-# Ice Box?
-
----
-
-# LIME 
-
----
-
-# Shapely value
-
----
-
-
-# SHAP
-
----
-
-# For neural nets ?
----
 
 class: center, middle
 
@@ -627,6 +788,24 @@ remains. If I put it in a pipeline the performance is about
 the same. 
 
 ---
+class: spacious
+
+# Iterative Model-Based Selection
+
+- Fit model, find least important feature, remove, iterate.
+- Or: Start with single feature, find most important feature, add, iterate.
+
+???
+But maybe dropping multiple features at once is not a good
+idea because the importance of the features might change
+once we dropped some of them. What we can do is, we can
+iteratively build models. And we could either start with a
+single feature then add more important ones or we could
+start with all features and discard some. 
+
+We'll talk about these two strategies which are slightly
+different. 
+---
 
 class: spacious
 
@@ -862,8 +1041,6 @@ predictions to be linear so I can explain to my boss what it
 means. But I can also still do the feature selection using a
 more complicated model and just tell my boss “Oh, only these
 features are important and here's how I make the prediction”
-
----
 
 ---
 
