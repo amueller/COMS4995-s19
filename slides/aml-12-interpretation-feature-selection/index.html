@@ -36,14 +36,16 @@ simplify it. Also: we haven't seen those yet?!
 
 FIXME mutual information needs better explanation
 FIXME lasso show random between correlated, same for tree, compare to RF
+FIXME IceBOX example with cross?
 
 ---
+class: spacious
 
 # Model Interpretation (post-hoc)?
 
-- Not inference!
-- Not causality!
-- still useful?
+- ## Not inference!
+- ## Not causality!
+- ## still useful(?)
 
 ???
 Possibly useful for feature selection, feature engineering, model debugging, explaining predictions.
@@ -113,15 +115,26 @@ def permutation_importance(est, X, y, n_bootstrap=100):
           feature_score = estimator.score(X_new, y)
           scores[f_idx, b_idx] = baseline_score - feature_score
 ```
+
+--
+
 - Applied on validation set given trained estimator.
 - Also kinda slow.
 - Implementation: ELI5,<br> https://github.com/scikit-learn/scikit-learn/pull/13146
+- For RF: https://github.com/parrt/random-forest-importances (uses oob)
 ---
 # LIME
+.smaller[
 - Build sparse linear local model around each data point.
 - Explain prediction for each point locally.
 - Paper: "Why Should I Trust You?" Explaining the Predictions of Any Classifier
 - Implementation: ELI5, https://github.com/marcotcr/lime
+]
+
+.center[
+![:scale 60%](images/lime_paper.png)
+]
+
 ---
 # SHAP
 - Build around idea of Shaply values
@@ -145,6 +158,20 @@ class: middle
 FIXME add small code example
 ---
 # Toy data
+```python
+X.shape
+```
+```
+(100000, 8)
+```
+.wide-left-column[
+![:scale 100%](images/toy_data_scatter.png)
+
+]
+.narrow-right-column[
+![:scale 100%](images/covariance.png)
+
+]
 ---
 # Caveats: L1-based feature selection
 ---
@@ -301,11 +328,26 @@ small part petal length, medium peddling for versicolor and
 large for virginca. These are all put through logistic
 function and then normalized. 
 ---
----
 
 # Ice Box
+.smaller[
 - like partial dependence plots, without the `.mean(axis=0)`
 - looks cool. maybe useful.
+- https://pdpbox.readthedocs.io/en/latest/
+]
+.center[
+![:scale 60%](images/ice_lstat.png)
+]
+
+---
+# Ice Box
+.smaller[
+- Another one: PyCEBOX
+- https://github.com/AustinRochford/PyCEbox
+]
+.center[
+![:scale 80%](images/boston_ice.png)
+]
 
 ---
 
