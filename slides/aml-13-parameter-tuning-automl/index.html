@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Parameter Tuning and AutoML</title>
+    <meta charset="utf-8">
+        <style>
+       @import url(https://fonts.googleapis.com/css?family=Garamond);
+       @import url(https://fonts.googleapis.com/css?family=Muli:400,700,400italic);
+       @import url(https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
+     </style>
+     <link rel="stylesheet" href="../style.css">
+  </head>
+  <body>
+    <textarea id="source">
+
+class: center, middle
+
+### W4995 Applied Machine Learning
+
+# Parameter Tuning and AutoML
+
+03/11/19
+
+Andreas C. Müller
+
+???
+---
+# Motivation
+- Need to select among Models
+- Need to select Hyper-Parameters
+- Need to select among preprocessing methods
+---
+# Conditional Hyper-Parameters
+- Kernels
+- Neural Nets
+- Pipelines
+---
+# Formulating model-selection as Hyperparameter Optimization
+- One big search, many conditional Hyper-Parameters
+- Categorical, integer, continuous
+- Different distributions
+---
+# CASH problem
+- Find the best configuration
+- Global optimization on complex (high-dim?) space
+---
+# Issues with Grid-Search
+- Need to define Grid
+- Exponential in number of dims
+---
+class: middle
+# Black-Box Search Procedures
+---
+# Random Search
+![:scale 100%](images/bergstra_random.jpeg)
+---
+# Random Search with scikit-learn
+- Need to specify right distributions
+- Use continuous distributions for biggest advantage
+---
+# Bayesian Optimization, SMBO
+Global, model-based optimization
+
+![:scale 100%](images/smbo.png)
+
+---
+# Surrogate functions
+![:scale 100%](images/smbo_table.png)
+
+NEED NEURAL NETS
+---
+# Evolutionary Methods
+![:scale 100%](images/tpot.png)
+
+---
+# Implementations
+- SMAC
+- spearmint
+- tpe
+- scikit-optimize
+- GPyOpt
+---
+# Criticism (2x Random)
+![:scale 50%](images/random_rank_chart.png)
+![:scale 50%](images/random_bar_plot_sample.png)
+--
+![:scale 30%](images/random2x_cifar10-compare.png)
+![:scale 30%](images/random2x_mrbi-compare.png)
+![:scale 30%](images/random2x_svhn-compare.png)
+
+http://www.argmin.net/2016/06/20/hypertuning/
+---
+# Beyond Black-Box
+- Hyperparameter gradient descent
+- Multi-Fidelity optimization
+- Meta-learning
+- (others...)
+---
+Multi-Fidelity Search
+---
+# Successive Halving
+---
+# Hyperband
+---
+# BOHB / HpBandSter
+---
+# In Practice / Implementations
+---
+# Meta-learning
+---
+# Ranking
+---
+# Discretization?
+---
+# Portfolios
+---
+# Meta-Features and Meta-Models
+![:scale 100%](images/metalearning-diagram.png)
+
+---
+# Active Testing and Recommendation Systems
+---
+# Multi-Task Bayesian Optimization
+---
+# Ensemble Models
+![:scale 100%](images/meta-learning-ensemble.png)
+
+---
+# Playing around with auto-sklearn
+```python
+import autosklearn.classification
+import sklearn.model_selection
+import sklearn.datasets
+from sklearn.metrics import accuracy_score
+X, y = sklearn.datasets.load_digits(return_X_y=True)
+X_train, X_test, y_train, y_test = \
+    sklearn.model_selection.train_test_split(X, y, random_state=1)
+automl = autosklearn.classification.AutoSklearnClassifier()
+automl.fit(X_train, y_train)
+y_hat = automl.predict(X_test)
+print("Accuracy score", accuracy_score(y_test, y_hat))
+```
+"This will run for one hour and should result in an accuracy above 0.98."
+
+
+
+---
+# Practical Recommendations / when to use what
+- Multi-Fidelity! Simple, effective!
+- Portfolios
+- BOHB / HpBandSter
+- auto-sklearn
+- TPot?
+## Seems promising:
+- Transfering surrogates / ensembles
+- Collaborative filtering / active testing
+---
+# Criticisms
+
+class: center, middle
+
+# Questions ?
+
+    </textarea>
+    <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+    <script>
+    // Config Remark
+    remark.macros['scale'] = function (percentage) {
+        var url = this;
+        return '<img src="' + url + '" style="width: ' + percentage + '" />';
+    };
+    config_remark = {
+        highlightStyle: 'magula',
+        highlightSpans: true,
+        highlightLines: true,
+        ratio: "16:9"
+    };
+      var slideshow = remark.create(config_remark);
+    // Configure MathJax
+    MathJax.Hub.Config({
+    tex2jax: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'] /* removed 'code' entry*/
+    }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for(i = 0; i < all.length; i += 1) {
+            all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+    });
+    </script>
+  </body>
+</html>
