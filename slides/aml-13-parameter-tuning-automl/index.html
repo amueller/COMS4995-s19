@@ -58,20 +58,27 @@ class: middle
 - Need to specify right distributions
 - Use continuous distributions for biggest advantage
 ---
+class: compact
 # Bayesian Optimization, SMBO
-Global, model-based optimization
-
-![:scale 100%](images/smbo.png)
-
+.wide-left-column[
+- fit 'cheap' probabilistic function to black-box
+- pick next point using exploration / exploitation
+- Implemented as acquisition function
+]
+.narrow-right-column[
+.center[
+![:scale 110%](images/smbo.png)
+]]
 ---
 # Surrogate functions
 ![:scale 100%](images/smbo_table.png)
 
 NEED NEURAL NETS
 ---
-# Evolutionary Methods
-![:scale 100%](images/tpot.png)
-
+# Evolutionary Methods: TPOT
+.center[
+![:scale 80%](images/tpot.png)
+]
 ---
 # Implementations
 - SMAC
@@ -80,15 +87,16 @@ NEED NEURAL NETS
 - scikit-optimize
 - GPyOpt
 ---
-# Criticism (2x Random)
-![:scale 50%](images/random_rank_chart.png)
-![:scale 50%](images/random_bar_plot_sample.png)
+class: compact, center
+# Criticism
+![:scale 25%](images/random_rank_chart.png)
+![:scale 25%](images/random_bar_plot_sample.png)<br>
 --
-![:scale 30%](images/random2x_cifar10-compare.png)
-![:scale 30%](images/random2x_mrbi-compare.png)
-![:scale 30%](images/random2x_svhn-compare.png)
+![:scale 23%](images/random2x_cifar10-compare.png)
+![:scale 23%](images/random2x_mrbi-compare.png)
+![:scale 23%](images/random2x_svhn-compare.png)
 
-http://www.argmin.net/2016/06/20/hypertuning/
+.smallest[http://www.argmin.net/2016/06/20/hypertuning/]
 ---
 # Beyond Black-Box
 - Hyperparameter gradient descent
@@ -96,7 +104,7 @@ http://www.argmin.net/2016/06/20/hypertuning/
 - Meta-learning
 - (others...)
 ---
-Multi-Fidelity Search
+# Multi-Fidelity Search
 ---
 # Successive Halving
 ---
@@ -115,8 +123,9 @@ Multi-Fidelity Search
 # Portfolios
 ---
 # Meta-Features and Meta-Models
-![:scale 100%](images/metalearning-diagram.png)
-
+.center[
+![:scale 90%](images/metalearning-diagram.png)
+]
 ---
 # Active Testing and Recommendation Systems
 ---
