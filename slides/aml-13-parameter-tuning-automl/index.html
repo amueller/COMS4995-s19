@@ -24,6 +24,7 @@ class: center, middle
 Andreas C. Müller
 
 ???
+FIXME show figure 2x random is as good as hyperband?
 ---
 # Motivation
 - Need to select among Models
@@ -37,7 +38,7 @@ Andreas C. Müller
 ---
 # Formulating model-selection as Hyperparameter Optimization
 - One big search, many conditional Hyper-Parameters
-- Categorical, integer, continuous
+- Categorical, integer, continuous, conditional
 - Different distributions
 ---
 # CASH problem
@@ -50,19 +51,40 @@ Andreas C. Müller
 ---
 class: middle
 # Black-Box Search Procedures
+`$$\Lambda^* = \arg\max_\Lambda f(\Lambda)$$`
+Parameters $\Lambda$, model-evaluation $f$.
+???
+General optimization of unknown, non-differentiable f, possibly no-smooth.
+NP Hard in general.
+Function f is very slow to evaluate - think training a neural net for a week.
 ---
 # Random Search
 ![:scale 100%](images/bergstra_random.jpeg)
 ---
 # Random Search with scikit-learn
-- Need to specify right distributions
+```python
+# specify parameters and distributions to sample from
+from scipy.stats import randint
+param_dist = {"max_depth": [3, None],
+              "max_features": randint(1, 11),
+              "min_samples_split": randint(2, 11),
+              "bootstrap": [True, False],
+              "criterion": ["gini", "entropy"]}
+n_iter_search = 20
+random_search = RandomizedSearchCV(clf,
+                                   param_distributions=param_dist,
+                                   n_iter=200, cv=5)
+```
+- lists or objects with `rvs` method
 - Use continuous distributions for biggest advantage
 ---
-class: compact
 # Bayesian Optimization, SMBO
 .wide-left-column[
+
 - fit 'cheap' probabilistic function to black-box
+
 - pick next point using exploration / exploitation
+
 - Implemented as acquisition function
 ]
 .narrow-right-column[
@@ -72,7 +94,8 @@ class: compact
 ---
 # Surrogate functions
 ![:scale 100%](images/smbo_table.png)
-
+???
+FIXME
 NEED NEURAL NETS
 ---
 # Evolutionary Methods: TPOT
@@ -80,12 +103,14 @@ NEED NEURAL NETS
 ![:scale 80%](images/tpot.png)
 ]
 ---
+class: spacious
+
 # Implementations
-- SMAC
-- spearmint
-- tpe
-- scikit-optimize
-- GPyOpt
+- SMAC: Random Forest model (Hutter group)
+- spearmint: GP (Snoek et al)
+- hyperopt: TPE (Bergstra, not maintained)
+- scikit-optimize: GP, tree, etc
+- GPyOpt: GP based on GPy (Lawrence group)
 ---
 class: compact, center
 # Criticism
@@ -97,6 +122,8 @@ class: compact, center
 ![:scale 23%](images/random2x_svhn-compare.png)
 
 .smallest[http://www.argmin.net/2016/06/20/hypertuning/]
+???
+FIXME use newer hyperband figures!
 ---
 # Beyond Black-Box
 - Hyperparameter gradient descent
@@ -105,8 +132,51 @@ class: compact, center
 - (others...)
 ---
 # Multi-Fidelity Search
+.smaller[Approximate function by similar cheaper function]
+.center[
+![:scale 70%](images/multi-fidelity-digits.png)
+![:scale 70%](images/multi-fidelity-digits-rf.png)
+
+]
+???
+Top: subsample the datasets
+bottom: use less trees in forest
+---
+# Multi-Fidelity Bayesian Optimization
+- Fit model to performance given parameters and budget
+- Choose parameters and budget for best exploration / exploitation
+- Related to multi-armed bandits and A/B testing
+- Differences to bandits:
+    - non-stationary distributions
+    - receiving loss (computing validation error) is expensive
+    - possibly infinitely many arms (continuous parameters)
 ---
 # Successive Halving
+- Given $n$ configuration and budget $B$
+- pick $\eta=2$ or $\eta=3$ (wording follows 2)
+- Each iteration, keep best halve of configurations
+- after $k=\log_\eta(n)$ left with single configuration.
+- initially allocate $\frac{B}{kn}$ to each configuration, double each iteration.
+--
+![:scale 70%](images/halving_algorithm.png)
+
+---
+# Successive Halving Example
+- configurations n=81
+- total budget B=20000
+```
+train 81 configurations with resources   41
+train 27 configurations with resources  123
+train  9 configurations with resources  370
+train  3 configurations with resources 1111
+train  1 configurations with resources 3333
+resources total: 16638
+```
+???
+Think about resources as in "maximum number of trees build in total" or "maximum number of data points used in total".
+---
+# Successive Halving (different) Example
+![:scale 90%](images/halving_curves.png)
 ---
 # Hyperband
 ---
@@ -114,7 +184,9 @@ class: compact, center
 ---
 # In Practice / Implementations
 ---
+class: middle, center
 # Meta-learning
+## Learning from experience (other datasets)
 ---
 # Ranking
 ---
@@ -165,7 +237,11 @@ print("Accuracy score", accuracy_score(y_test, y_hat))
 - Collaborative filtering / active testing
 ---
 # Criticisms
-
+- Do we need 100 classifiers?
+- Do we need Complex Pipelines?
+- Creates complex models and ensembles
+- "Making it too easy"?
+--
 class: center, middle
 
 # Questions ?

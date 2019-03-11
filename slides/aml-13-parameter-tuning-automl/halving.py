@@ -511,7 +511,7 @@ class BaseSuccessiveHalving(BaseSearchCV):
             n_candidates = len(candidate_params)
 
             # randomly sample training samples
-            n_samples_iter = floor(n_samples_total / n_candidates)
+            n_samples_iter = floor(n_samples_total / (n_candidates * n_iterations))
             if is_classifier(self.estimator):
                 n_samples_iter = max(n_samples_iter, min_n_samples)
             print("n_samples_iter: {}".format(n_samples_iter))
