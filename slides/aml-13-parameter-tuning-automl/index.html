@@ -175,37 +175,81 @@ resources total: 16638
 ???
 Think about resources as in "maximum number of trees build in total" or "maximum number of data points used in total".
 ---
+class: center
 # Successive Halving (different) Example
 ![:scale 90%](images/halving_curves.png)
 ---
 # Hyperband
+![:scale 90%](images/hyperband_curves.png)
+---
+# Hyperband
+![:scale 90%](images/hyperband_algorithm.png)
 ---
 # BOHB / HpBandSter
+![:scale 90%](images/bohb_curves.png)
 ---
-# In Practice / Implementations
+# In Practice
+"With the exception of the LeNet experiment (Section 3.3) and the 117 Datasets experi-
+ment (Section 4.2.1), the most aggressive bracket of SuccessiveHalving outperformed
+Hyperband in all of our experiments."
+.quote_author[Li et. al.]
+
+- Soon (?) in sklearn ([discussion](https://github.com/scikit-learn/scikit-learn/issues/12538))
+- [HpBandSter](https://automl.github.io/HpBandSter/build/html/index.html) distributed implementation, some custom code required
+- [scikit-hyperband](https://github.com/thuijskens/scikit-hyperband) looks good, but doesn't do out-of-the-box subsampling
+- Successive halving really easy to implement yourself.
 ---
 class: middle, center
 # Meta-learning
 ## Learning from experience (other datasets)
 ---
 # Ranking
----
-# Discretization?
+
+- Run many algorithms on large array of datasets
+- Rank by "best on average"
+
 ---
 # Portfolios
+
+- [PoSH auto-sklearn](https://ml.informatik.uni-freiburg.de/papers/18-AUTOML-AutoChallenge.pdf)
+
+- Create diverse set so that a good one among top k
+- Submodular optimization problem
+- greedy approximation
+---
+# Discretization
+
+## Are continuous parameters actually important ?
+
+- Anectotal evidence that it's not.
 ---
 # Meta-Features and Meta-Models
 .center[
 ![:scale 90%](images/metalearning-diagram.png)
 ]
 ---
-# Active Testing and Recommendation Systems
+# Active Testing and Recommendations
+.smaller[
+- [Probabilistic Matrix Factorization for AutoML (Fusi et al)](https://papers.nips.cc/paper/7595-probabilistic-matrix-factorization-for-automated-machine-learning.pdf)
+- https://github.com/rsheth80/pmf-automl/]
+![:scale 90%](images/fusi_latent.png)
 ---
 # Multi-Task Bayesian Optimization
+- Create estimate over all datasets at the same time!
+- Not scalable with Gaussian Processes
+- Maybe scalable with Neural Networks?
 ---
 # Ensemble Models
 ![:scale 100%](images/meta-learning-ensemble.png)
 
+---
+# Auto-sklearn
+- end-to-end auto-ml
+- seaches a fixed sklearn pipeline (4 steps)
+- Warm-starting with meta-features & KNN
+- Bayesian Optimization with SMAC
+
+https://automl.github.io/auto-sklearn/stable/index.html
 ---
 # Playing around with auto-sklearn
 ```python
@@ -223,10 +267,8 @@ print("Accuracy score", accuracy_score(y_test, y_hat))
 ```
 "This will run for one hour and should result in an accuracy above 0.98."
 
-
-
 ---
-# Practical Recommendations / when to use what
+# Practical Recommendations
 - Multi-Fidelity! Simple, effective!
 - Portfolios
 - BOHB / HpBandSter
@@ -241,7 +283,15 @@ print("Accuracy score", accuracy_score(y_test, y_hat))
 - Do we need Complex Pipelines?
 - Creates complex models and ensembles
 - "Making it too easy"?
---
+---
+class: middle
+
+Although we already reduced the space of considered ML algorithms substantially compared to our previous Auto-sklearn (4 vs. 15 classifiers), we could have reduced this set
+even further since, in the end, only XGBoost models ended up in the final ensembles for
+the challenge.
+
+.quote_author[Feurer et al, PoSH auto-sklearn]
+---
 class: center, middle
 
 # Questions ?
