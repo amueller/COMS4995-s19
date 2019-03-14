@@ -1143,7 +1143,7 @@ linear_svm.support_
 #array([1,26,42,62], dtype=int32)
 ```
 .smallest[
-`$$ y = \text{sign}(-0.03 \phi(\mathbf{x}_0)^T \phi(x) - 0.003 \phi(\mathbf{x}_{26})^T \phi(\mathbf{x})  +0.003 \phi(\mathbf{x}_{42})^T \phi(\mathbf{x}) + 0.03 \phi(\mathbf{x}_{63})^T \phi(\mathbf{x})) $$`
+`$$ y = \text{sign}(-0.03 \phi(\mathbf{x}_1)^T \phi(x) - 0.003 \phi(\mathbf{x}_{26})^T \phi(\mathbf{x})  +0.003 \phi(\mathbf{x}_{42})^T \phi(\mathbf{x}) + 0.03 \phi(\mathbf{x}_{62})^T \phi(\mathbf{x})) $$`
 ]
 
 ???
@@ -1181,7 +1181,7 @@ poly_svm.support_
 ```
 `$$ y = \text{sign}(-0.057 (\mathbf{x}_1^T\mathbf{x} + 1)^2
          -0.012 (\mathbf{x}_{41}^T \mathbf{x} + 1)^2 \\
-         +0.008 (\mathbf{x}_{42}^T \mathbf{x} + 1)^2 + 0.062 * (\mathbf{x}_{63}, \mathbf{x} + 1)^2)
+         +0.008 (\mathbf{x}_{42}^T \mathbf{x} + 1)^2 + 0.062 * (\mathbf{x}_{62}, \mathbf{x} + 1)^2)
 $$`
 
 ???
