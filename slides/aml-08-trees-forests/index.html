@@ -37,6 +37,8 @@ FIXME: length actually good. so more of a note than fixme lol
 FIXME: test curve mislabeled warm start
 FIXME explain "values" in figure in slide notes
 FIXME plots sometimes say values and sometimes samples, make sure it's consistent!
+FIXME some plots say entropy but actually use gini?! wtf, redo plots
+FIXME add graphviz back in as it's a bit higher quality?
 
 
 ---
@@ -71,7 +73,7 @@ class: centre,middle
 
 # Idea: series of binary questions
 .center[
-![:scale 70%](images/img_1.png)
+![:scale 70%](images/tree_illustation.png)
 ]
 ???
 Binary classification trees are binary trees, where each
@@ -90,7 +92,7 @@ questions are thresholds on single features.
 # Building Trees
 
 .left-column[
-![:scale 100%](images/img_2.png)
+![:scale 100%](images/tree_building_iteration_1.png)
 <br />
 <br />
 Continuous features:
@@ -98,9 +100,9 @@ Continuous features:
  - Minimize impurity
 ]
 .right-column[
-![:scale 100%](images/img_3.png)
+![:scale 100%](images/tree_building_iteration_2.png)
 
-![:scale 100%](images/img_4.png)
+![:scale 100%](images/tree_building_iteration_9.png)
 ]
 
 ???
@@ -161,11 +163,11 @@ Does the layout look okay??
 `$$H_\text{CE}(X_m) = -\sum_{k\in\mathcal{Y}} p_{mk} \log(p_{mk})$$`
 
  
- ![:scale 5%](images/img_7.png) observations in node m
+$X_m$ observations in node m
  
- ![:scale 3%](images/img_8.png) classes
+$\mathcal{Y}$ classes
  
- ![:scale 5%](images/img_9.png) distribution over classes in node m
+$p_{m\cdot}$ distribution over classes in node m
 ???
  For classification, there are two common criteria to
  preserve the purity of the leaf. One is called the Gini
@@ -183,7 +185,7 @@ very certain about what the class is for each leaf.
 # Prediction
 
 .center[
-![:scale 80%](images/img_10.png)
+![:scale 80%](images/tree_prediction.png)
 ]
 
 ???
@@ -347,7 +349,7 @@ class:spacious
 
 # No pruning
 .center[
-![:scale 100%](images/img_13.png)
+![:scale 100%](images/no_pruning.png)
 ]
 ???
 Here’s the full tree for the same dataset.
@@ -357,7 +359,7 @@ class:spacious
 # max_depth = 4
 
 .center[
-![:scale 100%](images/img_14.png)
+![:scale 100%](images/max_depth_4.png)
 ]
 
 ???
@@ -384,7 +386,7 @@ prediction time you're willing to give.
 
 # max_leaf_nodes = 8
 .center[
-![:scale 50%](images/img_15.png)
+![:scale 50%](images/max_leaf_nodes_8.png)
 ]
 
 ???
@@ -399,7 +401,7 @@ class:spacious
 
 # min_samples_split = 50
 .center[
-![:scale 70%](images/img_16.png)
+![:scale 70%](images/min_samples_split_50.png)
 ]
 
 ???
@@ -425,13 +427,13 @@ just tune this one parameter.
 ```python
 from sklearn.model_selection import GridSearchCV
 param_grid = {'max_depth':range(1, 7)}
-grid = GridSearchCV(DecisionTreeClassifier(random_state=0),param_grid=param_grid,
-                    cv=10)
+grid = GridSearchCV(DecisionTreeClassifier(random_state=0),
+                    param_grid=param_grid, cv=10)
 grid.fit(X_train, y_train)
 ```
 ]
 .center[
-![:scale 70%](images/img_17.png)
+![:scale 70%](images/grid_max_depth.png)
 ]
 
 ???
@@ -457,7 +459,7 @@ grid.fit(X_train, y_train)
 ```
 ]
 .center[
-![:scale 70%](images/img_18.png)
+![:scale 70%](images/grid_max_leaf_nodes.png)
 ]
 
 ???
@@ -590,7 +592,7 @@ tree = DecisionTreeClassifier(max_leaf_nodes=6)
 tree.fit(X_train, y_train)
 ```
 ]
-![:scale 70%](images/img_21.png)
+![:scale 70%](images/instability_1.png)
 ]
 .right-column[
 .tiny-code[```python
@@ -600,7 +602,7 @@ tree = DecisionTreeClassifier(max_leaf_nodes=6)
 tree.fit(X_train, y_train)
 ```
 ]
-.center[![:scale 70%](images/img_22.png)
+.center[![:scale 70%](images/instability_2.png)
 ]]
 ???
 Another weakness of trees that I want to mention is that
@@ -630,11 +632,11 @@ something that's very unstable.
 .left-column[
 .tiny-code[```python
 X_train, X_test, y_train, y_test = train_test_split(
-    iris.data, iris.target, stratify=iris.target, random_state=1)
+    iris.data, iris.target, stratify=iris.target, random_state=0)
 tree = DecisionTreeClassifier(max_leaf_nodes=6)
 tree.fit(X_train,y_train)
 ```]
-.center[![:scale 60%](images/img_22.png)
+.center[![:scale 60%](images/instability_1.png)
 ]
 ]
 
@@ -647,7 +649,7 @@ array([0.0, 0.0, 0.414, 0.586])
 ```
 ]
 
-![:scale 80%](images/img_23.png)
+![:scale 80%](images/tree_importances.png)
 
 ]
 
@@ -809,7 +811,7 @@ class:spacious
 ???
 ---
 # Different splitting methods
-.center[![:scale 80%](images/img_24.png)]
+.center[![:scale 80%](images/splits_kinect.png)]
 
 .smaller[(taken from Shotton et. al. Real-Time Human Pose Recognition ..)]
 
@@ -918,7 +920,7 @@ voting.score(X_test, y_test), lr.score(X_test, y_test), tree.score(X_test, y_tes
 ```
 ]
 
-.center[![:scale 30%](images/img_25.png)]
+.center[![:scale 80%](images/voting_classifier.png)]
 ???
 It looks like this. Here is the logistic regression model on
 this 2D data set. This is the decision tree based model and
@@ -942,7 +944,7 @@ class: spacious
 - BaggingClassifier, BaggingRegressor
 ]
 .right-column[
-.center[![:scale 100%](images/img_26.png)]
+.center[![:scale 100%](images/bootstrap_sample.png)]
 ]
 ???
 One way to do this is called Bagging or Bootstrap
@@ -974,7 +976,7 @@ then the average might not overfit as much.
 class: spacious
 
 # Bias and Variance
-.center[![:scale 40%](images/img_27.png)]
+.center[![:scale 40%](images/bias_vs_variance.png)]
 
 
 .left[
@@ -1041,7 +1043,7 @@ class: spacious
 
 # Random Forests
 
-.center[![:scale 90%](images/img_28.png)]
+.center[![:scale 90%](images/random_forest.png)]
 
 ???
 Here example of a random forest on a 2-dimensional dataset. 
@@ -1064,9 +1066,9 @@ Here example of a random forest on a 2-dimensional dataset.
 
 .right-column[
 
-![:scale 100%](images/img_26.png)
+![:scale 100%](images/bootstrap_sample.png)
 
-![:scale 100%](images/img_29.png)
+![:scale 100%](images/feature_sample.png)
 ]
 
 ???
@@ -1188,7 +1190,7 @@ for n_estimators in estimator_range:
 ]
 
 .center[
-![:scale 39%](images/img_30.png)
+![:scale 39%](images/warm_start_forest.png)
 ]
 
 ???
@@ -1288,7 +1290,7 @@ and the test set scores to see how they compare.
 
 ---
 .center[
-![:scale 90%](images/img_31.png)
+![:scale 90%](images/oob_estimates.png)
 ]
 
 ???
@@ -1321,7 +1323,7 @@ plt.yticks(range(4), iris.feature_names);
 ```array([ 0.126,  0.033,  0.445,  0.396])```
 ]
 .center[
-![:scale 40%](images/img_32.png)
+![:scale 40%](images/forest_importances.png)
 ]
 ???
 As for the trees, for the random forest, I can get variable
