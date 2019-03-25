@@ -37,10 +37,10 @@ before the machine learning pipeline or often for
 visualization.
 
 
-FIXME: switch LDA and T-SNE
-animations for T-SNE?
-FIXME add lelands thing?
-FIXME add fastviz?
+FIXME LDA projection slide with explanation and diagram!
+FIXME compare Largevis, t-SNE, UMAP
+FIXME print output in PCA slides: I need to know the dimenionality (29?)
+FIXME trim tsne animation
 ---
 class: centre,middle
 # Principal Component Analysis
@@ -511,8 +511,11 @@ space. Even though I did this transformation of the data, I
 can still see how this model in the reduced feature space
 uses these features.
 
-In the left plot, I basically plot the back rotated versus
-the coefficients without PCA. And you can see that they're
+The left plot shows plain logistic regression coefficients
+and the back-rotated coefficients with PCA.
+The plot on the right shows for each feature the coefficient
+in the standard model and in the model including PCA.
+And you can see that they're
 sort of related. They're not going to be perfectly related
 because I reduced the dimensionality of this space and also
 the model with PCA did better in this case. So clearly
@@ -1013,7 +1016,8 @@ example is this Swiss roll.
 
 
 ---
-![:scale 90%](images/manifold-learning-structure.png)
+class: center, middle
+![:scale 100%](images/manifold-learning-structure.png)
 ???
 Here, this is sort of a two-dimensional data set that was
 embedded in a weird way in the three-dimensional data set.
@@ -1033,7 +1037,6 @@ the data.
 
 
 Learn underlying “manifold” structure, use for dimensionality reduction.
-# FIXME white padding on image?!
 ---
 # Pros and Cons
 - For visualization only
