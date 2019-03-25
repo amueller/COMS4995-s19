@@ -39,6 +39,8 @@ visualization.
 
 FIXME: switch LDA and T-SNE
 animations for T-SNE?
+FIXME add lelands thing?
+FIXME add fastviz?
 ---
 class: centre,middle
 # Principal Component Analysis
@@ -776,11 +778,227 @@ different applications of PCA that all have sort of quite
 different goals and quite different ways of setting
 dimensionality.
 
-The next thing I want to talk about is manifold learning. So
-PCA as I said, is a very simple transformation of the data,
-that is just a rotation and sort of subtracting the mean.
 
 
+
+---
+
+class: middle
+# Discriminant Analysis
+???
+So the next thing I want to talk about is discriminate
+analysis. In particular, linear discriminate analysis. This
+is also a classifier, but it also can do dimensionality
+reduction.
+---
+class: spacious
+# Linear Discriminant Analysis aka Fisher Discriminant
+
+`$$    P(y=k | X) = \frac{P(X | y=k) P(y=k)}{P(X)} = \frac{P(X | y=k) P(y = k)}{ \sum_{l} P(X | y=l) \cdot P(y=l)}$$`
+???
+Linear Discriminant Analysis is also called LDA, but never
+call it LDA because LDA also means Latent Dirichlet
+Allocation and so it might be confusing.
+
+Linear Discriminant Analysis is a linear classifier that
+builds on Bayes rule, in that, it assumes the density model
+for each of the classes, if you have a density model for
+each of the classes, you can build a classifier using Bayes
+rule.
+
+This is Bayes rule of having a joint distribution of X and
+Y. If you then look at the conditional probability of X, you
+can say that the probability of Y being a particular class
+given X is the probability of X given Y is class, times
+probability of being in this class divided by P(X).
+
+And so you can expand this now here, the P(x) as a sum over
+all classes. And so the only thing you really need is a
+probability distribution of P(X) given a particular class.
+So if you fix any possibilities distribution for particular
+class Bayes rule gives you like a classifier. Linear
+Discriminant Analysis does basically one particular
+distribution, which is the Gaussian distribution.
+
+
+
+- Generative model: assumes each class has Gaussian distribution
+- Covariances are the same for all classes.
+- Very fast: only compute means and invert covariance matrix (works well if n_features << n_samples)
+- Leads to linear decision boundary.
+- Imagine: transform space by covariance matrix, then nearest centroid.
+- No parameters to tune!
+- Don’t confuse with Latent Dirichlet Allocation (LDA)
+
+---
+class: spacious
+# Linear Discriminant Analysis aka Fisher Discriminant
+
+`$$    P(y=k | X) = \frac{P(X | y=k) P(y=k)}{P(X)} = \frac{P(X | y=k) P(y = k)}{ \sum_{l} P(X | y=l) \cdot P(y=l)}$$`
+
+`$$ p(X | y=k) = \frac{1}{(2\pi)^n |\Sigma|^{1/2}}\exp\left(-\frac{1}{2} (X-\mu_k)^t \Sigma^{-1} (X-\mu_k)\right) $$`
+???
+So what we're doing is basically, we're fitting a Gaussian
+to each of the classes, but we're sharing the covariance
+matrix. So for each class, we estimate the mean of the
+class, and then we estimate the joint covariance matrix, so
+we subtract the mean of the class from all the data points,
+and then we compute the covariance matrix of that.
+
+So now we have fitted Gaussian into each class, they all
+have the same covariance matrix and then we can apply this
+rule. And this gives us a classifier.
+
+---
+class: spacious
+# Linear Discriminant Analysis aka Fisher Discriminant
+
+`$$    P(y=k | X) = \frac{P(X | y=k) P(y=k)}{P(X)} = \frac{P(X | y=k) P(y = k)}{ \sum_{l} P(X | y=l) \cdot P(y=l)}$$`
+
+`$$ p(X | y=k) = \frac{1}{(2\pi)^n |\Sigma|^{1/2}}\exp\left(-\frac{1}{2} (X-\mu_k)^t \Sigma^{-1} (X-\mu_k)\right) $$`
+
+`$$    \log\left(\frac{P(y=k|X)}{P(y=l | X)}\right) = 0 \Leftrightarrow (\mu_k-\mu_l)\Sigma^{-1} X = \frac{1}{2} (\mu_k^t \Sigma^{-1} \mu_k - \mu_l^t \Sigma^{-1} \mu_l) $$`
+
+???
+You can actually write this in a slightly different way. The
+decision boundary between the two classes is the same as
+this formula on the right.
+
+What this is basically, the single data point lies on the
+decision boundary, if inverse square matrix times x is some
+constant. This is actually just a nearest centroid
+classifier in the space that was rotated by this joint
+covariance matrix or rotated and stretched by the joint
+covariance matrix.
+
+So basically, I compute the joint covariance matrix and then
+I look at what's the closest mean and I adjust it based on
+the prior probabilities of the class.
+
+---
+class: spacious
+# Quadratic Discriminant Analysis
+LDA: `$$ p(X | y=k) = \frac{1}{(2\pi)^n |\Sigma|^{1/2}}\exp\left(-\frac{1}{2} (X-\mu_k)^t \Sigma^{-1} (X-\mu_k)\right) $$`
+
+QDA: `$$ p(X | y=k) = \frac{1}{(2\pi)^n |\Sigma_k|^{1/2}}\exp\left(-\frac{1}{2} (X-\mu_k)^t \Sigma_k^{-1} (X-\mu_k)\right) $$`
+
+???
+- Each class is Gaussian, but separate covariance matrices!
+- More flexible (quadratic decision boundary), but less robust: have less points per covariance matrix.
+- Can’t think of it as transformation of the space.
+???
+Quadratic Discriminate Analysis is exactly the same thing,
+only that you have a separate covariance matrix for each of
+the classes. This makes a more flexible classifier, but
+also, you have fewer points to estimate each of the various
+matrices. So you have many more parameters, which makes it a
+little bit harder to fit.
+
+---
+class:center
+![:scale 55%](images/linear-vs-quadratic-discriminant-analysis.png)
+???
+If your data points are actually Gaussian, then obviously,
+this works well because it assumes each class is a Gaussian.
+
+
+If they have the same covariance matrix, Linear Discriminant
+Analysis obviously finds the perfect boundary. If they have
+different covariance matrix, then Quadratic Discriminant
+Analysis does better.
+
+What does this all have to do with dimensionality reduction?
+
+So we can use it as a classifier. Linear Discriminant
+Analysis is just a linear classifier with a particular
+probabilistic model. If I want a linear classifier, I’ll
+probably use a logistic regression instead. But what’s nice
+about this is the joint covariance function.
+
+
+---
+# Discriminants and PCA
+- Both fit Gaussian model
+- PCA for the whole data
+- LDA multiple Gaussians with shared covariance
+- Can use LDA to transform space!
+- At most as many components as there are classes - 1 (needs between class variance)
+???
+Linear Discriminant Analysis compared to PCA, they both fit
+a Gaussian to the data. The PCA basically fits a Gaussian to
+the whole dataset while Linear Discriminant Analysis fits
+multiple Gaussian with a shared covariance structure. So
+that means we can use this covariance structure to rotate
+our space or stretch our space using Linear Discriminant
+Analysis.
+
+Because of the way it's defined, we can get as many
+components as there are classes minus one because you
+basically look at the vector that connects the means of the
+classes in the rotated space. So you rotate the space, and
+then you look at the space spend by the means.
+
+---
+class:center
+# PCA vs Linear Discriminants
+![:scale 100%](images/pca-lda.png)
+???
+Here's an example of doing Linear Discriminant Analysis
+versus PCA on a synthetic dataset where I have three classes
+and they all share a covariance matrix.
+
+Obviously, that's the case Linear Discriminant Analysis was
+designed for. If I do a PCA, PCA can’t really do a lot here
+because it flips the x-axis because jointly all three of
+this kind of looked like Gaussian and PCA is completely
+unsupervised so it can't distinguish between these three.
+
+If I used Linear Discriminant Analysis, it will a give me
+this. And basically, the first discriminant that I mentioned
+here will be the one that perfectly separates all the means.
+So it gets out the interesting dimensions that helped me
+classify.
+---
+class:center
+# Data where PCA failed
+![:scale 100%](images/pca-fail.png)
+???
+So if I look at the data set that I created so that PCA
+failed. So here, this was the original data set, all the
+information was in the third principal component, if I do
+Linear Discriminant Analysis I will get only one component.
+The one component that was found by Linear Discriminant
+Analysis, it's just the one that perfectly separates the
+data.
+
+So this is a supervised transformation of the data that
+tries to find the features that best separate the data. I
+find this very helpful for visualizing classification data
+sets in a way that's nearly as simple as PCA but can take
+the class information into account.
+
+
+---
+# Summary
+- PCA good for visualization, exploring correlations
+- PCA can sometimes help with classification as regularization or for feature extraction.
+- LDA is a supervised alternative to PCA.
+???
+PCA, I really like for visualization and for exploring
+correlations, you can use it together with a classification
+for regularization if you have lots of features. Often, I
+find that regularization of the classifier works better.
+
+T-SNE probably makes the nicest pictures of the bunch.
+
+And if you want a linear transformation of your data in a
+supervised setting Linear Discriminant Analysis is a good
+alternative to PCA.
+
+
+
+
+LDA also  also yields a rotation of the input spacA
 ---
 class: centre,middle
 # Manifold Learning
@@ -1011,7 +1229,13 @@ In this completely unsupervised method, I could sort of draw
 boundaries by hand in 2D from the original 64-dimensional
 space and I could group the data. This 2D view can help me
 understand the data.
+---
+class: center, compact
+# Showing algorithm progress
 
+![:scale 50%](images/digits_tsne_animation.gif)
+
+.smallest[https://github.com/oreillymedia/t-SNE-tutorial]
 
 ---
 class:split-40
@@ -1081,217 +1305,24 @@ Yes, by a lot. PCA is computing an SPD, which is like a very
 centered linear algebra thing, which is very fast. And a lot
 of people spent like 50 years optimizing it. Still, there's
 a bunch of things to speed t-SNE.
-
-
 ---
-class: middle
-# Discriminant Analysis
-???
-So the last thing I want to talk about is discriminate
-analysis. In particular, linear discriminate analysis. This
-is also a classifier, but it also can do dimensionality
-reduction.
+# UMAP
+https://github.com/lmcinnes/umap
+.smaller[
+- Construct graph from simplices, use graph layout algorithm
+- Much faster than t-SNE: MNIST takes 2 minutes vs 45 minutes for t-SNE]
+
+![:scale 45%](images/umap_mnist.png)
+![:scale 50%](images/umap_fashion_mnist.png)
 ---
-class: spacious
-# Linear Discriminant Analysis aka Fisher Discriminant
-
-`$$    P(y=k | X) = \frac{P(X | y=k) P(y=k)}{P(X)} = \frac{P(X | y=k) P(y = k)}{ \sum_{l} P(X | y=l) \cdot P(y=l)}$$`
-???
-Linear Discriminant Analysis is also called LDA, but never
-call it LDA because LDA also means Latent Dirichlet
-Allocation and so it might be confusing.
-
-Linear Discriminant Analysis is a linear classifier that
-builds on Bayes rule, in that, it assumes the density model
-for each of the classes, if you have a density model for
-each of the classes, you can build a classifier using Bayes
-rule.
-
-This is Bayes rule of having a joint distribution of X and
-Y. If you then look at the conditional probability of X, you
-can say that the probability of Y being a particular class
-given X is the probability of X given Y is class, times
-probability of being in this class divided by P(X).
-
-And so you can expand this now here, the P(x) as a sum over
-all classes. And so the only thing you really need is a
-probability distribution of P(X) given a particular class.
-So if you fix any possibilities distribution for particular
-class Bayes rule gives you like a classifier. Linear
-Discriminant Analysis does basically one particular
-distribution, which is the Gaussian distribution.
-
-
-
-- Generative model: assumes each class has Gaussian distribution
-- Covariances are the same for all classes.
-- Very fast: only compute means and invert covariance matrix (works well if n_features << n_samples)
-- Leads to linear decision boundary.
-- Imagine: transform space by covariance matrix, then nearest centroid.
-- No parameters to tune!
-- Don’t confuse with Latent Dirichlet Allocation (LDA)
-
----
-
-`$$ p(X | y=k) = \frac{1}{(2\pi)^n |\Sigma|^{1/2}}\exp\left(-\frac{1}{2} (X-\mu_k)^t \Sigma^{-1} (X-\mu_k)\right) $$`
-???
-So what we're doing is basically, we're fitting a Gaussian
-to each of the classes, but we're sharing the covariance
-matrix. So for each class, we estimate the mean of the
-class, and then we estimate the joint covariance matrix, so
-we subtract the mean of the class from all the data points,
-and then we compute the covariance matrix of that.
-
-So now we have fitted Gaussian into each class, they all
-have the same covariance matrix and then we can apply this
-rule. And this gives us a classifier.
-
----
-
-`$$    \log\left(\frac{P(y=k|X)}{P(y=l | X)}\right) = 0 \Leftrightarrow (\mu_k-\mu_l)\Sigma^{-1} X = \frac{1}{2} (\mu_k^t \Sigma^{-1} \mu_k - \mu_l^t \Sigma^{-1} \mu_l) $$`
-
-???
-You can actually write this in a slightly different way. The
-decision boundary between the two classes is the same as
-this formula on the right.
-
-What this is basically, the single data point lies on the
-decision boundary, if inverse square matrix times x is some
-constant. This is actually just a nearest centroid
-classifier in the space that was rotated by this joint
-covariance matrix or rotated and stretched by the joint
-covariance matrix.
-
-So basically, I compute the joint covariance matrix and then
-I look at what's the closest mean and I adjust it based on
-the prior probabilities of the class.
-
----
-class: spacious
-# Quadratic Discriminant Analysis
-.padding-top[
-`$$ p(X | y=k) = \frac{1}{(2\pi)^n |\Sigma_k|^{1/2}}\exp\left(-\frac{1}{2} (X-\mu_k)^t \Sigma_k^{-1} (X-\mu_k)\right) $$`
+# LargeVis
+https://github.com/elbamos/largeVis
+.smaller[
+- Use nearest neighbor graph constructed very efficiently (and approximately)
+- Much faster than t-SNE
 ]
-???
-- Each class is Gaussian, but separate covariance matrices!
-- More flexible (quadratic decision boundary), but less robust: have less points per covariance matrix.
-- Can’t think of it as transformation of the space.
-???
-Quadratic Discriminate Analysis is exactly the same thing,
-only that you have a separate covariance matrix for each of
-the classes. This makes a more flexible classifier, but
-also, you have fewer points to estimate each of the various
-matrices. So you have many more parameters, which makes it a
-little bit harder to fit.
-
----
-class:center
-![:scale 55%](images/linear-vs-quadratic-discriminant-analysis.png)
-???
-If your data points are actually Gaussian, then obviously,
-this works well because it assumes each class is a Gaussian.
-
-
-If they have the same covariance matrix, Linear Discriminant
-Analysis obviously finds the perfect boundary. If they have
-different covariance matrix, then Quadratic Discriminant
-Analysis does better.
-
-What does this all have to do with dimensionality reduction?
-
-So we can use it as a classifier. Linear Discriminant
-Analysis is just a linear classifier with a particular
-probabilistic model. If I want a linear classifier, I’ll
-probably use a logistic regression instead. But what’s nice
-about this is the joint covariance function.
-
-
----
-# Discriminants and PCA
-- Both fit Gaussian model
-- PCA for the whole data
-- LDA multiple Gaussians with shared covariance
-- Can use LDA to transform space!
-- At most as many components as there are classes (needs between class variance)
-???
-Linear Discriminant Analysis compared to PCA, they both fit
-a Gaussian to the data. The PCA basically fits a Gaussian to
-the whole dataset while Linear Discriminant Analysis fits
-multiple Gaussian with a shared covariance structure. So
-that means we can use this covariance structure to rotate
-our space or stretch our space using Linear Discriminant
-Analysis.
-
-Because of the way it's defined, we can get as many
-components as there are classes minus one because you
-basically look at the vector that connects the means of the
-classes in the rotated space. So you rotate the space, and
-then you look at the space spend by the means.
-
----
-class:center
-# PCA vs Linear Discriminants
-![:scale 100%](images/pca-lda.png)
-???
-Here's an example of doing Linear Discriminant Analysis
-versus PCA on a synthetic dataset where I have three classes
-and they all share a covariance matrix.
-
-Obviously, that's the case Linear Discriminant Analysis was
-designed for. If I do a PCA, PCA can’t really do a lot here
-because it flips the x-axis because jointly all three of
-this kind of looked like Gaussian and PCA is completely
-unsupervised so it can't distinguish between these three.
-
-If I used Linear Discriminant Analysis, it will a give me
-this. And basically, the first discriminant that I mentioned
-here will be the one that perfectly separates all the means.
-So it gets out the interesting dimensions that helped me
-classify.
----
-class:center
-# Data where PCA failed
-![:scale 100%](images/pca-fail.png)
-???
-So if I look at the data set that I created so that PCA
-failed. So here, this was the original data set, all the
-information was in the third principal component, if I do
-Linear Discriminant Analysis I will get only one component.
-The one component that was found by Linear Discriminant
-Analysis, it's just the one that perfectly separates the
-data.
-
-So this is a supervised transformation of the data that
-tries to find the features that best separate the data. I
-find this very helpful for visualizing classification data
-sets in a way that's nearly as simple as PCA but can take
-the class information into account.
-
-
----
-# Summary
-- PCA good for visualization, exploring correlations
-- PCA can sometimes help with classification as regularization or for feature extraction.
-- Manifold learning makes nice pictures.
-- LDA is a supervised alternative to PCA.
-???
-PCA, I really like for visualization and for exploring
-correlations, you can use it together with a classification
-for regularization if you have lots of features. Often, I
-find that regularization of the classifier works better.
-
-Manifold learning is really just for making nice pictures.
-
-T-SNE probably makes the nicest pictures of the bunch.
-
-And if you want a linear transformation of your data in a
-supervised setting Linear Discriminant Analysis is a good
-alternative to PCA.
-
-
-
-
-LDA also  also yields a rotation of the input spacA
+![:scale 47%](images/largevis_mnist.png)
+![:scale 47%](images/largevis_wikidoc.png)
 ---
 class: center, middle
 
