@@ -128,9 +128,8 @@ have the same labels and which points have different labels.
 
 
 - Number of clusters might be pre-specified. - Notations of
-“similar” and “different” depend on algorithm or user
-specified metrics. - Identify groups by assigning “cluster
-labels” to each data point. FIXME!
+“similar” and “different” depend on algorithm or user specified metrics.
+- Identify groups by assigning “cluster labels” to each data point. FIXME!
 ---
 
 # Goals of Clustering
@@ -149,6 +148,12 @@ labels” to each data point. FIXME!
 - Unsupervised feature extraction
   - Derive features from clusters or cluster distances
 
+--
+
+- Evaluation
+  - Quantitative measures of limited use
+  - Usually qualitative
+  - What is your goal?
 ???
 So why would we want to use a clustering algorithm? The
 main usage that I've come across is exporation of the data
@@ -192,9 +197,47 @@ One of the most basic and most well-known ones is kmeans.
 Here k stands for the number of clusters you're trying to
 find.
 ---
+class: center, middle
+# K-Means
 
-# K-Means Algorithm
+---
+# Objective function for K-Means
+<br \>
+<br \>
+`$$\Large \min_{\mathbf{c}_j \in \mathbf{R}^p, j=1,..,k} \sum_i ||\mathbf{x}_i - \mathbf{c}_{x_i}||^2 $$`
+$\mathbf{c}_{x_i}$ is the cluster center $c_j$ closest to $x_i$
+???
+- Finds a local minimum of minimizing squared distances (exact solution is
+NP hard):
+- New data points can be assigned cluster membership based on existing clusters.
 
+Here is what this algorithm optimizes, the
+objective function.
+
+It's the sum of the distances of the cluster centers to all
+the points in the clusters.
+
+So the clusters centers are c_j and we want to find cluster
+centers such that the sum of the distance of each point to
+its closest cluster center is minimized.
+
+This is an NP hard problem, so we can't really hope to solve
+it exactly, but we can run the k-means algorithm that we
+just discussed, and it will provide us with some local
+minimum of this objective.
+
+There's a couple of nice things about this algorith;
+
+It's very easy to write down and understand. Each cluster is
+represented by a center, which makes things simple, and you
+can reassign any new point you observe to a cluster by just
+computing the distances to all the cluster centers.
+
+So in this case, if we build a model on some data that we
+collected, we can easily apply this clustering to new data
+points. That's not the case for all clustering algorithms.
+---
+# K-Means algorithm
 .wide-left-column[
 .center[
 ![:scale 100%](images/kmeans.png)
@@ -228,43 +271,7 @@ So you can see the green cluster center moving towards the
 red here until it has captured all the points in this group.
 Questions? Who has seen this before?
 ---
-class: spacious
-# Objective function for K-Means
-<br \>
-<br \>
-`$$\Large \min_{\mathbf{c}_j \in \mathbf{R}^p, j=1,..,k} \sum_i ||\mathbf{x}_i - \mathbf{c}_{x_i}||^2 $$`
-$\mathbf{c}_{x_i}$ is the cluster center $c_j$ closest to $x_i$
-???
-- Finds a local minimum of minimizing squared distances (exact solution is
-NP hard):
-- New data points can be assigned cluster membership based on existing clusters.
 
-Here is what this algorithms actually optimizes, the
-objective function.
-
-It's the sum of the distances of the cluster centers to all
-the points in the clusters.
-
-So the clusters centers are c_j and we want to find cluster
-centers such that the sum of the distance of each point to
-its closest cluster center is minimized.
-
-This is an NP hard problem, so we can't really hope to solve
-it exactly, but we can run the k-means algorithm that we
-just discussed, and it will provide us with some local
-minimum of this objective.
-
-There's a couple of nice things about this algorith;
-
-It's very easy to write down and understand. Each cluster is
-represented by a center, which makes things simple, and you
-can reassign any new point you observe to a cluster by just
-computing the distances to all the cluster centers.
-
-So in this case, if we build a model on some data that we
-collected, we can easily apply this clustering to new data
-points. That's not the case for all clustering algorithms.
----
 
 # K-Means API
 
@@ -284,15 +291,23 @@ km = KMeans(n_clusters=5, random_state=0)
 km.fit(X)
 print(km.cluster_centers_.shape)
 print(km.labels_.shape)
+```
+```
+(5, 2)
+(100,)
+```
+```python
 # predict is the same as labels_ on training data
 # but can be applied to new data
 print(km.predict(X).shape)
-plt.scatter(X[:, 0], X[:, 1], c=km.labels_)
-plt.gca().set_aspect("equal")
 ```
-(5, 2) </br>
-(100,) </br>
+```
 (100,)
+```
+```python
+plt.scatter(X[:, 0], X[:, 1], c=km.labels_)
+```
+
 ]
 ]
 
@@ -537,8 +552,7 @@ once.
 
 
 FIXME slide for kmeans++, computational cost of kmeans++
-- Consider using random, in particular for
-MiniBatchKMeans
+- Consider using random, in particular for MiniBatchKMeans
 ---
 
 # Feature Extraction using K-Means
@@ -675,25 +689,57 @@ the bottom up and top down approach lead to the same result.
 And it depends mostly on how you're define the similarities.
 
 
-
-
 Done with scipy!
 FIXME dendrogram code!
 ---
 
 # Merging (Linkage) Criteria
 
-- Complete Linkage
-  - Smallest maximum distance
-- Average Linkage
-  - Smallest average distance between all pairs in the clusters
+
+???
+
+---
+# Linkage Criteria
+
+.center[
+![:scale 100%](images/merging_criteria.png)
+]
+
+.narrow-left-column[
+.smaller[
+Cluster sizes:
+```
+single : [96  1  1  1  1]
+average : [82  9  7  1  1]
+complete : [50 24 14 11  1]
+ward : [31 30 20 10  9]
+```
+]]
+
+.wide-right-column[
+.smallest[
 - Single Linkage
   - Smallest minimum distance
+- Average Linkage
+  - Smallest average distance between all pairs in the clusters
+- Complete Linkage
+  - Smallest maximum distance
 - Ward (default in sklearn)
   - Smallest increase in within-cluster variance
   - Leads to more equally sized clusters.
 
+]]
 ???
+Here's an example on some synthetic 2D data set. So here, I
+run three different clustering algorithms. You can see that
+here in average to data point being their own cluster where
+as in ward the cluster size are much more similar.
+
+In particular, average, complete and single linkage tend to
+cut off single points that are very far away. So if one
+point is far right from everything, every linkage criteria
+except ward will get their own cluster.
+
 There's four commonly used similarities. Complete linkage
 looks at the smallest maximum distance. So if you look
 between two clusters, you look at the maximum distance
@@ -718,32 +764,7 @@ because it makes relatively equally sized clusters.
 
 
 single linkage = cutting longest edge in minimum spanning tree.
----
-# Linkage Criteria
 
-.center[
-![:scale 100%](images/merging_criteria.png)
-]
-
-```
-average : [82  9  7  1  1]
-complete : [50 24 14 11  1]
-ward : [31 30 20 10  9]
-```
-
-???
-Here's an example on some synthetic 2D data set. So here, I
-run three different clustering algorithms. You can see that
-here in average to data point being their own cluster where
-as in ward the cluster size are much more similar.
-
-In particular, average, complete and single linkage tend to
-cut off single points that are very far away. So if one
-point is far right from everything, every linkage criteria
-except ward will get their own cluster.
-
-
-FIXME single linkage!
 ---
 class: spacious
 # Pros and Cons
@@ -1396,33 +1417,6 @@ be.
 
 GMM can be more unstable, is more expensive to compute.
 
----
-
-# Bayesian Infinite Mixtures
-
-- Bayesian treatment:
-  - Add priors on mixture coefficients and Gaussians.
-  - Can “unselect” components if they don’t contribute.
-  - Possibly more robust
-- Infinite Mixtures:
-  - Replace Dirichlet Prior over mixture coefficients by Dirichlet Process.
-  - “automatically” finds number of components (based on parameter of
-the prior).
-- Both implemented in BayesianGaussianMixture
-- Use variational inference (as opposed to gibbs sampling)
-- In practice: need to specify upper limit of components
-
-???
-There's actually a way to figure out the number of
-components automatically, I'm actually going to skip it.
-Because it's a little bit too complicated.
----
-
-.center[
-![:scale 100%](images/bim_1.png)
-]
-
-???
 ---
 class: some-space
 # Summary
