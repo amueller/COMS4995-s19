@@ -19,7 +19,7 @@ class: center, middle
 
 # Clustering and Mixture Models
 
-03/26/18
+03/27/19
 
 Andreas C. Müller
 
@@ -31,8 +31,9 @@ evaluation of clustering.
 VB GMM: explain better? better example? or leave out?
 
 FIXME: order of slides weird, in particular K-Means (also
-agglomerative and others lol) FIXME: linkage explanation
-diagram FIXME: cluster sized in particularly good for dbscan
+agglomerative and others lol)
+FIXME: linkage explanation diagram
+FIXME: cluster sized in particularly good for dbscan
 debugging
 ---
 
@@ -148,7 +149,7 @@ labels” to each data point. FIXME!
 - Unsupervised feature extraction
   - Derive features from clusters or cluster distances
 
-??? 
+???
 So why would we want to use a clustering algorithm? The
 main usage that I've come across is exporation of the data
 and understanding the structure of the data. Are there
@@ -322,7 +323,7 @@ Q: Why is the centers in two dimensions?
 Because the input spaces is in two dimensions in this toy
 dataset.
 
-Cluster centers live in the same space as the data. 
+Cluster centers live in the same space as the data.
 
 ---
 
@@ -339,10 +340,10 @@ Clusters are Voronoi-diagrams of centers
 
 ???
 I want to talk about some of the properties and limitations
-of KMeans. 
+of KMeans.
 
 So the cluster shapes, I restricted them in KMeans because
-they're Voronoi-diagram of the centers. 
+they're Voronoi-diagram of the centers.
 
 Voronoi-diagrams basically just mean these cells… while the
 boundary between two neighboring clusters is just the center
@@ -377,7 +378,7 @@ corner and top right corner.
 
 But KMeans wasn't really able to pick up on these three
 clusters because the boundary between the clusters is the
-middle between the cluster centers. 
+middle between the cluster centers.
 
 
 ---
@@ -409,11 +410,11 @@ doesn't really pick up on these shapes.
 Since you have only simple cluster shapes, so if I use this
 two cluster dataset, this will be what KMeans gives me
 because basically it cannot do anything else but straight
-lines for two clusters. 
+lines for two clusters.
 
 Even though it has these restrictions it’s still a very
 commonly used algorithm. And so we'll talk a little bit more
-about some of the other properties of this algorithm.  
+about some of the other properties of this algorithm.
 
 ---
 class: spacious
@@ -442,7 +443,7 @@ distance calculation per iteration.
 
 That's actually if you have many clusters or if you have
 many features or if you have many samples that can take like
-a whole bunch of time. 
+a whole bunch of time.
 
 There's also fast exact algorithms. One of them is
 implemented in scikit-learn called Elkan’s. Another
@@ -455,11 +456,11 @@ another cluster, the data point that was assigned to the
 first cluster will not be assigned to the second cluster
 since the distance between clusters is so big. And so you
 can use the triangle inequality to save lot of these
-distance calculations. 
+distance calculations.
 
 And finally, there's a bunch of approximate algorithms,
 particularly, minibatch KMeans. It’s much much faster than
-KMeans, but it's an approximation. 
+KMeans, but it's an approximation.
 
 So here's, saying exact algorithm means exact in the sense,
 that they are exactly the same as what Lloyd wrote down in
@@ -469,9 +470,9 @@ impossible. So it's not really clear if it's very important
 how exactly this is as you always just have an approximation
 so it might be a good idea to give up on trying to do
 exactly the thing that Lloyd did and something like
-minibatch KMeans, which can be much, much faster. 
+minibatch KMeans, which can be much, much faster.
 
-Q: Do we do feature engineering? 
+Q: Do we do feature engineering?
 
 Yes, since this is distance space, scaling is clearly
 important. But the problem is, you can't really evaluate
@@ -480,7 +481,7 @@ to prototype anything at all. So you can try to engineer
 features around the clustering again, but then you need to
 compare the old and the new clustering. And basically, you
 need to look into the data and see does the new clustering
-make more sense than the old one. 
+make more sense than the old one.
 
 ---
 
@@ -507,12 +508,12 @@ So it always pick the further away point.
 I think there’s some randomization there. But the idea is
 for the initial cluster center to be far away as possible
 and that might give you better optima, and it might speed up
-the optimization. 
+the optimization.
 
 The problem with this is that if you do this, like greedily
 adding the furthest away point, you need to compute a lot of
 distances. And if you have many clusters and many data
-points it becomes very expensive. 
+points it becomes very expensive.
 
 And in particular, if you're using Minibatch KMeans, I've
 seen that running this initialization scheme becomes
@@ -521,17 +522,17 @@ that's kind of silly. So if you run KMeans on bigger data
 sets you should be aware of how much time does the
 initialization take and  how much time does your clustering
 take and maybe do a super initialization if it takes too
-long. 
+long.
 
 One thing you should be aware of is that by default,
 scikit-learn does 10 years random restarts for KMeans. So
 basically, it does this KMeans++ strategy 10 times, runs the
 full algorithm until convergence and then retains the
-results that is the best according to the criteria. 
+results that is the best according to the criteria.
 
 So if you have a big data set, you might not want to do
 that. And you might just set init to one and just run it
-once.   
+once.
 
 
 
@@ -560,18 +561,18 @@ cluster centers. So you'll have a new feature space that has
 number of clusters many dimensions, and that's a very
 nonlinear transformation of original feature space. This can
 be helpful, sometimes. In particularly if you have very
-simple models. 
+simple models.
 
 In this paper on the C4 dataset, they ran KMeans, used the
 cluster centers to extract features and then ran logistic
 regression and it was as good as the deep learning methods
-at that time. 
+at that time.
 
 By now, deep learning is much, much better than this. But it
 was very interesting because it uses very simple approach to
 find basically prototypes in the data center, they used like
 hundreds or thousands of cluster centers and then use the
-distances to these cluster centers as the features. 
+distances to these cluster centers as the features.
 
 
 ---
@@ -582,7 +583,7 @@ class: center, middle
 
 ???
 The next algorithm I want to talk about is similarly
-classical, it’s called agglomerative clustering. 
+classical, it’s called agglomerative clustering.
 ---
 
 # Agglomerative Clustering
@@ -628,7 +629,7 @@ clustering. Here, given this procedure, you can visualize
 this as a tree. It is also called as hierarchical
 clustering, because it gives you a whole hierarchy of
 different clusters. On the lowest level of the hierarchy,
-each data point is its own cluster center. 
+each data point is its own cluster center.
 
 So here, I have 12 data points so I would have 12 clusters.
 And if I merged everything, I have one cluster. But in
@@ -636,7 +637,7 @@ between, there's this whole hierarchy of different numbers
 of clusters. Here, you can see the one and four was merged
 first, then six and nine was merged, then two and eight was
 merged, then zero and eleven, then five and zero and eleven
-and so on. 
+and so on.
 
 The length of these bars are basically the distance between
 the clusters that got merged. So you can see the distance
@@ -644,7 +645,7 @@ between zero and eleven, and zero, eleven, and five are very
 small. So that basically means that all three of them have
 almost the same distance. Whereas here, you can see one and
 four are much closer together than one and four and three
-and two. 
+and two.
 
 By looking at this dendogram, it’s very helpful for picking
 the number of clusters. So if I look at this, I would
@@ -706,14 +707,14 @@ clusters.
 
 Ward looks at smallest increase within cluster variance. You
 merge the clusters and you look how much did the variance
-increase. 
+increase.
 
 Single linkage is the same as computing a minimum spanning
 tree, and then cutting the longest edge. So that's actually
-equivalent to top down approach. 
+equivalent to top down approach.
 
 Ward is the default in scikit-learn. It’s kind of nice
-because it makes relatively equally sized clusters. 
+because it makes relatively equally sized clusters.
 
 
 single linkage = cutting longest edge in minimum spanning tree.
@@ -734,12 +735,12 @@ ward : [31 30 20 10  9]
 Here's an example on some synthetic 2D data set. So here, I
 run three different clustering algorithms. You can see that
 here in average to data point being their own cluster where
-as in ward the cluster size are much more similar.  
+as in ward the cluster size are much more similar.
 
 In particular, average, complete and single linkage tend to
 cut off single points that are very far away. So if one
 point is far right from everything, every linkage criteria
-except ward will get their own cluster. 
+except ward will get their own cluster.
 
 
 FIXME single linkage!
@@ -768,7 +769,7 @@ only merge things that are neighboring. You can do
 neighboring the input space by using the KNearest neighbor
 graph or you can do input like in an image space. So for
 example, you could say looking at pixels in an image, I only
-want to merge pixels that are ease in the image. 
+want to merge pixels that are ease in the image.
 
 You have some idea of the structure of the data then this
 allows you to really speed up the algorithm because you only
@@ -785,11 +786,11 @@ you would use clustering algorithm that's not aware of this
 neighborhood structure then it would take a long time.
 
 If you have like a sparse connectivity structure, it's going
-to be fast otherwise might not be so fast. 
+to be fast otherwise might not be so fast.
 
 Most of linkage criteria except ward might lead to very
 imbalanced cluster sciences, that might be something you
-want or not, depending on your application. 
+want or not, depending on your application.
 
 If your data set is reasonably small or something like that,
 you can look at the Dendogram which shows you all possible
@@ -798,7 +799,7 @@ of the structure of your data and help you pick the right
 number of clusters or tell you if there's the right number
 of clusters.
 
-Q: Can you use clustering for generalization? 
+Q: Can you use clustering for generalization?
 
 With KMeans, we could assign a new data point to one of the
 clusters. For agglomerative clustering, we can’t really do
@@ -840,13 +841,13 @@ It's also an iterative algorithm. What's important to
 understand in this algorithm is the concept of core sample.
 This algorithm has two parameters, one is the neighborhood
 radius called epsilon and the other is the minimum number of
-samples in a cluster. 
+samples in a cluster.
 
 So here in this example, the colored points are sort of data
 points, and you've drawn the radius epsilon around it. That
 said the minimum number of samples is four. So this means
 each cluster is restricted to have a minimum of four samples
-to be a cluster. 
+to be a cluster.
 
 So given these parameters, we can define the notion of a
 core sample. Core sample in DBSCAN is a sample that has more
@@ -884,14 +885,14 @@ B, I would have labeled B as noise in the beginning, since B
 is not a core point so it will not get its own cluster. So I
 would label B as noise. But then later on, when I label the
 red cluster, I see I can reach B from the red cluster, I’ll
-give it that cluster label. 
+give it that cluster label.
 
 If there was an unexplored neighbor here, we would not visit
 it because only core points basically add points to the
 queue. So if there was two unexplored neighbors, it would be
 a core point, if there's only one, it's not a core point
 because it doesn't have enough neighbors. So basically, the
-cluster doesn't promote in that direction. 
+cluster doesn't promote in that direction.
 
 One thing that’s nice about this is you identify noise
 points. The other clustering algorithm didn’t have a concept
@@ -932,7 +933,7 @@ than this becomes noise. So here, in the first row, one
 cluster has four points, and the other cluster had three
 points. So if I do min samples equal to three, they're both
 clusters. So I do min samples to five, none of them are
-clusters, they're labeled noise. 
+clusters, they're labeled noise.
 
 If you increase epsilon, you make more points neighbors. And
 so basically, you're merging more and more clusters
@@ -959,12 +960,12 @@ From the chart in the left, first we pick some in the blue
 thing and we cover all of the blue cluster, and then
 something in the green cluster and then the red and yellow.
 And the rest all are just labeled noise because they don't
-have eight neighbors. 
+have eight neighbors.
 
 In the case on the right, some of them have six neighbors
 and so they’re labeled as their own clusters. You can see
 here, in between they're randomly picked. So once we picked
-these random points, they're labeled noise. 
+these random points, they're labeled noise.
 
 So there's no easy way to pick a direct upper bound on a
 number of clusters, but you can run it for different volumes
@@ -989,29 +990,29 @@ cluster shapes. Even with agglomerative clustering, even if
 you don't add, like some neighborhood graph topology on it,
 agglomerative clustering would not be able to learn this.
 DBSCAN has no problem with learning this since it only works
-very locally. 
+very locally.
 
 Also, DBSCAN can detect outliers, which is kind of nice.
 What's slightly less nice, but you need to adjust two
 parameters and parameters are not directly related to the
-number of clusters. 
+number of clusters.
 
 So it's not entirely clear to me, whether it is harder to
 pick epsilon, or is it harder to pick number of clusters but
 sometimes if an application asks for 10 clusters, that's
 little bit harder so you need to rerun the algorithm with
 multiple values of epsilon to figure out what epsilon should
-it be to get you to 10 clusters. 
+it be to get you to 10 clusters.
 
 This algorithm is pretty fast, because it only uses local
 search. And it can find arbitrary cluster sizes. So that's
-pretty nice. 
+pretty nice.
 
 Sometimes it can also give you very differently sized
 clusters, similar to the agglomerative metrics. Often, I
 find that I get like one big cluster and a couple of small
 clusters, which is not usually what you want. If you want
-various similar sized clusters, KMeans or ward is better. 
+various similar sized clusters, KMeans or ward is better.
 
 The last algorithm I want to talk about is actually not a
 clustering algorithm. But it's a probabilistic generative
@@ -1026,7 +1027,7 @@ class: center, middle
 
 ???
 Gaussian mixture models are very similar to KMeans, but
-slightly more flexible. 
+slightly more flexible.
 ---
 
 # Mixture Models
@@ -1039,7 +1040,7 @@ slightly more flexible.
 Mixture models are unsupervised models that try to fit per
 metric density to your data. So you want to model like for
 p(X), you want to model a distribution of your data. Mixture
-model does this as a mixture of some based distribution. 
+model does this as a mixture of some based distribution.
 
 My model for p(X) is the sum of Pk, each Pk is sum per
 metric distribution, and they’re weighted by πk, which is
@@ -1064,13 +1065,13 @@ components
 ???
 So for Gaussian mixture models, each of these distribution
 would just be a Gaussian with a different mean and a
-different covariance function. 
+different covariance function.
 
 So you say, my P(X), my data distribution I want to model as
 a mixture of K different Gaussian and I want to find these
 means and I want to find these covariance and I want to know
 how I should weight them. So this is one way to write down
-the model. 
+the model.
 
 Another way that I find often helpful when dealing with the
 generative model, so generative model is just a model that
@@ -1080,7 +1081,7 @@ Another way is writing down how you draw a new sample. And
 here, in this case of this mixture model, the way you would
 see sample from it is you sample from a multinomial with
 these weights, πk. So the πs, they all need to sum up to
-one, obviously so that the distribution is normalized. 
+one, obviously so that the distribution is normalized.
 
 So the integrals of each of the normals is one. So if you
 want the integral over x to be one, the πks need to some to
@@ -1088,12 +1089,12 @@ one. So you can draw from a multinomial, basically using
 these πks and then you say, I draw a cluster K, so now I'm
 going to draw a new data point from K and I'm using the
 Gaussian distribution associated with the mixture component
-K. 
+K.
 
 And this is the way you would sample from this distribution.
 So you pick a component, and then you create a point in this
 component, you pick a component and you pick a point in this
-component. 
+component.
 
 The algorithm is basically the same as KMeans. So again,
 it's a non-convex optimization. So usually you initialize
@@ -1104,7 +1105,7 @@ Basically what you do is in each iteration you assign each
 point a probability of being generated by each of the
 components. And then you can recompute mean and standard
 deviation or covariance matrix for each of the components
-based on the points that are assigned to it. 
+based on the points that are assigned to it.
 
 So it's very similar to KMeans only you don't do a hard
 assignment, so you don't say this belongs to this component,
@@ -1112,7 +1113,7 @@ you assign probabilities saying this point probably comes
 from this component, and is less likely to come from this
 component. And so, in addition to computing the means, you
 also compute the covariance matrices. These are the two big
-differences compared to KMeans. 
+differences compared to KMeans.
 
 And obviously, in the end, you get an estimate of the
 parametric form of the density.
@@ -1170,7 +1171,7 @@ class: spacious
 ???
 One reason might be doing clustering as we did before but as
 a more powerful variant of KMeans. But you can also do much
-more with it. 
+more with it.
 
 There’s a lot of things that makes having a parametric
 density model is a nice thing. You can say, if I see a new
@@ -1187,7 +1188,7 @@ one Gaussian as we did with LDA.
 There's like many more different things where being able to
 compute the probability of a given data point, is often very
 helpful. So that's sort of when a parametric model might be
-helpful. 
+helpful.
 
 
 - Create parametric density model.
@@ -1238,13 +1239,13 @@ print(gmm.covariances_)
 ???
 Here's how you do this with scikit-learn. So you only need
 to specify the number of components, usually, you fit it on
-data X and you get the means and the variances. 
+data X and you get the means and the variances.
 
 Here, is a 2D data set, I get three components, I get three
 means, and I get three covariance matrices. You can see
 KMeans since it can model covariance, it can learn something
 like is the blue cluster or the blue component, more spread
-out than the green component which KMeans couldn't. 
+out than the green component which KMeans couldn't.
 
 
 ---
@@ -1301,15 +1302,15 @@ from.
 You could’ve also set the model to joint likelihood, and see
 how likely is it to observe X or do a core samples, which
 will give me a log likelihood of each individual sample
-stating which of the samples look strange. 
+stating which of the samples look strange.
 
 So the shape of the result is number of samples times number
 of components. So for each of the component, I say given the
 data that was generated by this mixture, how likely is it
-that it was generated by this particular component. 
+that it was generated by this particular component.
 
 For the blue components it would probably be one and near
-zero for the other two components. 
+zero for the other two components.
 
 ---
 # Covariance restrictions
@@ -1330,7 +1331,7 @@ number for each of the components. So it's like sigma i
 times the unit matrix. And then it looks like this, if I fit
 it to this dataset here. This is like very few numbers to
 learn so I need very little data. Also, this not very
-flexible. 
+flexible.
 
 For diagonal, I learned a diagonal covariance matrix. So for
 each of the components, I have number of features many
@@ -1352,7 +1353,7 @@ one covariance matrix. But it's a symmetric matrix, but the
 number of parameters still grows as the number feature
 squared. This is probably something you only want to use, if
 you have some a priori knowledge that the clusters should
-sort of have a similar shape. 
+sort of have a similar shape.
 
 The full is sort of the default that I talked about. In
 this, you have a full covariance matrix independently for
@@ -1362,7 +1363,7 @@ think of this as control overfitting. So you could actually
 overfit the density model. If you give the model too much
 flexibility, it could learn a two complicated model that
 doesn't really model the data well, in particular in very
-high dimensions. 
+high dimensions.
 
 
 
@@ -1385,11 +1386,11 @@ these components and below, it can learn the variance.
 Obviously, I drew this data synthetically from Gaussians so
 the data is actually a mixture of three Gaussians and I
 specified fit three Gaussians to it so it's kind of obvious
-that it's going to work. 
+that it's going to work.
 
 In the real world, your data will not be generated by
 Gaussian and you won’t know how many components there might
-be. 
+be.
 
 
 
@@ -1444,17 +1445,17 @@ and the cluster centers represent your clusters. But it's
 very restricted in terms of the shape of each cluster
 center. And it's sort of an approximate algorithm that
 depends on initialization. So if you initialize differently,
-you might get different results. 
+you might get different results.
 
 Agglomerative is kind of nice, because it can take the input
 topology into account and it can produce the hierarchy. If
 you have not that many data points looking at the dendogram
-might be very helpful. 
+might be very helpful.
 
 DBSCAN is great because it can find arbitrarily shaped
 clusters and it can also detect outliers. The downside is
 that you need to specify two parameters that are sort of not
-so obvious to pick. 
+so obvious to pick.
 
 And finally, there's Gaussian mixture models, which are sort
 of an upgrade of KMeans. They can model covariance. You can
@@ -1463,10 +1464,10 @@ comes from a particular component, so you don't hard assign
 each point to a particular component. It gives you a
 parametric density model, which is nice. But it can be hard
 to fit if you want to fit the full covariance matrix. If you
-only find the diagonal covariance matrix, it's not so bad. 
+only find the diagonal covariance matrix, it's not so bad.
 
 Gaussian mixture models require multiple initializations
-possibly, and they're like a local search procedure. 
+possibly, and they're like a local search procedure.
 
 
 
@@ -1484,12 +1485,12 @@ There's this example on the scikit-learn website which shows
 a range of different clustering algorithms. So there’s
 KMeans, affinity propagation, mean shift, spectral
 clustering, ward, agglomerative clustering, DBSCAN, Birach
-and Gaussian mixtures. 
+and Gaussian mixtures.
 
 So you can sort of see what kind of problems they work with
 or not work with. Though this is 2D and things behave very,
 very differently in 2D than they behave in higher
-dimensions. 
+dimensions.
 
 All of these algorithms have parameters and adjusting these
 parameters is really tricky. Another question that you
@@ -1498,10 +1499,10 @@ complex cluster shapes, like, DBSCAN and agglomerative were
 able to get these two circles and these two bananas, KMeans
 and the Gaussian mixtures can do that. But the question is,
 is your data set actually going to look like this or is it
-going to look like this? 
+going to look like this?
 
 I think in in the real world data sets are much more likely
-to look something like this. 
+to look something like this.
 
 
 ---
