@@ -28,10 +28,7 @@ Today we're gonna talk about clustering and mixture models,
 mostly clustering algorithms. Next time we'll talk about
 evaluation of clustering.
 
-VB GMM: explain better? better example? or leave out?
-
-FIXME: order of slides weird, in particular K-Means (also
-agglomerative and others lol)
+FIXME: illustration of Kmeans++
 FIXME: linkage explanation diagram
 FIXME: cluster sized in particularly good for dbscan
 debugging
@@ -44,13 +41,22 @@ class: center, middle
 ???
 
 
+
+---
+.center[
+![:scale 70%](images/cluster_intro_1.png)
+]
+
+???
 The ideas is that you start out with a bunch of data points,
 and the assumption is that they fall into groups or
 clusters, and the goal is to discover these underlying
 groups.
+
+
 ---
 .center[
-![:scale 70%](images/cluster_intro_1.png)
+![:scale 70%](images/cluster_intro_2.png)
 ]
 
 ???
@@ -58,11 +64,46 @@ For example you want to find that these points belong to the
 same groups, and these, and these.
 ---
 .center[
-![:scale 70%](images/cluster_intro_2.png)
+![:scale 70%](images/cluster_intro_3.png)
 ]
+???
+Usually the clusters are identified by a cluster label or cluster indicator,
+though these numbers are arbitrary. What you care about is which points belong to the same cluster.
+So I could relabel the clusters and this would still be considered the same clustering.
+
+
+What we're really interested in is the partitioning of the
+data, though the way it's implemented in the scikit-learn
+API is that you predict an integer for each data point, so
+the clusters are numbered 0.. n_clusters -1. So we'd label
+these points with 0, these with one, and so on. But you
+should keep in mind that the number themselves have no
+meaning, renumbering the clusters corresponds to the same
+clustering.  We're really only interested in which points
+have the same labels and which points have different labels.
+---
+
+class: spacious
+# Clustering
+
+- Partition data into groups (clusters)
+- Points within a cluster should be “similar”.
+- Points in different cluster should be “different”.
 
 ???
 
+
+So you want to partition the data, so that each data point
+belongs to exactly one of the groups. And you want to define
+groups such that points in the same cluster are similar, and
+points in different clusters are different. And the
+different algorithms define how they measure similarity in
+different ways.
+
+
+- Number of clusters might be pre-specified. - Notations of
+“similar” and “different” depend on algorithm or user specified metrics.
+- Identify groups by assigning “cluster labels” to each data point. FIXME!
 ---
 .center[
 ![:scale 70%](images/cluster_intro_3.png)
@@ -87,49 +128,15 @@ Group into 4 clusters
 
 
 If you misspecify the number of groups you'd get something
-like this. We're not gonna talk about how to tune these
-parameters today, but in general you either need to have
+like this. To pick the number of clusters, in general you either need to have
 some prior knowledge about the data, or you need to inspect
 the results manually to see if the parameters are good.
-We're gonna talk more about this next time.
 
 Often, you don't know the number of clusters, or if there
 are even clusters in the data. Very rarely is the case as
 clear as in this example.  Still there might be a reasonable
 grouping, so there is no "right" amount of clusters, but you
 might still get something out of the clustering.
----
-class: spacious
-# Clustering
-
-- Partition data into groups (clusters)
-- Points within a cluster should be “similar”.
-- Points in different cluster should be “different”.
-
-???
-
-
-So you want to partition the data, so that each data point
-belongs to exactly one of the groups. And you want to define
-groups such that points in the same cluster are similar, and
-points in different clusters are different. And the
-different algorithms define how they measure similarity in
-different ways.
-
-What we're really interested in is the partitioning of the
-data, though the way it's implemented in the scikit-learn
-API is that you predict an integer for each data point, so
-the clusters are numbered 0.. n_clusters -1. So we'd label
-these points with 0, these with one, and so on. But you
-should keep in mind that the number themselves have no
-meaning, renumbering the clusters corresponds to the same
-clustering.  We're really only interested in which points
-have the same labels and which points have different labels.
-
-
-- Number of clusters might be pre-specified. - Notations of
-“similar” and “different” depend on algorithm or user specified metrics.
-- Identify groups by assigning “cluster labels” to each data point. FIXME!
 ---
 
 # Goals of Clustering
@@ -150,9 +157,10 @@ have the same labels and which points have different labels.
 
 --
 
-- Evaluation
+- Evaluation and parameter tuning
   - Quantitative measures of limited use
-  - Usually qualitative
+  - Usually qualitative measures used
+  - Best: downstream tasks
   - What is your goal?
 ???
 So why would we want to use a clustering algorithm? The
@@ -196,9 +204,6 @@ class: center, middle
 One of the most basic and most well-known ones is kmeans.
 Here k stands for the number of clusters you're trying to
 find.
----
-class: center, middle
-# K-Means
 
 ---
 # Objective function for K-Means
@@ -222,20 +227,10 @@ centers such that the sum of the distance of each point to
 its closest cluster center is minimized.
 
 This is an NP hard problem, so we can't really hope to solve
-it exactly, but we can run the k-means algorithm that we
-just discussed, and it will provide us with some local
-minimum of this objective.
+it exactly, but we can run the k-means algorithm that we'll discussed,
+and it will provide us with some local minimum of this objective.
 
-There's a couple of nice things about this algorith;
 
-It's very easy to write down and understand. Each cluster is
-represented by a center, which makes things simple, and you
-can reassign any new point you observe to a cluster by just
-computing the distances to all the cluster centers.
-
-So in this case, if we build a model on some data that we
-collected, we can easily apply this clustering to new data
-points. That's not the case for all clustering algorithms.
 ---
 # K-Means algorithm
 .wide-left-column[
@@ -270,6 +265,17 @@ the cluster centers don't move much between iterations.
 So you can see the green cluster center moving towards the
 red here until it has captured all the points in this group.
 Questions? Who has seen this before?
+
+There's a couple of nice things about this algorithm;
+
+It's very easy to write down and understand. Each cluster is
+represented by a center, which makes things simple, and you
+can reassign any new point you observe to a cluster by just
+computing the distances to all the cluster centers.
+
+So in this case, if we build a model on some data that we
+collected, we can easily apply this clustering to new data
+points. That's not the case for all clustering algorithms.
 ---
 
 
@@ -438,27 +444,21 @@ class: spacious
 
 - Naive implementation (Lloyd's):
   - n_cluster * n_samples distance calculations per iteration
-
---
-
-- Fast exact algorithms:
-  - Elkan's, Ying-Yang
-
---
-
-- Approximate algorithms:
-  - minibatch K-Means
-
 ???
 The naïve implementation is what I basically talked about,
 in each iteration it requires you to compute the distance
 from all data points to all the cluster centers. So you have
 to do number of clusters times number of samples, many
 distance calculation per iteration.
-
 That's actually if you have many clusters or if you have
 many features or if you have many samples that can take like
 a whole bunch of time.
+
+--
+
+- Fast "exact" algorithms:
+  - Elkan's, Ying-Yang
+???
 
 There's also fast exact algorithms. One of them is
 implemented in scikit-learn called Elkan’s. Another
@@ -472,6 +472,14 @@ first cluster will not be assigned to the second cluster
 since the distance between clusters is so big. And so you
 can use the triangle inequality to save lot of these
 distance calculations.
+
+--
+
+- Approximate algorithms:
+  - minibatch K-Means
+
+???
+
 
 And finally, there's a bunch of approximate algorithms,
 particularly, minibatch KMeans. It’s much much faster than
@@ -692,13 +700,6 @@ And it depends mostly on how you're define the similarities.
 Done with scipy!
 FIXME dendrogram code!
 ---
-
-# Merging (Linkage) Criteria
-
-
-???
-
----
 # Linkage Criteria
 
 .center[
@@ -709,10 +710,10 @@ FIXME dendrogram code!
 .smaller[
 Cluster sizes:
 ```
-single : [96  1  1  1  1]
-average : [82  9  7  1  1]
+single :   [96  1  1  1  1]
+average :  [82  9  7  1  1]
 complete : [50 24 14 11  1]
-ward : [31 30 20 10  9]
+ward :     [31 30 20 10  9]
 ```
 ]]
 
@@ -858,14 +859,13 @@ practice.
 
 ]
 ???
-It's also an iterative algorithm. What's important to
-understand in this algorithm is the concept of core sample.
+It's also an iterative algorithm.
 This algorithm has two parameters, one is the neighborhood
 radius called epsilon and the other is the minimum number of
 samples in a cluster.
 
-So here in this example, the colored points are sort of data
-points, and you've drawn the radius epsilon around it. That
+So here in this example, the colored points are data
+points, and we've drawn the radius epsilon around it. That
 said the minimum number of samples is four. So this means
 each cluster is restricted to have a minimum of four samples
 to be a cluster.
@@ -938,36 +938,6 @@ sample, start new cluster.
 - Outliers can later be relabeled to belong to a cluster.
 ]
 ---
-
-# Illustration
-
-.center[
-![:scale 70%](images/dbscan_illustration.png)
-]
-
-???
-In this illustration, all the big points are core points,
-all the small ones are not core points, and all the white
-ones are noise. And so basically, if you decrease min
-samples, the thing you do is all points that are smaller
-than this becomes noise. So here, in the first row, one
-cluster has four points, and the other cluster had three
-points. So if I do min samples equal to three, they're both
-clusters. So I do min samples to five, none of them are
-clusters, they're labeled noise.
-
-If you increase epsilon, you make more points neighbors. And
-so basically, you're merging more and more clusters
-together. Increasing epsilon creates fewer clusters, but
-they're bigger. So you can see from in the second row, with
-epsilon 1.5 you get three clusters, with epsilon equal two
-you get two clusters, with epsilon three, you get just one
-cluster.
-
-
-
-FIXME add epsilon circles to points?
----
 ![:scale 100%](images/dbscan_animation.gif)
 
 by David Sheehan <a href="https://dashee87.github.io/data%20science/general/Clustering-with-Scikit-with-GIFs/">dashee87.github.io</a>
@@ -993,13 +963,42 @@ number of clusters, but you can run it for different volumes
 of epsilon, and pick the one that has the right number of
 clusters for you. So you can define that at priori.
 
+---
+
+# Illustration of Parameters
+
+.center[
+![:scale 70%](images/dbscan_illustration.png)
+]
+
+???
+In this illustration, all the big points are core points,
+all the small ones are not core points, and all the white
+ones are noise. And so basically, if you decrease min
+samples, the thing you do is all points that are smaller
+than this becomes noise. So here, in the first row, one
+cluster has four points, and the other cluster had three
+points. So if I do min samples equal to three, they're both
+clusters. So I do min samples to five, none of them are
+clusters, they're labeled noise.
+
+If you increase epsilon, you make more points neighbors. And
+so basically, you're merging more and more clusters
+together. Increasing epsilon creates fewer clusters, but
+they're bigger. So you can see from in the second row, with
+epsilon 1.5 you get three clusters, with epsilon equal two
+you get two clusters, with epsilon three, you get just one
+cluster.
+
+
+FIXME add epsilon circles to points?
 
 ---
 # Pros and Cons
 
-- Can learn arbitrary cluster shapes
-- Can detect outliers
-- Needs two parameters to adjust
+- Pro: Can learn arbitrary cluster shapes
+- Pro: Can detect outliers
+- Con: Needs two (non-obvious?) parameters to adjust
 
 .center[
 ![:scale 50%](images/dbscan_pro_con.png)
@@ -1178,6 +1177,8 @@ kind of hard to draw distributions in 2D so I did it in 1D.
 Usually you fix the number of components beforehand, KMeans
 and initialization and so on, and then you fit the means and
 the covariance
+
+FIXME make clear bottom is weighted sum of top plots
 
 ---
 class: spacious
@@ -1427,7 +1428,7 @@ class: some-space
 - Agglomerative<br/>Can take input topology into account, can produce hierarchy.
 --
 
-- DBSCAN<br/>Arbitrary cluster shapes, can detect outliers.
+- DBSCAN<br/>Arbitrary cluster shapes, can detect outliers, often very different sized clusters.
 --
 
 - Gaussian Mixture Models<br/>Can model covariance, soft clustering, can be hard to fit.
