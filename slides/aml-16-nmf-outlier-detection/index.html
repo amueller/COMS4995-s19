@@ -19,7 +19,7 @@ class: center, middle
 
 # NMF; Outlier detection
 
-04/02/18
+04/01/19
 
 Andreas C. Müller
 ???
@@ -31,6 +31,12 @@ FIXME list KL divergence loss for NMF
 FIXME related gaussian model and Kernel density to GMM?
 FIXME talk more about all outliers are different in different ways vs classification (add example where outlier is better?)
 ---
+# Check out dabl!
+
+https://amueller.github.io/dabl/user_guide.html
+
+For now: visualization and preprocessing
+---
 class: center, middle
 
 # Non-Negative Matrix Factorization
@@ -38,7 +44,7 @@ class: center, middle
 NMF is basically in line with what we talked about with
 dimensionality reduction but also related to clustering.
 It’s a particular algorithm in a wider family of matrix
-factorization algorithms. 
+factorization algorithms.
 ---
 #Matrix Factorization
 
@@ -54,7 +60,7 @@ of features. And we want to factor it into two matrices, A
 and B.
 
 A is number of samples times k and B is k times number of
-features. 
+features.
 
 If we do this in some way, we get for each sample, a new
 representation in k-dimensional, each row of k will
@@ -86,12 +92,12 @@ encoded in B.
 ???
 The one example of this that we already saw is principal
 component analysis. In PCA, B was basically the rotation and
-then a projection. And A is just a projected matrix. 
+then a projection. And A is just a projected matrix.
 
 This is just one particular factorization you can do. I have
 the sign equal, but usually, more generally, you're trying
 to find matrixes A and B so that this is as close to equal
-as possible. 
+as possible.
 
 In particular, for PCA, what we're trying to do is we try to
 find matrices A and B so that the rows of B are orthogonal,
@@ -104,7 +110,7 @@ component analysis.
 ---
 class:spacious
 # Other Matrix Factorizations
-    
+
 - PCA: principal components orthogonal, minimize
 squared loss
 
@@ -126,14 +132,14 @@ minimize the squared loss to the data.
 In sparse PCA you do the same, but you say the entries of B
 should also be sparse, so you put an L1 norm on it, and then
 that maybe gives you more easily interpretable features or
-definitely more sparse features. 
+definitely more sparse features.
 
 Independent component analysis tries to make sure that the
-projections given by B are statistically independent. 
+projections given by B are statistically independent.
 
 NMF is used more commonly in practice. In this, we restrict
 ourselves to the matrices being positive, what I mean by
-that is, each entry is a positive number. 
+that is, each entry is a positive number.
 
 
 ---
@@ -149,7 +155,7 @@ that is, each entry is a positive number.
 In NMF, we compute X as a product of W and H. W stands for
 weights, and H stands for hidden representation. We want to
 find W and H so that their product is as close as possible
-to X. 
+to X.
 
 ---
 class: spacious
@@ -198,7 +204,7 @@ little bit like soft clustering, in the sense of slightly
 related to GMMs, you can think of the columns of W as being
 something like prototypes and so you express each data point
 as a combination of these prototypes. Since they're all
-positive, it's more similar to clustering. 
+positive, it's more similar to clustering.
 
 Another thing that’s quite interesting is that you can learn
 overcomplete representations. What that means is that you
@@ -242,7 +248,7 @@ images. I have these the digits, 0 and 1, and I tried to
 express them as a linear combination of the PCA components
 and as a linear combination of the NMF components. Here, I
 ordered them by which component is the most important for
-each of these data points. 
+each of these data points.
 
 For both, 0 and 1, the most active component is this one,
 which is a guess either 0 or 1, depending on whether it's
@@ -250,7 +256,7 @@ positive or negative. You can see that neither of these
 latter components looks a hardly like a 0 or a 1.
 
 What you’re seeing here is the cancellation effect taking
-place. 
+place.
 
 The idea with NMF is that in NMF, hopefully, you got
 something that’s more interpretable in particular, since
@@ -297,11 +303,11 @@ absence of signal for this to make sense. So obviously, you
 could always make your data positive by subtracting the
 minimum of the data and just shifting the 0 point. But
 that's not going to work very well. 0 really needs to mean
-something in NMF to make sense. 
+something in NMF to make sense.
 
 One kind of data where NMF is commonly used is text data. In
 text data, you look at word counts, and they're always
-positive so they’re a very natural candidate. 
+positive so they’re a very natural candidate.
 
 As with all things interpretable, the interpretability of a
 model is a hit or miss. So it depends a lot on the
@@ -324,7 +330,7 @@ minimization problem and trying to find a W and H. So
 depending on how you initialize them, and what kind of
 optimization you run, you'll get different outcomes, and you
 will get some local optimum, but you're not going to get the
-global optimum. So that’s a bit disappointing. 
+global optimum. So that’s a bit disappointing.
 
 Even if you did compute this for a dataset. So you have your
 data matrix X, you decompose it into W and H and now you
@@ -338,36 +344,36 @@ data is by running optimization, given the weights W doing
 the optimization is convex, though, so it's not really
 problematic, and the outcome will always be the same, but it
 takes a lot longer to run optimization for something, than
-just do rotation. 
+just do rotation.
 
 The components are not orthogonal as in PCA which can make
 sometimes be a bit confusing because you can't really think
-about it in terms of projections. 
+about it in terms of projections.
 
 Finally, another thing that's quite different in NMF than
 PCA is:
 
-A)  They're not ordered 
+A)  They're not ordered
 
 B) If you want fewer components, there will not be a subset
-of the more components solution. 
+of the more components solution.
 
 
 So here, is a solution for this positive dataset. If I do
 NMF with two components, I get these two arrows, they
 basically point towards the ends of the data which has the
 extreme points so it can express everything in there as a
-positive combination of the two. 
+positive combination of the two.
 
 And if I do only one component, I get the mean of the data,
-because that's the best I can do with one component. 
+because that's the best I can do with one component.
 
 If I change the number of components, I might get completely
 different results every time. So picking the right number of
 components is quite critical because it really influences
 what the solution looks like. So if compute 20 components,
 and then I compute 10 components, the 10 will be just
-completely different from any subset of the 20 components. 
+completely different from any subset of the 20 components.
 
 
 ---
@@ -389,7 +395,7 @@ Here's another illustration of this. If I do 20 components,
 I get the top, if I do 5 components, I get the bottom. And
 you can see these are quite different. And if I would use
 more components, they would probably be even more localized,
-and be just like, sort of small pieces of strokes. 
+and be just like, sort of small pieces of strokes.
 
 With 5 components, you get something like digits out there
 and all of these together seems to sort of cover space
@@ -418,13 +424,13 @@ signal processing, particular for speech and audio. It's
 often down for separating the sources, when there are
 multiple speakers, and you want to separate out one of the
 speakers or if you want to remove the singer’s voice and
-keep the music intact. 
+keep the music intact.
 
 This can be done using the library librosa. There are also
 plugins for common audio players, where you can just remove
-the voice with NMF. 
+the voice with NMF.
 
-Also, it's commonly used gene expression analysis. 
+Also, it's commonly used gene expression analysis.
 
 
 ---
@@ -435,7 +441,7 @@ class:center,middle
 The idea in outlier detection is to find points that are
 different. There are two quite related kinds of outlier
 detection summarized under outlier detection. There's
-outlier detection and novelty detection. 
+outlier detection and novelty detection.
 
 ---
 #Motivation
@@ -455,15 +461,15 @@ training dataset also contains outliers which makes it a bit
 dirty, while in novelty detection, you get a dataset and
 then, later on, someone gives you new data and asks you what
 is new here. So in novelty detection, your dataset would be
-clean. 
+clean.
 
 But in both, you want to identify something that's sort of
 different from the standard distribution. Only, in the
 outlier detection case, there are already different samples
-in your training dataset. 
+in your training dataset.
 
 This is one of the rigidly few unsupervised problems that
-are pretty heavily used in practice. 
+are pretty heavily used in practice.
 
 
 
@@ -511,7 +517,7 @@ class:spacious
 The main idea is, you model your data distribution, p(X).
 And then you look at the data points that are unlikely under
 the model. So if it's unlikely under the model, then it's
-probably an outlier. 
+probably an outlier.
 
 If you’re doing outlier detection that means your sample is
 going to be contaminated. So they're outliers in the dataset
@@ -524,7 +530,7 @@ actually know the real data distribution, how good something
 does is hard to measure. Usually, you don't have ground
 truth of what the outliers are if you have the ground truth
 what the outliers are, you could just do an imbalance
-classification task. 
+classification task.
 
 So similar to clustering, what we're doing here is building
 a model, trying to find some outliers, and then check if
@@ -533,7 +539,7 @@ things that our model finds, then we can put into
 production. But there's no guarantee that it's going to find
 like x fraction of the outliers and since we don't have
 labeled data, usually, we can't really measure our recall.
-We won't ever know about the samples that we didn't find. 
+We won't ever know about the samples that we didn't find.
 
 So maybe with respect to the homework and in the homework
 actually have ground truth data. And it's similar to the
@@ -544,14 +550,14 @@ evaluate your outlier detection, using, for example, AUC,
 which is what you're going to do your homework.
 
 But in a real-world setting, if you had the labels, you
-would never use outlier detection. 
+would never use outlier detection.
 
 Again, similar to clustering, what makes an outlier in a
 particular dataset is ill-defined. So depends on the
 application, what do you want to consider an outlier or not.
 So in the homework, it’s ill and healthy, and the ill people
 are the outliers. But it could also be that the people that
-are much older and everybody else are the outliers. 
+are much older and everybody else are the outliers.
 
 If there's sort of a very clear density model, and so you
 don't know what the density of the data is supposed to look
@@ -591,7 +597,7 @@ the outlier detection task, what we're trying to do is
 actually trying to find a robust estimate of the mean and
 covariance matrix so that we can tolerate some outliers in
 the training dataset, and still sort of recover the real
-covariance matrix. 
+covariance matrix.
 
 In this illustration, the black points, inliers, are what
 you expect the data to look like and the outlier
@@ -599,12 +605,12 @@ distribution is plotted in red.
 
 They overlap, so usually in unsupervised methods, you will
 never label any of these red points as outliers but we could
-try to figure out that these points here are outliers. 
+try to figure out that these points here are outliers.
 
 The way that elliptic envelope works are that it finds a
 robust version of the variance matrix. Basically, it finds
 the covariance matrix with the smallest determinant that
-still covers a large portion of the data. 
+still covers a large portion of the data.
 
 In most outlier detection methods, you have to specify how
 many outliers you expect. So here, let's say we specify 10%
@@ -666,7 +672,7 @@ The mean of the prediction tells me that about 10% of the
 training data was labeled as an outlier, which is what we
 would expect, given that we set it as 10%.  You could also
 get a continuous score saying how much of an outlier is each
-point with the score samples methods. 
+point with the score samples methods.
 
 Here, in the elliptic envelope, contamination parameter
 changes how the model is fit, for some other models, this
@@ -685,13 +691,13 @@ are.
 ]
 
 ???
-If the data is not Gaussian, we get this. 
+If the data is not Gaussian, we get this.
 
 In this dataset, my intuition was that the isolated three
 points are the outliers and the rest are the normal data.
 Since the data is non-Gaussian, it gives you 10% as outliers
 that are furthest away from the mean. And this is not what I
-wanted at all. 
+wanted at all.
 
 So if your data is very non-Gaussian, then the method will
 not clearly work well.
@@ -710,11 +716,11 @@ right outliers. But then again, I need to know what the
 number of components is for my GMM, for this to work well.
 
 So I still to make the assumptions about what the density
-is. 
+is.
 
 Another approach is instead of having a parametric density
 model like this, we can do a non-parametric density model
-like a kernel density estimate. 
+like a kernel density estimate.
 
 
 Could do mixtures of gaussians obviously!
@@ -729,13 +735,13 @@ class: center, spacious
 KDE is a most simple non-parametric estimate for probability
 distributions. The ticks at the bottom in the left plot are
 data points. One way to visualize the distribution is to do
-a histogram. 
+a histogram.
 
 For the KDE estimate in the right, we put a small Gaussian
 blob around each data point. So here, each data point here
 at the bottom corresponds to one of these Gaussians and then
 we just sum them all up and this gives you sort of this
-smooth density here. 
+smooth density here.
 
 So this a little bit like a GMM where we have as many
 components as data points. You could also use other kernels.
@@ -754,7 +760,7 @@ function would work for this, you kind of put a little bit
 of probability math around each data point.
 
 An obvious problem with this is that you need to pick the
-bandwidth. 
+bandwidth.
 
 
 
@@ -780,11 +786,11 @@ large of bandwidth and black is probably a decent bandwidth.
 Again, this is an unsupervised problem. So it's very hard to
 do this. You can actually use cross validation to adjust the
 bandwidth. So you can look at what's the score of the held
-out data. 
+out data.
 
 This is also not a robust estimate. So if you have outliers
 in your data, the outliers in your data might influence your
-estimate. 
+estimate.
 
 The other problem with this is that KDDs don't work in
 higher dimensions. You can obviously not only do this
@@ -796,10 +802,10 @@ these small Gaussian blobs. If you would want to do a
 histogram, in like 10 dimensions, and you don't have enough
 data, then most of the histogram cells will be empty. And
 here, this is only like a smooth version of the histogram so
-it has the same problem. 
+it has the same problem.
 
 So if your space is in high dimensional, most of the space
-will be empty and this is not going to work very well. 
+will be empty and this is not going to work very well.
 
 
 - Need to adjust kernel bandwidth
@@ -837,7 +843,7 @@ inlier.
 So basically, now I label 10% of the data as outliers and I
 actually get the right three points that I wanted and a
 couple more points. Obviously, I get more points, because I
-told them I want 10% of my data to be outliers. 
+told them I want 10% of my data to be outliers.
 
 So this is a really is a very simple method. But it doesn’t
 work well in higher dimensions and it gets very slow since
@@ -882,7 +888,7 @@ vectors and does it in a more robust way.
 You also have to set the number of outliers you expect as
 nu. Again, nu is part of the optimization process. So
 setting the outlier fraction differently will change how the
-models fit. 
+models fit.
 
 
 - Need to adjust kernel bandwidth
@@ -903,13 +909,13 @@ So for KDE, I can do cross-validation to see how good of a
 probability model this is, while the SVM doesn't have a
 probability model. So I can't do cross-validation or
 anything. So I just need to pick gamma in some way that
-makes sense to me, which is not great. 
+makes sense to me, which is not great.
 
 If you can visualize data, obviously, that helps. But in
 higher dimensions, you need to look at projections or other
 things to see how to set gamma. So in a sense, is also sort
 of a non-parametric density estimate. But it doesn't really
-have a probabilistic model. 
+have a probabilistic model.
 
 
 ---
@@ -947,12 +953,12 @@ the data is very dense.
 The idea is that you build many completely random trees,
 it's complete unsupervised, so it just keeps splitting the
 data in some way and we look at how deep do we need to go to
-isolate a data point from the other data points. 
+isolate a data point from the other data points.
 
 If on average, we have to go very deep into the tree, it’s
 probably if some of our data is dense, it's not an outlier.
 So on average, if we split off the point very early, it's
-probably an outlier. 
+probably an outlier.
 
 
 - Measure as Path length!
@@ -971,7 +977,7 @@ If you add more and more completely random trees, you get a
 relatively stable score that tells you is it an outlier or
 is it an outlier. You can think of this as sort of trying to
 model the density of the data. But there's no probabilistic
-model here. 
+model here.
 
 X1 has over 1000 trees, you need a very long path line so
 you go very deep into a tree before it's isolated from the
@@ -981,18 +987,18 @@ rest of data points so it's probably an outlier. So
 basically, if you're on the outside of the data, no matter
 what feature is picked, you’re likely to be split off, given
 that you're an outlier with respect to any of these
-features. 
+features.
 
 ---
 #Normalizing the Path Length
 
 Average path length of unsuccessful search in Binary Search Tree:
 
-`$$ c(n) = 2H(n-1) - \left(\frac{2(n-1)}{n}\right) \text{  (H = Harmonic number)}$$` 
+`$$ c(n) = 2H(n-1) - \left(\frac{2(n-1)}{n}\right) \text{  (H = Harmonic number)}$$`
 
 
 
-`$$ s(x,n) = 2^{-\frac{E(h(x))}{c(n)}} \text{   (h = depth in tree)}$$` 
+`$$ s(x,n) = 2^{-\frac{E(h(x))}{c(n)}} \text{   (h = depth in tree)}$$`
 
 
 - s &lt; 0.5 : definite inlier
@@ -1023,7 +1029,7 @@ Basically, the way you determine outliers is by threshold
 the score. So here, setting the number of expected outliers
 doesn't change the algorithm at all, it only changes the
 threshold for this core function. So here, picking the
-number of outliers in advance is not as important. 
+number of outliers in advance is not as important.
 
 ---
 class:spacious
@@ -1051,7 +1057,7 @@ size), which is 8.
 
 So you repeatedly draw, without replacement, 256 samples
 from your data and grow trees of depth 8 and then you look
-at the average path length to isolate a point. 
+at the average path length to isolate a point.
 
 Obviously, as with all random forest, more trees are better
 but the default in scikit-learn is 100.
@@ -1059,7 +1065,7 @@ but the default in scikit-learn is 100.
 In principle, these are free parameters of the algorithm,
 like, how much to subsample for each tree, and how to prune
 each tree. But people don't tune these parameters and it
-just works well. 
+just works well.
 
 The contamination rate only picks the threshold on this
 final score.
@@ -1073,7 +1079,7 @@ Here is what the algorithm produces and it worked as good as
 I thought.
 
 Remember, this is a toy dataset. It doesn't really tell you
-that much about how works in the real world. 
+that much about how works in the real world.
 
 ---
 .center[![:scale 90%](images/building_forest_2.png)]
@@ -1082,12 +1088,12 @@ Here, I plotted the score for each data point. You could do
 this for data models too. Here, since it’s tree-based, it’s
 not nice and smooth as it is for support vector machine or
 the KDE. I didn't have to tune any kernel bandwidth or
-anything and so that's kind of nice. 
+anything and so that's kind of nice.
 
 Again, it also depends on what your assumptions are about
 outliers. This will not work very well for the homework. And
 you can think about why this does not work very well from
-your homework. 
+your homework.
 ---
 class:spacious
 # Other density based-models
@@ -1106,13 +1112,13 @@ You can use other density based models. You can use just PCA which is also like 
 You can use GMMs.
 
 There’s a robust variant of PCA that is, unfortunately, not
-on scikit-learn. 
+on scikit-learn.
 
 You can use any probabilistic model that you want. But you
 need to think about if the model is appropriate for the data
 that you’re trying to model. And if you expect there's a lot
 of outliers in your training dataset already, then you might
-need to think about how to make the model robust. 
+need to think about how to make the model robust.
 
 So PCA is not robust, while robust PCA is robust. And so if
 you have very big outliers in your dataset, it will skew
@@ -1149,7 +1155,7 @@ So the isolation forest does kind of reasonably well in all
 cases. I mean, this is a 2D dataset and so it can just find
 dense regions without a problem. Whereas the one class SVM,
 gives slightly strange results, probably because it picked
-some support vectors to cover the data. 
+some support vectors to cover the data.
 
 Ideally, the one class SVM is supposed to be robust to
 contamination in the training set, but as we can see, it's
@@ -1185,7 +1191,7 @@ As with all unsupervised methods, for outlier detection,
 validating the model and tuning the parameters are really
 hard. So the more your model depends on parameters, like the
 one class SVM depends a lot on parameters, it's just very
-tricky to do that. 
+tricky to do that.
 
 As with the clustering, validation often means looking into
 the data, looking at single data points, why are they
@@ -1202,15 +1208,15 @@ outliers are all outliers in a similar way or outliers in
 different ways. So if all your outliers are outliers in a
 different way, then running a classifier will actually not
 work. So in that setting, you might actually be better off
-with an outlier detection method. 
+with an outlier detection method.
 
 Even if you have labels, if all of your outliers are
 outliers in a very different way, it might be better to just
 build the model off the non-outlier data and then call
 everything else that’s an outlier instead of trying to learn
 a classifier. If there's no dense region of outliers, then
-you can’t learn a classifier for that. 
- 
+you can’t learn a classifier for that.
+
 
 ---
 class: middle
