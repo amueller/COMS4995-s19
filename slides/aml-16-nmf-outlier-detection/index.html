@@ -30,12 +30,25 @@ FIXME better illustration for NMF
 FIXME list KL divergence loss for NMF
 FIXME related gaussian model and Kernel density to GMM?
 FIXME talk more about all outliers are different in different ways vs classification (add example where outlier is better?)
+FIXME relate NMF to K-Means and PCA, give example, spell out vector quantization (maybe before NMF for factorization in general?)
+FIXME realistic data for both NMF and for outlier detection. maybe cool time series for outlier detection? hum
 ---
 # Check out dabl!
 
 https://amueller.github.io/dabl/user_guide.html
 
 For now: visualization and preprocessing
+
+try:
+```python
+import dapl
+dapl.plot(data_df, target_col='some_target')
+```
+and:
+```python
+import dapl
+data_clean = dapl.clean(data)
+```
 ---
 class: center, middle
 
@@ -51,8 +64,9 @@ factorization algorithms.
 <br>
 
 .center[
-![:scale 90%](images/matrix_factorization.png)
+![:scale 80%](images/matrix_factorization.png)
 ]
+
 ???
 So matrix factorization algorithm works like this. We have
 our data matrix, X, which is number of samples times number
@@ -77,8 +91,9 @@ encoded in B.
 <br>
 
 .center[
-![:scale 90%](images/matrix_factorization_2.png)
+![:scale 80%](images/matrix_factorization_2.png)
 ]
+sklearn speak: `A = mf.transform(X)`
 
 ???
 ---
@@ -92,7 +107,7 @@ encoded in B.
 ???
 The one example of this that we already saw is principal
 component analysis. In PCA, B was basically the rotation and
-then a projection. And A is just a projected matrix.
+then a projection. And A is just the  projection of X.
 
 This is just one particular factorization you can do. I have
 the sign equal, but usually, more generally, you're trying
@@ -143,7 +158,7 @@ that is, each entry is a positive number.
 
 
 ---
-#NMF
+# NMF
 
 <br>
 
@@ -157,6 +172,32 @@ weights, and H stands for hidden representation. We want to
 find W and H so that their product is as close as possible
 to X.
 
+---
+class: compact
+
+# NMF Loss and algorithm
+
+Frobenius loss / squared loss ($ Y = H W$):
+
+`$$ l_{\text{frob}}(X, Y) = \sum_{i,j} (X_{ij} - Y_{ij})^ 2$$`
+
+Kulback-Leibler (KL) divergence:
+`$$ l_{\text{KL}}(X, Y) = \sum_{i,j} X_{ij} \log(\frac{X_{ij}}{Y_{ij}}) - X_{ij}  + Y_{ij}$$`
+
+--
+
+optimization :
+- Convex in either W or H, not both.
+- Randomly initialize (PCA?)
+- Iteratively update W and H (block coordinate descent)
+
+--
+
+Transforming data:
+
+- Given new data `X_test`, fixed `W`, computing `H` requires optimization.
+???
+In literature: often everything transposed
 ---
 class: spacious
 
