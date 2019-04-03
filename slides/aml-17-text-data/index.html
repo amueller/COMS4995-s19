@@ -19,12 +19,12 @@ class: center, middle
 
 # Working with Text Data
 
-04/04/18
+04/03/19
 
 Andreas C. Müller
 
 ???
-Today, we'll talk about working with text data. 
+Today, we'll talk about working with text data.
 
 FIXME make all bar-plots uniform style!
 FIXME tfidf before n-grams
@@ -53,7 +53,7 @@ FIXME is logisticregressionCV efficient here? sag?
 So far we talked about data where we have a fixed number of
 features, and where the features are either continuous or
 categorical. And that is most of the data out there and the
-simplest kind of data to work with. 
+simplest kind of data to work with.
 
 The rest of the semester, we're going to talk about
 different kinds of data that is opposite to what we already
@@ -91,7 +91,7 @@ are the common types of data.
 ???
 Here's an example of some text dataset that I'm going to use
 later. This is like relatively typical text, its user input
-data from IMDb movie reviews. 
+data from IMDb movie reviews.
 
 Clearly, they don't have the same length, there's no clear
 way to express this is as like some folding point features
@@ -110,7 +110,7 @@ hard because they are very short.
 
 I’m going to talk about a particular kind of data that you
 see very often because it's often used. But there are other
-kinds of data that is text data. 
+kinds of data that is text data.
 
 ---
 # Other Types of text data
@@ -129,7 +129,7 @@ categories are well known. Though, if you have a user input
 a country, they will never input the same country in the
 same way. The UK could be the United Kingdom, or England, or
 Britain, or Great Britain, and all of these might correspond
-in this context to the same entity. 
+in this context to the same entity.
 
 If you have users input this, they will also make typos.
 This variable is representing a category concept but you
@@ -137,12 +137,12 @@ have to do some cleaning before you can actually convert it
 into a category. This is often a manual thing to do. There
 are things that can help you with this, like duplication or
 an entity recognition but we're not going to talk about
-that. 
+that.
 
 The names are strings. They are definitely not categorical,
 and they’re also not words. So it's not really clear if
 there’s like any information in the name and we're going to
-look into this later today. 
+look into this later today.
 
 But you clearly don't want to treat them the same way as
 words that you find in a dictionary.
@@ -164,7 +164,7 @@ So there's this whole area of named entity recognition that
 actually tries to extract from any text the named entities
 and then tries to disambiguate. We're actually going to talk
 about this, but it's also some particular kind of text data
-that I want you to be aware of. 
+that I want you to be aware of.
 
 ---
 
@@ -176,12 +176,12 @@ that I want you to be aware of.
 ]
 ???
 The most common approach that people use for this is bag of
-words, which is a very simple approach. 
+words, which is a very simple approach.
 
 We start with a string which would be your whole document.
 The first step is to tokenize it, which is basically
 breaking it up the document into words. And then, you built
-a vocabulary over all documents over all words. 
+a vocabulary over all documents over all words.
 
 So you look over all the movie reviews, or all the emails or
 the text you have, and you collect all the tokens which are
@@ -191,24 +191,24 @@ Finally, using the vocabulary, you create a group
 representation. The length of your feature vector will be
 the size of the vocabulary. For each word in the vocabulary,
 you count how often this word appears in the string that you
-want to encode. 
+want to encode.
 
 Most of the words in the English language don't appear in a
 sentence. So most of these entries will be 0. But the word
 ‘ants’ appears once, so increment the count for ‘ants’ by 1
-and so on. 
+and so on.
 
 So I'll have 6 non-zero entries and all the other entries
 will be 0. So this is what we call like a very sparse vector
-so most entries of this vector are 0. 
+so most entries of this vector are 0.
 
 When coding this, we’ll use a sparse matrix encoding. The
 idea of sparse matrix encoding is that you only store the
-non-zero entries. 
+non-zero entries.
 
 So basically, we will only store the 1s, so storing the
 string as a bag of word will cost us a nearly 6 floating
-point numbers. 
+point numbers.
 
 ---
 # Toy Example
@@ -246,7 +246,7 @@ array([[1, 0, 1, 0, 0, 0, 1, 1],
 ???
 Here, I have a corpus. Corpus is what people in NLP called
 datasets. My dataset is 2 strings, “Do you want ants?”,
-“Because that's how you get ants.” 
+“Because that's how you get ants.”
 
 The bag of word representation is implemented in the count
 vectorizer in scikit-learn, which is a
@@ -260,12 +260,12 @@ take in a Numpy area as anything in scikit-learn.
 But here, count vectorizer takes in a list of strings. I
 gave the list of string and I fit it on my documents and
 this builds the vocabulary. I can get back to vocabulary by
-looking at the feature names using get_feature_names() 
+looking at the feature names using get_feature_names()
 
 The vocabulary is sorted alphabetically. Vocabulary has 8
 entries from ‘ants’ to ‘you’. So if I use this count
 vectorizer to create like a word representation, then I'll
-get an 8-dimensional feature space. 
+get an 8-dimensional feature space.
 
 I can use this to transform the 2 documents that I have. X
 here, being the outcome of the transform will be a sparse
@@ -278,7 +278,7 @@ into Numpy array, since usually, it will not fit into your
 memory. If you have like a vocabulary of size 100,000 and
 100,000 documents, and you make it into Numpy array, then
 your memory will just fill up and your computer will crash
-since you won’t have enough memory to store all the zeros. 
+since you won’t have enough memory to store all the zeros.
 
 In this toy example, we can easily convert this to a Numpy
 array and you can see that this is the feature
@@ -297,14 +297,14 @@ Usually, you either ignore them, that’s the default thing to
 do. Your test set will have tokens that your training set
 will not have, and so you can’t really learn anything about
 that. One thing you could do is count how many words out of
-the vocabulary there are. 
+the vocabulary there are.
 
 We going to talk a little bit later about how to restrict
 your vocabulary and you can basically add a new feature,
 that says, “There's X amount of features that are not in the
 vocabulary.” Often, this can be useful for people cascading
 something or miss typing something or using names or
-something like that. 
+something like that.
 
 But usually, you assume that most of the words appear in
 your training data set.
@@ -315,7 +315,7 @@ You can treat them but by default, if you do that, they're
 just different features. So they're completely unrelated. So
 if there's a new spelling error in your test dataset that
 never appeared in your training dataset, then the word will
-be completely ignored. 
+be completely ignored.
 
 You can use spell correction, I’ll talk about that in a bit.
 
@@ -363,7 +363,7 @@ words so you will only get back ‘ants’ ‘do’ ‘want’ ‘you’ and
 
 Basically, you store all the words in a big bag and
 completely lose any context and any order of the words.
-That's why it's called a bag of words. 
+That's why it's called a bag of words.
 
 ---
 class: center, middle
@@ -374,13 +374,13 @@ class: center, middle
 We're going to do a binary classification task on a dataset
 of IMDb movie reviews. You can look on GitHub, I have the
 notebook that runs through all of this if you want to run it
-yourself. 
+yourself.
 
 The idea here is that we want to do sentiment analysis
 basically classifying reviews into either being positive or
 negative. In IMDb, they give stars from 0 to 10. This is
 from a research paper where the author stated 1, 2 and 3 as
-negative while 7, 8, 9 and 10 are positive. 
+negative while 7, 8, 9 and 10 are positive.
 
 ---
 
@@ -406,7 +406,7 @@ class balance: [12500 12500]
 ???
 Text data is in either it's in a CSV format or if they’re
 longer documents, people in NLP like to have a single text
-file for each data point. 
+file for each data point.
 
 There's a tool in scikit-learn that allows you to load data,
 method load_files function, which basically iterates over
@@ -416,7 +416,7 @@ text document corresponds to a data point, that's a very
 common format that people use for text data.
 
 We can load this, then we get the actual data and the
-targets. 
+targets.
 
 Text_trainval is used as a training and validation set is
 just a list. The length is 25,000. So there are 25,000
@@ -437,7 +437,7 @@ writing only. You have too see it for yourself to get at grip of how
 horrible a movie really can be. Not that I recommend you to do that.
 There are so many clichés, mistakes (and all other negative things
 you can imagine) here that will just make you cry. To start with the
-technical first, there are a LOT of mistakes regarding the airplane. I 
+technical first, there are a LOT of mistakes regarding the airplane. I
 won't list them here, but just mention the coloring of the plane. They
 didn't even manage to show an airliner in the colors of a fictional
 airline, but instead used a 747 painted in the original Boeing livery.
@@ -452,12 +452,12 @@ better than this one.'
 ]
 ???
 We can also look at data points. I’m calling decode here to
-print the Unicode characters. 
+print the Unicode characters.
 
 The word ‘cliché’ can be typed with or without the axon and
 they would be two different words. But also, you need to
 determine if it’s a Unicode character or not. In Python 3,
-by default, everything is a unique code. 
+by default, everything is a unique code.
 
 
 all the code is in the github repo.
@@ -491,7 +491,7 @@ So the vocabulary that we built is 66,651. There’s 2.5
 million stored elements (non-zero entries).
 
 This is a much, much smaller number than the product of
-these two numbers. So most of the entries are zero. 
+these two numbers. So most of the entries are zero.
 
 Remember, you need to know whether you are in Python 2 or 3
 and then you need to know the type of text.
@@ -500,7 +500,7 @@ There are two different things that you need to keep in
 mind. So the text can be a byte string or Unicode string.
 But if it's a byte string, it also has an encoding attached
 with it. You need to know the encoding to go from the byte
-string to the string. 
+string to the string.
 
 
 ---
@@ -539,10 +539,10 @@ This is the first thing I do, it’s helpful to see if
 something sensible happened. And you get an idea of the
 data. I'm going to plot the first 10 data points, and I'm
 going to plot some 20 in the middle and I'm going to plot
-every 2000th data point. 
+every 2000th data point.
 
 The first couple of ones seem to be pretty boring. But then
-it seems to do something relatively reasonable. 
+it seems to do something relatively reasonable.
 
 Now that we have the sparse matrix representation, we can
 just do classification as usual.
@@ -578,7 +578,7 @@ I get is 88% accuracy, which is pretty good.
 
 Here, accuracy is meaningful because we know it's a balanced
 dataset. The next thing I always like to do is look at the
-coefficients. 
+coefficients.
 
 
 ---
@@ -592,11 +592,11 @@ So here I'm looking at the 20 most negative and 20 most
 positive coefficients of this logistic regression. It's
 pretty easy to do because it's a binary task. If you have
 multiclass tasks, you’ll have way more coefficients and it's
-harder to visualize. 
+harder to visualize.
 
 This seems to be like a pretty reasonable model to pick up
 on the bad words and the good words. This is the baseline
-approach. 
+approach.
 
 
 
@@ -614,7 +614,7 @@ what's happening here.
 In particular, there's the tokenization, which is how do you
 break it up into tokens. Then normalization, which is how do
 you make tokens look sort of reasonable. And then what to
-include in vocabulary. 
+include in vocabulary.
 
 ---
 class: spacious
@@ -646,7 +646,7 @@ thing where you can get the gender of a person, depending on
 how much often they use ‘I’.
 
 It doesn't include any punctuation because we only use the
-w, which is digits. 
+w, which is digits.
 
 This is pretty simple and pretty restrictive.
 
@@ -685,11 +685,11 @@ apostrophe, making it a single token.
 I can also allow things to have an apostrophe in the middle
 of the word, and get ‘that’s’ as a single token. This might
 look nicer but actually, in reality, it usually doesn't
-matter that much. 
+matter that much.
 
 But you can play around with this and see if the tokens you
 get with standard tokenization are good for your
-application. 
+application.
 
 Again, spacy and NLTK have much more sophisticated things.
 The X in vectorization slide represents the sparse matrix
@@ -751,15 +751,15 @@ fixed rule set.
 Lemmatization also uses reduces the word stem but in a smart
 way. It tries to parse the sentence and then uses a
 dictionary of all English words with all its verb forms and
-conjugations and tries to map it to a standardized form. 
+conjugations and tries to map it to a standardized form.
 
 The reason why I picked this example is ‘meeting’ appears
 twice in here, once as a noun and once as a verb. Using
 stemming:
 ‘was’ becomes ‘wa’
 ‘worse’ becomes ‘wors’ and so on
-‘I’m’ is just split up in two without the apostrophe. 
-‘scared’ becomes ‘scare’ 
+‘I’m’ is just split up in two without the apostrophe.
+‘scared’ becomes ‘scare’
 ‘meeting’ becomes ‘meet’
 
 Lemmatization parsed the sentence and figured out that the
@@ -767,7 +767,7 @@ first ‘meeting’ is a noun and keeps it as it is but the
 second ‘meeting’ which is a verb is simplified to ‘meet’.
 You can also see that the ‘was’ was normalized to ‘be’ and
 the ‘worse’ was normalized to ‘bad’ and the ’m was
-normalized to ‘be’ as well. 
+normalized to ‘be’ as well.
 
 The question with any kind of normalization you do is will
 this be helpful for your application.
@@ -776,7 +776,7 @@ Q: is stemming only applicable to English literature?
 
 These are both language dependent. This model exists for
 many languages. Today, I’m only talking about languages that
-work similar to English. 
+work similar to English.
 
 Scikit-learn only lowercases it. You can plug in other
 normalization from NLTK or spacy into the count vectorizer
@@ -790,7 +790,7 @@ class: center, middle
 ???
 The other main thing that you can play with is restricting
 the vocabulary. So far, I said, we're just going to use all
-the tokens that we see. 
+the tokens that we see.
 
 
 
@@ -812,34 +812,34 @@ print(list(ENGLISH_STOP_WORDS))
 ```
 .tiny-code[
 ```
-['former', 'above', 'inc', 'off', 'on', 'those', 'not', 'fifteen', 'sometimes', 'too', 'is', 'move', 'much', 'own', 'until', 'wherein', 
-'which', 'over', 'thru', 'whoever', 'this', 'indeed', 'same', 'three', 'whatever', 'us', 'somewhere', 'after', 'eleven', 'most', 'de', 'full', 
-'into', 'being', 'yourselves', 'neither', 'he', 'onto', 'seems', 'who', 'between', 'few', 'couldnt', 'i', 'found', 'nobody', 'hereafter', 
-'therein', 'together', 'con', 'ours', 'an', 'anyone', 'became', 'mine', 'myself', 'before', 'call', 'already', 'nothing', 'top', 'further', 
-'thereby', 'why', 'here', 'next', 'these', 'ever', 'whereby', 'cannot', 'anyhow', 'thereupon', 'somehow', 'all', 'out', 'ltd', 'latterly', 
-'although', 'beforehand', 'hundred', 'else', 'per', 'if', 'afterwards', 'any', 'since', 'nor', 'thereafter', 'it', 'around', 'them', 
-'alone', 'up', 'sometime', 'very', 'give', 'elsewhere', 'always', 'cant', 'due', 'forty', 'still', 'either', 'was', 'beyond', 'fill', 
-'hereupon', 'no', 'might', 'by', 'everyone', 'five', 'often', 'several', 'and', 'something', 'formerly', 'she', 'him', 'become', 'get', 
-'could', 'ten', 'below', 'had', 'how', 'back', 'nevertheless', 'namely', 'herself', 'none', 'be', 'himself', 'becomes', 'hereby', 
-'never', 'along', 'while', 'side', 'amoungst', 'toward', 'made', 'their', 'part', 'everything', 'his', 'becoming', 'a', 'now', 'am', 
-'perhaps', 'moreover', 'seeming', 'themselves', 'name', 'etc', 'more', 'another', 'whither', 'see', 'herein', 'whom', 'among', 'un', 'via', 
-'every', 'cry', 'me', 'should', 'its', 'again', 'co', 'itself', 'two', 'yourself', 'seemed', 'under', 'then', 'meanwhile', 'anywhere', 
-'beside', 'seem', 'please', 'behind', 'sixty', 'were', 'in', 'upon', 'than', 'twelve', 'when', 'third', 'to', 'though', 'hence', 
-'done', 'other', 'where', 'someone', 'of', 'whose', 'during', 'many', 'as', 'except', 'besides', 'for', 'within', 'mostly', 'but', 
-'nowhere', 'we', 'our', 'through', 'both', 'bill', 'yours', 'less', 'well', 'have', 'therefore', 'one', 'last', 'throughout', 'can', 
-'mill', 'against', 'anyway', 'at', 'system', 'noone', 'that', 'would', 'only', 'rather', 'wherever', 'least', 'are', 'empty', 'almost', 
-'latter', 'front', 'my', 'amount', 'put', 'what', 'whereas', 'across', 'whereupon', 'otherwise', 'thin', 'others', 'go', 'thus', 
-'enough', 'her', 'fire', 'may', 'once', 'show', 'because', 'ourselves', 'some', 'such', 'yet', 'eight', 'sincere', 'from', 'been', 'twenty', 
-'whether', 'without', 'you', 'do', 'everywhere', 'six', 'however', 'first', 'find', 'hers', 'towards', 'will', 'also', 'even', 'or', 
-'re', 'describe', 'serious', 'so', 'anything', 'must', 'ie', 'the', 'whenever', 'thick', 'bottom', 'they', 'keep', 'your', 'has', 'about', 
-'each', 'four', 'eg', 'interest', 'hasnt', 'detail', 'amongst', 'take', 'thence', 'down', 'fifty', 'whence', 'whereafter', 'nine', 'with', 
+['former', 'above', 'inc', 'off', 'on', 'those', 'not', 'fifteen', 'sometimes', 'too', 'is', 'move', 'much', 'own', 'until', 'wherein',
+'which', 'over', 'thru', 'whoever', 'this', 'indeed', 'same', 'three', 'whatever', 'us', 'somewhere', 'after', 'eleven', 'most', 'de', 'full',
+'into', 'being', 'yourselves', 'neither', 'he', 'onto', 'seems', 'who', 'between', 'few', 'couldnt', 'i', 'found', 'nobody', 'hereafter',
+'therein', 'together', 'con', 'ours', 'an', 'anyone', 'became', 'mine', 'myself', 'before', 'call', 'already', 'nothing', 'top', 'further',
+'thereby', 'why', 'here', 'next', 'these', 'ever', 'whereby', 'cannot', 'anyhow', 'thereupon', 'somehow', 'all', 'out', 'ltd', 'latterly',
+'although', 'beforehand', 'hundred', 'else', 'per', 'if', 'afterwards', 'any', 'since', 'nor', 'thereafter', 'it', 'around', 'them',
+'alone', 'up', 'sometime', 'very', 'give', 'elsewhere', 'always', 'cant', 'due', 'forty', 'still', 'either', 'was', 'beyond', 'fill',
+'hereupon', 'no', 'might', 'by', 'everyone', 'five', 'often', 'several', 'and', 'something', 'formerly', 'she', 'him', 'become', 'get',
+'could', 'ten', 'below', 'had', 'how', 'back', 'nevertheless', 'namely', 'herself', 'none', 'be', 'himself', 'becomes', 'hereby',
+'never', 'along', 'while', 'side', 'amoungst', 'toward', 'made', 'their', 'part', 'everything', 'his', 'becoming', 'a', 'now', 'am',
+'perhaps', 'moreover', 'seeming', 'themselves', 'name', 'etc', 'more', 'another', 'whither', 'see', 'herein', 'whom', 'among', 'un', 'via',
+'every', 'cry', 'me', 'should', 'its', 'again', 'co', 'itself', 'two', 'yourself', 'seemed', 'under', 'then', 'meanwhile', 'anywhere',
+'beside', 'seem', 'please', 'behind', 'sixty', 'were', 'in', 'upon', 'than', 'twelve', 'when', 'third', 'to', 'though', 'hence',
+'done', 'other', 'where', 'someone', 'of', 'whose', 'during', 'many', 'as', 'except', 'besides', 'for', 'within', 'mostly', 'but',
+'nowhere', 'we', 'our', 'through', 'both', 'bill', 'yours', 'less', 'well', 'have', 'therefore', 'one', 'last', 'throughout', 'can',
+'mill', 'against', 'anyway', 'at', 'system', 'noone', 'that', 'would', 'only', 'rather', 'wherever', 'least', 'are', 'empty', 'almost',
+'latter', 'front', 'my', 'amount', 'put', 'what', 'whereas', 'across', 'whereupon', 'otherwise', 'thin', 'others', 'go', 'thus',
+'enough', 'her', 'fire', 'may', 'once', 'show', 'because', 'ourselves', 'some', 'such', 'yet', 'eight', 'sincere', 'from', 'been', 'twenty',
+'whether', 'without', 'you', 'do', 'everywhere', 'six', 'however', 'first', 'find', 'hers', 'towards', 'will', 'also', 'even', 'or',
+'re', 'describe', 'serious', 'so', 'anything', 'must', 'ie', 'the', 'whenever', 'thick', 'bottom', 'they', 'keep', 'your', 'has', 'about',
+'each', 'four', 'eg', 'interest', 'hasnt', 'detail', 'amongst', 'take', 'thence', 'down', 'fifty', 'whence', 'whereafter', 'nine', 'with',
 'whole', 'there']
 ```
 ]
 ???
 One way to restrict the vocabulary often is to remove stop
 words. Stop words, are words that are not so important to
-the content and so you discard them. 
+the content and so you discard them.
 
 If I do this for my example, the only thing that remains are
 ‘ants’ and ‘want’ because ‘this’, ‘I’ and ‘how’ are all stop
@@ -849,11 +849,11 @@ Scikit-learn has some stop words built in. So if you do stop
 word equal to English, it will use the built-in the stop
 word list. It's a little bit strange and we're working on
 improving it. So for example, there’s ‘system’ in the stop
-word list and ‘bill’ is in the stop word list. 
+word list and ‘bill’ is in the stop word list.
 
 For unsupervised problems, using stop words might be
 helpful. For supervised problems, I rarely found it helpful
-with the tools that we talked about. 
+with the tools that we talked about.
 
 So problem is, these are nearly 200 words but we have 66,000
 features, removing 200 features doesn't really make a
@@ -863,7 +863,7 @@ model won’t be able to figure out are they important or not.
 If you use an unsupervised model, in the unsupervised model
 since they appear so often, these might just dominate
 whatever clustering you do and so removing them might be a
-good idea. 
+good idea.
 
 
 
@@ -924,7 +924,7 @@ opposite direction of what the stop words do. The stop words
 remove the most common ones that are meaningless and here,
 we removed the most infrequent ones because they're probably
 not helpful. These are often misspellings, or names or
-something like that. 
+something like that.
 
 ---
 
@@ -964,7 +964,7 @@ lr.score(X_val_df4, y_val)
 ???
 Here I used the count vectorizer with min_df=2 and min_df=4.
 That means either use tokens that appear in 2 documents in a
-training set, or at least 4 documents in a training set. 
+training set, or at least 4 documents in a training set.
 
 Min_df=2 gives me 39825 while min_df=4 gives me 26928. I’ve
 drastically reduced the feature space when using min_df=2
@@ -974,18 +974,18 @@ Min_df means minimum document frequency, meaning the number
 of documents the words appear in. It's not the number of
 times the word appears. So if a word appears in 100 times in
 a single document, it's still going to be thrown out by
-this. 
+this.
 
 Here, I used X_train_df=4, which is much, much smaller, it’s
 less than half the size. And the result I get is identical,
-basically, in terms of accuracy. 
+basically, in terms of accuracy.
 
 These are the main configuration you just used a single bag
-of words. 
+of words.
 
 That said, they're throwing away a lot of the context and
 information. One way to improve upon this is what's called
-N-grams. 
+N-grams.
 
 
 
@@ -1009,7 +1009,7 @@ cannot distinguish between the two because somewhere along
 the document, it could appear ‘don't’ and you don't know if
 it's in front of ‘love’, or if it’s ‘love, don't hate’ or
 ‘don't love hate’, since they basically have the same
-representation. 
+representation.
 
 The idea behind N-grams is you look at pairs of words that
 appear next to each other. Unigrams looks at single words,
@@ -1019,7 +1019,7 @@ trigrams looks at three words next to each other, and so on.
 
 Here instead of splitting it up into single tokens, we can
 split it up into pairs of tokens allowing me to have a
-little bit of context around each of the words. 
+little bit of context around each of the words.
 
 
 - N-grams: tuples of consecutive words
@@ -1059,14 +1059,14 @@ print("Vocabulary:\n{}".format(cv.get_feature_names()))
 ```
 Vocabulary size: 16
 Vocabulary:
-['ants', 'because', 'because that', 'do', 'do you', 'get', 'get ants', 'how', 'how you', 'that', 'that how', 'want', 'want ants', 
+['ants', 'because', 'because that', 'do', 'do you', 'get', 'get ants', 'how', 'how you', 'that', 'that how', 'want', 'want ants',
 'you', 'you get', 'you want']
 ```
 ]
 ???
 When implementing in scikit-learn, you have to specify the
 N-gram range, which has the minimum number of tokens and the
-maximum number of tokens you want to look at. 
+maximum number of tokens you want to look at.
 
 Usually, you want to look at Unigram + Bigrams + Trigrams,
 don't look at only Bigrams. If I only look at Unigrams, I
@@ -1129,14 +1129,14 @@ features. But this is mostly because I did the min_df=4.
 There are very few sequences of 4 words that appear often
 together. If I don't use the min_df=4 and I look at all
 things I get nearly 8 million features. This is like 20
-times more four grams than what we had before. 
+times more four grams than what we had before.
 
 So particularly if you use higher N-grams using this pruning
 of document frequency might be quite helpful. You can see
 that probably they have about the same amount of
 information, but you’ll have 20 times fewer features, which
 will definitely impact runtime and possibly impact
-generalization. 
+generalization.
 
 
 ---
@@ -1160,7 +1160,7 @@ This is with stop words. What we're doing is we do stop
 words first and then N-grams. What I find interesting is
 that here using unigrams and bigrams we got 155354, but if
 we remove the stop words it gets halved to 81085. This is
-pretty extreme. 
+pretty extreme.
 
 The stop word list is only 200 words. So if we remove these
 200 words and if you look at the bigrams we half the number
@@ -1170,7 +1170,7 @@ are probably the most common Bigrams in this.
 
 So if we remove this then whatever word that came before
 ‘the’ is now makes after bigram. And so now, the
-combinations appear much less frequently. 
+combinations appear much less frequently.
 
 
 ---
@@ -1194,7 +1194,7 @@ print(len(cv4sw.get_feature_names()))```
 ???
 4grams are even rarer and so there are 31585 4grams that
 appear at least 4 times but if I remove the stop words I get
-only 369 4grams that appeared at least 4 times. 
+only 369 4grams that appeared at least 4 times.
 ---
 ```
 ['worst movie ve seen' '40 year old virgin' 've seen long time'
@@ -1221,7 +1221,7 @@ only 369 4grams that appeared at least 4 times.
 ???
 This is the most common 4grams after removing stop words.
 Whenever you have the ability to look into something
-interesting in our data, do it. 
+interesting in our data, do it.
 
 ---
 .center[
@@ -1241,10 +1241,10 @@ but since we have bigrams, we can distinguish between ‘not
 worth’ and ‘well worth’.
 
 You can also see that most of these actually were Bigrams
-that included stop word. 
+that included stop word.
 
 It gets slightly worse because all of these Bigrams actually
-have stop words in them. 
+have stop words in them.
 
 
 
@@ -1296,19 +1296,19 @@ $df(d,t)$ = number of documents containing term $t$
 ???
 Next thing we can do is actually try to rescale our words
 with something called Tf-idf which stands for Term Frequency
-Inverse Document Frequency. 
+Inverse Document Frequency.
 
 This is sort of an alternative to using soft stop words in a
 sentence. The idea here is to down-weight things that are
-very common. 
+very common.
 
 It’s the logarithm of 1 over the number of documents
-containing the term. 
+containing the term.
 
 So if something happens to appear in most of the documents,
 the inverse document frequency will give it a very low
 weight. This is something that's very commonly used in
-information retrieval. 
+information retrieval.
 
 Information retrieval basically means you're trying to find
 relevant documents. If you can think of how a search engine
@@ -1320,7 +1320,7 @@ to a particular search term. That is the motivation for
 this.
 
 But people find it also sometimes helps in a machine
-learning context. 
+learning context.
 
 You can’t really know in advance whether this helps for the
 particular dataset or not, but basically you should keep in
@@ -1381,7 +1381,7 @@ on the text and it will build the vocabulary and then do the
 rescaling. Or you can use to count vectorizer,
 TFIDFTransformer, which will work on the sparse matrix
 created by the count vectorizer and then just transform it
-using rescaling. 
+using rescaling.
 
 This is an alternative to using stop words or putting more
 emphasis on rare words.
@@ -1398,10 +1398,10 @@ a very short review that says good, 0 times, and bad also 3
 times, then it's probably a bad review. So you want to
 really scale these so that the relative frequency of the
 word only matters and not the total length document. That's
-sort of what the normalization does. 
+sort of what the normalization does.
 
 And so the common thing to do is L2 normalization, which
-divides by Euclidean norm. 
+divides by Euclidean norm.
 
 
 
@@ -1414,7 +1414,7 @@ The next thing I want to talk about is character n-grams.
 Character n-grams are a different way to extract features
 from text data. It's not that useful for general text
 classification but it's useful for some more specific
-applications. 
+applications.
 
 The idea is that, instead of looking at tokens, which are
 words, we look at windows of characters.
@@ -1462,12 +1462,12 @@ words, we look at windows of characters.
 ]
 ???
 Here, I want to look at character trigrams, look at windows
-of length 3. 
+of length 3.
 
 My first one would be “Do_” and then “o_y” and then “_you”
 and so…
 
-Then you build the vocabulary over these trigrams. 
+Then you build the vocabulary over these trigrams.
 
 
 ---
@@ -1515,9 +1515,9 @@ print("Vocabulary:\n{}".format(cv.get_feature_names()))
 ```
 Vocabulary size: 73
 Vocabulary:
-[' a', ' an', ' g', ' ge', ' h', ' ho', ' t', ' th', ' w', ' wa', ' y', ' yo', 'an', 'ant', 'at', 'at’', 'au', 'aus', 'be', 'bec', 'ca', 
-'cau', 'do', 'do ', 'e ', 'e t', 'ec', 'eca', 'et', 'et ', 'ge', 'get', 'ha', 'hat', 'ho', 'how', 'nt', 'nt ', 'nts', 'o ', 'o y', 'ou', 
-'ou ', 'ow', 'ow ', 's ', 's h', 's.', 's?', 'se', 'se ', 't ', 't a', 'th', 'tha', 'ts', 'ts.', 'ts?', 't’', 't’s', 'u ', 'u g', 'u w', 
+[' a', ' an', ' g', ' ge', ' h', ' ho', ' t', ' th', ' w', ' wa', ' y', ' yo', 'an', 'ant', 'at', 'at’', 'au', 'aus', 'be', 'bec', 'ca',
+'cau', 'do', 'do ', 'e ', 'e t', 'ec', 'eca', 'et', 'et ', 'ge', 'get', 'ha', 'hat', 'ho', 'how', 'nt', 'nt ', 'nts', 'o ', 'o y', 'ou',
+'ou ', 'ow', 'ow ', 's ', 's h', 's.', 's?', 'se', 'se ', 't ', 't a', 'th', 'tha', 'ts', 'ts.', 'ts?', 't’', 't’s', 'u ', 'u g', 'u w',
 'us', 'use', 'w ', 'w y', 'wa', 'wan', 'yo', 'you', '’s', '’s ']
 ```
 ]
@@ -1534,8 +1534,8 @@ print("Vocabulary:\n{}".format(cv.get_feature_names()))
 Vocabulary size: 74
 Vocabulary:
 [' a', ' an', ' b', ' be', ' d', ' do', ' g', ' ge', ' h', ' ho', ' t', ' th', ' w', ' wa', ' y', ' yo', '. ', '? ', 'an', 'ant', 'at', '
-at’', 'au', 'aus', 'be', 'bec', 'ca', 'cau', 'do', 'do ', 'e ', 'ec', 'eca', 'et', 'et ', 'ge', 'get', 'ha', 'hat', 'ho', 'how', 'nt', 'nt ', 
-'nts', 'o ', 'ou', 'ou ', 'ow', 'ow ', 's ', 's.', 's. ', 's?', 's? ', 'se', 'se ', 't ', 'th', 'tha', 'ts', 'ts.', 'ts?', 't’', 't’s', 
+at’', 'au', 'aus', 'be', 'bec', 'ca', 'cau', 'do', 'do ', 'e ', 'ec', 'eca', 'et', 'et ', 'ge', 'get', 'ha', 'hat', 'ho', 'how', 'nt', 'nt ',
+'nts', 'o ', 'ou', 'ou ', 'ow', 'ow ', 's ', 's.', 's. ', 's?', 's? ', 'se', 'se ', 't ', 'th', 'tha', 'ts', 'ts.', 'ts?', 't’', 't’s',
 'u ', 'us', 'use', 'w ', 'wa', 'wan', 'yo', 'you', '’s', '’s ']
 ```
 ]
@@ -1548,18 +1548,18 @@ Usually, we look at characters that are longer, so single
 characters don’t really tell us much. Here, I look at
 n-grams of size 2 and 3. You can also go up to, like 5 or 7,
 obviously, the feature space tends to explode if you go
-higher. 
+higher.
 
 After applying, I get a vocabulary of size 73, which is
-pretty big for such a short text. 
+pretty big for such a short text.
 
 And there's also a featurette that can respect word
-boundaries called char_wb. 
+boundaries called char_wb.
 
 So here, you get the end of one word and the beginning of
 the next word, you might want to exclude that if you're only
 interested on the actual words. So the char_wb makes sure
-that there's no white space inside the character n-gram. 
+that there's no white space inside the character n-gram.
 
 
 ---
@@ -1611,7 +1611,7 @@ at this is that some people gave their star rating in the
 comment. This is actually leaking the label of the star
 rating. This is not something that we saw before but here
 looking at his character n-grams, we can see that that's
-something that's in the dataset. 
+something that's in the dataset.
 
 
 
@@ -1622,7 +1622,7 @@ class: middle
 ???
 A more useful application is going back to the European
 Parliament. What I'm going to do now is predict nationality
-from the name. 
+from the name.
 ---
 .center[
 ![:scale 70%](images/nationality_name_1.png)
@@ -1633,7 +1633,7 @@ from the name.
 ]
 ???
 Here's the distribution of the country. This is a very
-imbalanced classification. 
+imbalanced classification.
 ---
 # Comparing words vs chars
 
@@ -1705,7 +1705,7 @@ grid.best_params_
 ]
 ???
 We can do a grid search, though that might take a while on
-the bigger dataset. 
+the bigger dataset.
 
 Things that you want to tune are a regularization of your
 models, I always use logistic regression CV to tune it
@@ -1716,7 +1716,7 @@ Here, this is for character n-grams, but still, I might want
 to tune the n-gram range. If I was using bag of words, I
 might not look at sequences of 8 words because it will take
 very long to compute this and it's probably not going to be
-useful. 
+useful.
 
 Here, I'm using count vectorizer, but I could still
 normalize using the L2 normalizer.
@@ -1727,20 +1727,20 @@ these steps for the count vectorizer, if you have a big
 dataset, it might be pretty expensive and so you don't want
 to refit this again, just because you're plugged in the
 normalizer or just because you changed the C parameter in
-the logistic regression. 
+the logistic regression.
 
 Make pipeline has a parameter called memory that allows you
 to cash the results. So you just have to give it a non-empty
 string and it'll use that as the full name to catch the
 results. If there's no catch eviction, at some point you
-need to delete it, or your hard drive will run full. 
+need to delete it, or your hard drive will run full.
 
 Here, you can see that after tuning everything, I actually
 get a result that's much better than what I had before. So
-before I had an f1 macro of 0.45 and now I have 0.58. 
+before I had an f1 macro of 0.45 and now I have 0.58.
 
 So min_df=2 and ngram_range: (1,5) and c=10 gives the best
-results. 
+results.
 
 
 - Small dataset, makes grid-search faster! (less reliable)
@@ -1751,7 +1751,7 @@ results.
 ]
 ???
 Here, I used pivot tables and Pandas to look into the effect
-of the different parameters. 
+of the different parameters.
 ---
 # Other features
 - Length of text
@@ -1762,7 +1762,7 @@ of the different parameters.
 - Whatever makes sense for the task!
 ???
 There are other kinds of features that you might want to
-look into. 
+look into.
 
 There are actual collections of positive-negative words that
 you can download and you can check how many positive words
@@ -1770,10 +1770,10 @@ are in this, how many negative words are in this. So
 basically, the model can share information about how
 important these words are because a particularly positive
 word might appear only very infrequently in your dataset but
-you can still learn that positive word means good. 
+you can still learn that positive word means good.
 
 Bag of words is a pretty good baseline. It’s a very simple
-approach and often gives reasonable results. 
+approach and often gives reasonable results.
 
 
 ---
@@ -1789,14 +1789,14 @@ if you want to use training a model on the Twitter stream,
 which has tweets coming in all the time, this has a couple
 of problems.
 
-- You don't want to store all the data 
+- You don't want to store all the data
 
 - Your vocabulary might shift over time. You might not be
 able to store the whole vocabulary, because the whole
-vocabulary of what everybody says on Twitter is very large. 
+vocabulary of what everybody says on Twitter is very large.
 
 There's a trick which allows you to get away without
-building a vocabulary. 
+building a vocabulary.
 
 ---
 
@@ -1807,7 +1807,7 @@ building a vocabulary.
 This is what we did before. We tokenize the string, split
 onto words, build a vocabulary and then built a sparse
 matrix representation. Now we can replace this vocabulary
-with just a hash function. 
+with just a hash function.
 ---
 
 .center[
@@ -1816,7 +1816,7 @@ with just a hash function.
 ???
 And we can use any string hash function, that computes half
 of the token, then we represent this token just by its hash
-number. 
+number.
 
 Here, I used a hash method. This just hashes to 832,412 and
 so this is the number of the feature. Then I can use these
@@ -1824,9 +1824,9 @@ as indices into my sparse matrix encoding. So now I need a
 hash function with some upper limits, let's say 1 billion or
 something, and as I get a feature vector of length 1
 billion. And then I can use these hashes as indices into
-this feature vector. 
+this feature vector.
 
-So I don't need to build a vocabulary which is pretty nice. 
+So I don't need to build a vocabulary which is pretty nice.
 
 
 ---
@@ -1889,7 +1889,7 @@ Con:
 
 ]
 ???
-Here are pros and cons listed. 
+Here are pros and cons listed.
 
 It's hard to interpret the results because now you have like
 a feature vector of size million, but you don't know what
@@ -1899,7 +1899,7 @@ know what it is.
 
 You could try to store the correspondences but that would
 sort of remove all the benefits. So that makes it kind of
-hard to debug. 
+hard to debug.
 
 There can be hash collisions, which make it harder to
 interpret. 2 tokens can hash to the same index. In practice,
@@ -1908,7 +1908,7 @@ for interpretability because you can't undo the hash
 function so you don't know why your model learned the thing
 it learned. But if you have really big text data or
 streaming setting, this is a quite simple and effective
-method. 
+method.
 
 
 
