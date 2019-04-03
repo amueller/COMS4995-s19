@@ -27,8 +27,9 @@ Andreas C. Müller
 Today, we'll talk about working with text data.
 
 FIXME explain L2 normalization and intuition?
-FIXME is logisticregressionCV efficient here? sag?
 FIXME bad resolution in some plots
+FIXME mention NLTK, spacy, gensim
+FIXME move pro's and cons of hashing vectorizer before the example?
 ---
 
 # More kinds of data
@@ -93,7 +94,7 @@ later. This is like relatively typical text, its user input
 data from IMDb movie reviews.
 
 Clearly, they don't have the same length, there's no clear
-way to express this is as like some folding point features
+way to express this is as like some floating point features
 which we would use for a standard machine learning approach.
 You can also see there are weird things about
 capitalization, some weird words in there like Godzilla that
@@ -1887,7 +1888,7 @@ Pro:
 Con:
 - Can't interpret results
 - Hard to debug
-- (collisions are not a problem for performance)
+- (collisions are not a problem for model accuracy)
 
 ]
 ???
