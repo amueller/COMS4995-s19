@@ -27,9 +27,10 @@ Andreas C. Müller
 Today, we'll talk about working with text data.
 
 FIXME make all bar-plots uniform style!
-FIXME tfidf before n-grams
 FIXME explain L2 normalization and intuition.
 FIXME is logisticregressionCV efficient here? sag?
+FIXME Remove "format" in print
+FIXME bad resolution in some plots
 ---
 
 # More kinds of data
@@ -46,7 +47,7 @@ FIXME is logisticregressionCV efficient here? sag?
   * No pre-defined features
   * Free text
   * Images
-  * (Audio: not this class)
+  * (Audio, video, graphs, ...: not this class)
 
 
 ???
@@ -465,7 +466,8 @@ all the code is in the github repo.
 # Vectorization
 
 ```python
-text_train_val = [doc.replace(b"<br />", b" ") for doc in text_train_val]
+text_train_val = [doc.replace(b"<br />", b" ")
+                  for doc in text_train_val]
 text_train, text_val, y_train_, y_val = train_test_split(
     text_trainval, y_trainval, stratify=y_trainval, random_state=0)
 vect = CountVectorizer()
@@ -991,6 +993,130 @@ N-grams.
 
 - Removed nearly 1/3 of features!
 - As good as before
+---
+# Tf-idf rescaling
+
+$$ \text{tf-idf}(t,d) = \text{tf}(t,d)\cdot \text{idf}(t)$$
+
+$$ \text{idf}(t) = \log\frac{1+n_d}{1+\text{df}(d,t)} + 1$$
+
+$n_d$ = total number of documents <br/>
+$df(d,t)$ = number of documents containing term $t$
+
+--
+
+* In sklearn: by default also L2 normalisation!
+
+???
+Next thing we can do is actually try to rescale our words
+with something called Tf-idf which stands for Term Frequency
+Inverse Document Frequency.
+
+This is sort of an alternative to using soft stop words in a
+sentence. The idea here is to down-weight things that are
+very common.
+
+It’s the logarithm of 1 over the number of documents
+containing the term.
+
+So if something happens to appear in most of the documents,
+the inverse document frequency will give it a very low
+weight. This is something that's very commonly used in
+information retrieval.
+
+Information retrieval basically means you're trying to find
+relevant documents. If you can think of how a search engine
+works, if you want to match a bag of words representation of
+two different query strings, you might not care so much
+about matching the ‘a’ and ‘the’, but you care a lot about
+matching the parts that are rare and that are very specific
+to a particular search term. That is the motivation for
+this.
+
+But people find it also sometimes helps in a machine
+learning context.
+
+You can’t really know in advance whether this helps for the
+particular dataset or not, but basically you should keep in
+mind, this emphasizes rare words and does a soft removal of
+very common words. This also means the sort of stop words
+here are corpus specific so here it will learn to
+down-weight ‘movie’ and ‘film’ because they're very common.
+
+The implementation of this in scikit-learn is a little bit
+non-standard but I don't think it makes a big difference.
+
+You should also keep in mind is that if you use the
+implementation of TF-IDF in scikit-learn by default, it will
+also do L2 normalization. L2 normalization means you divide
+each row by its length. That means you normalize the weight
+the length of the document. You only want to count how often
+the word appears relative to how long the document is.
+Basically, if you make a document that basically repeats
+each word twice, it should still have the same
+representation. By default, that's turned on for TF-IDF. But
+it's not turned on for the bag of words.
+
+
+* Emphasizes "rare" words - "soft stop word removal"
+* Slightly non-standard smoothing (many +1s)
+
+---
+# TfidfVectorizer, TfidfTransformer
+
+.smaller[
+```python
+from sklearn.feature_extraction.text import TfidfVectorizer, TfidfTransformer
+```
+```python
+malory_tfidf = TfidfVectorizer().fit_transform(malory)
+malory_tfidf.toarray()
+```
+```
+array([[ 0.41 ,  0.   ,  0.576,  0.   ,  0.   ,  0.   ,  0.576,  0.41 ],
+       [ 0.318,  0.447,  0.   ,  0.447,  0.447,  0.447,  0.   ,  0.318]])
+```
+```python
+malory_tfidf = make_pipeline(CountVectorizer(),
+                             TfidfTransformer()).fit_transform(malory)
+malory_tfidf.toarray()
+```
+```
+array([[ 0.41 ,  0.   ,  0.576,  0.   ,  0.   ,  0.   ,  0.576,  0.41 ],
+       [ 0.318,  0.447,  0.   ,  0.447,  0.447,  0.447,  0.   ,  0.318]])
+```
+
+]
+???
+In scikit-learn, there are two ways to do this. You can
+either use the TF-IDF vectorizer which you can use directly
+on the text and it will build the vocabulary and then do the
+rescaling. Or you can use to count vectorizer,
+TFIDFTransformer, which will work on the sparse matrix
+created by the count vectorizer and then just transform it
+using rescaling.
+
+This is an alternative to using stop words or putting more
+emphasis on rare words.
+
+
+Q: Explain the part about the L2 norm.
+
+For the L1 norm, it might be easier to visualize. Dividing
+by L1 norm would mean just dividing by word count and so
+that would mean that basically, if you have a very long
+review, and it says bad 3 times, but it says good 20 times,
+then you only care about the relative frequency. And if it's
+a very short review that says good, 0 times, and bad also 3
+times, then it's probably a bad review. So you want to
+really scale these so that the relative frequency of the
+word only matters and not the total length document. That's
+sort of what the normalization does.
+
+And so the common thing to do is L2 normalization, which
+divides by Euclidean norm.
+
+
 
 ---
 # N-grams: Beyond single words
@@ -1280,132 +1406,6 @@ in the ‘not’ and the ‘well’ so that the important things can
 still be expressed.
 ---
 
-# Tf-idf rescaling
-
-$$ \text{tf-idf}(t,d) = \text{tf}(t,d)\cdot \text{idf}(t)$$
-
-$$ \text{idf}(t) = \log\frac{1+n_d}{1+\text{df}(d,t)} + 1$$
-
-$n_d$ = total number of documents <br/>
-$df(d,t)$ = number of documents containing term $t$
-
---
-
-* In sklearn: by default also L2 normalisation!
-
-???
-Next thing we can do is actually try to rescale our words
-with something called Tf-idf which stands for Term Frequency
-Inverse Document Frequency.
-
-This is sort of an alternative to using soft stop words in a
-sentence. The idea here is to down-weight things that are
-very common.
-
-It’s the logarithm of 1 over the number of documents
-containing the term.
-
-So if something happens to appear in most of the documents,
-the inverse document frequency will give it a very low
-weight. This is something that's very commonly used in
-information retrieval.
-
-Information retrieval basically means you're trying to find
-relevant documents. If you can think of how a search engine
-works, if you want to match a bag of words representation of
-two different query strings, you might not care so much
-about matching the ‘a’ and ‘the’, but you care a lot about
-matching the parts that are rare and that are very specific
-to a particular search term. That is the motivation for
-this.
-
-But people find it also sometimes helps in a machine
-learning context.
-
-You can’t really know in advance whether this helps for the
-particular dataset or not, but basically you should keep in
-mind, this emphasizes rare words and does a soft removal of
-very common words. This also means the sort of stop words
-here are corpus specific so here it will learn to
-down-weight ‘movie’ and ‘film’ because they're very common.
-
-The implementation of this in scikit-learn is a little bit
-non-standard but I don't think it makes a big difference.
-
-You should also keep in mind is that if you use the
-implementation of TF-IDF in scikit-learn by default, it will
-also do L2 normalization. L2 normalization means you divide
-each row by its length. That means you normalize the weight
-the length of the document. You only want to count how often
-the word appears relative to how long the document is.
-Basically, if you make a document that basically repeats
-each word twice, it should still have the same
-representation. By default, that's turned on for TF-IDF. But
-it's not turned on for the bag of words.
-
-
-* Emplasizes "rare" words - "soft stop word removal"
-* Slightly non-standard smoothing (many +1s)
-
-
----
-# TfidfVectorizer, TfidfTransformer
-
-.smaller[
-```python
-from sklearn.feature_extraction.text import TfidfVectorizer, TfidfTransformer
-```
-```python
-malory_tfidf = TfidfVectorizer().fit_transform(malory)
-malory_tfidf.toarray()
-```
-```
-array([[ 0.41 ,  0.   ,  0.576,  0.   ,  0.   ,  0.   ,  0.576,  0.41 ],
-       [ 0.318,  0.447,  0.   ,  0.447,  0.447,  0.447,  0.   ,  0.318]])
-```
-```python
-malory_tfidf = make_pipeline(CountVectorizer(),
-                             TfidfTransformer()).fit_transform(malory)
-malory_tfidf.toarray()
-```
-```
-array([[ 0.41 ,  0.   ,  0.576,  0.   ,  0.   ,  0.   ,  0.576,  0.41 ],
-       [ 0.318,  0.447,  0.   ,  0.447,  0.447,  0.447,  0.   ,  0.318]])
-```
-
-]
-???
-In scikit-learn, there are two ways to do this. You can
-either use the TF-IDF vectorizer which you can use directly
-on the text and it will build the vocabulary and then do the
-rescaling. Or you can use to count vectorizer,
-TFIDFTransformer, which will work on the sparse matrix
-created by the count vectorizer and then just transform it
-using rescaling.
-
-This is an alternative to using stop words or putting more
-emphasis on rare words.
-
-
-Q: Explain the part about the L2 norm.
-
-For the L1 norm, it might be easier to visualize. Dividing
-by L1 norm would mean just dividing by word count and so
-that would mean that basically, if you have a very long
-review, and it says bad 3 times, but it says good 20 times,
-then you only care about the relative frequency. And if it's
-a very short review that says good, 0 times, and bad also 3
-times, then it's probably a bad review. So you want to
-really scale these so that the relative frequency of the
-word only matters and not the total length document. That's
-sort of what the normalization does.
-
-And so the common thing to do is L2 normalization, which
-divides by Euclidean norm.
-
-
-
----
 class: middle
 
 # Character n-grams
@@ -1598,7 +1598,7 @@ the bag of words.
 ---
 class: middle
 .center[
-![:scale 100%](images/imdb_char_ngrams.png.png)
+![:scale 100%](images/imdb_char_ngrams.png)
 ]
 ???
 I can also look at the features that are important. The way
@@ -1753,11 +1753,12 @@ results.
 Here, I used pivot tables and Pandas to look into the effect
 of the different parameters.
 ---
+class: spacious
 # Other features
 - Length of text
 - Number of out-of-vocabularly words
 - Presence / frequency of ALL CAPS
-- Punctuation...!? (somewhat captures by char ngrams)
+- Punctuation...!? (somewhat capturedd by char ngrams)
 - Sentiment words (good vs bad)
 - Whatever makes sense for the task!
 ???
@@ -1801,7 +1802,7 @@ building a vocabulary.
 ---
 
 .center[
-![:scale 90%](images/large_scale_text_vec_1.png)
+![:scale 90%](images/bag_of_words.png)
 ]
 ???
 This is what we did before. We tokenize the string, split
