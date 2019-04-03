@@ -41,9 +41,12 @@ font-size:30px;
 }
 .remark-slide-container .compact p, .remark-slide-container .compact li, .remark-slide-container .compact pre{
 line-height: 1.1;
-display: block;
 margin: 0px 0;
 }
+.remark-slide-container .compact .MathJax_Display{
+    line-height: 1.1;
+    margin: 1px 0;
+    }
 .remark-slide-container .compact h1{
 margin-bottom: 3px;
 }
