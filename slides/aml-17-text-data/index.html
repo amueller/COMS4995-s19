@@ -26,10 +26,8 @@ Andreas C. Müller
 ???
 Today, we'll talk about working with text data.
 
-FIXME make all bar-plots uniform style!
-FIXME explain L2 normalization and intuition.
+FIXME explain L2 normalization and intuition?
 FIXME is logisticregressionCV efficient here? sag?
-FIXME Remove "format" in print
 FIXME bad resolution in some plots
 ---
 
@@ -170,10 +168,9 @@ that I want you to be aware of.
 ---
 
 # Bag of Words
-
-<br>
 .center[
-![:scale 70%](images/bag_of_words.png)
+<br>
+![:scale 85%](images/bag_of_words.png)
 ]
 ???
 The most common approach that people use for this is bag of
@@ -393,9 +390,9 @@ from sklearn.datasets import load_files
 reviews_train = load_files("../data/aclImdb/train/")
 
 text_trainval, y_trainval = reviews_train.data, reviews_train.target
-print("type of text_train: {}".format(type(text_trainval)))
-print("length of text_train: {}".format(len(text_trainval)))
-print("class balance: {}".format(np.bincount(y_trainval)))
+print("type of text_train: ", type(text_trainval))
+print("length of text_train: ", len(text_trainval))
+print("class balance: ", np.bincount(y_trainval))
 
 ```
 
@@ -428,7 +425,8 @@ documents, and this is a balanced dataset meaning there are
 
 # Data loading
 ```python
-print("text_train[1]:\n{}".format(text_trainval[1].decode()))
+print("text_train[1]:")
+print(text_trainval[1].decode())
 ```
 .smaller[
 ```
@@ -460,15 +458,13 @@ they would be two different words. But also, you need to
 determine if it’s a Unicode character or not. In Python 3,
 by default, everything is a unique code.
 
-
-all the code is in the github repo.
 ---
 # Vectorization
 
 ```python
 text_train_val = [doc.replace(b"<br />", b" ")
                   for doc in text_train_val]
-text_train, text_val, y_train_, y_val = train_test_split(
+text_train, text_val, y_train, y_val = train_test_split(
     text_trainval, y_trainval, stratify=y_trainval, random_state=0)
 vect = CountVectorizer()
 X_train = vect.fit_transform(text_train)
@@ -511,30 +507,35 @@ string to the string.
 ```python
 feature_names = vect.get_feature_names()
 print(feature_names[:10])
-print(feature_names[20000:20020])
-print(feature_names[::2000])
 ```
-
---
-
 .smaller[
 ```
 ['00', '000', '0000000000001', '00001', '00015', '000s', '001', '003830', '006', '007']
 ```
 ]
---
+
+```python
+print(feature_names[20000:20020])
+```
 .smaller[
 ```
 ['eschews', 'escort', 'escorted', 'escorting', 'escorts', 'escpecially', 'escreve',
  'escrow', 'esculator', 'ese', 'eser', 'esha', 'eshaan', 'eshley', 'esk', 'eskimo',
  'eskimos', 'esmerelda', 'esmond', 'esophagus']
+ ```
+]
+
+```python
+print(feature_names[::2000])
+```
+.smaller[
+```
 ['00', 'ahoy', 'aspects', 'belting', 'bridegroom', 'cements', 'commas', 'crowds',
  'detlef', 'druids', 'eschews', 'finishing', 'gathering',  'gunrunner', 'homesickness',
  'inhumanities', 'kabbalism', 'leech', 'makes', 'miki', 'nas', 'organ', 'pesci',
  'principally', 'rebours', 'robotnik', 'sculptural', 'skinkons', 'stardom', 'syncer',
  'tools', 'unflagging', 'waaaay', 'yanks']
 ```
-
 ]
 ???
 This is the first thing I do, it’s helpful to see if
@@ -625,8 +626,8 @@ class: spacious
 - Scikit-learn (very simplistic):
   * `re.findall(r"\b\w\w+\b")`
   * Includes numbers
-  * doesn't include single-letter words
-  * doesn't include `-` or `'`
+  * discards single-letter words
+  * `-` or `'` break up words
 ???
 Scikit-learn is not an LLP library. Some very good Python
 LLP libraries are NLTK and spacy. They have a lot more
@@ -1126,7 +1127,7 @@ divides by Euclidean norm.
 --
 
 .center[
-![:scale 70%](images/single_words.png)
+![:scale 80%](images/single_words.png)
 ]
 ???
 Because there's a big difference between ‘didn't love’ and
@@ -1158,8 +1159,8 @@ little bit of context around each of the words.
 .tiny-code[
 ```python
 cv = CountVectorizer(ngram_range=(1, 1)).fit(malory)
-print("Vocabulary size: {}".format(len(cv.vocabulary_)))
-print("Vocabulary:\n{}".format(cv.get_feature_names()))
+print("Vocabulary size: ", len(cv.vocabulary_))
+print("Vocabulary:\n", cv.get_feature_names())
 ```
 ```
 Vocabulary size: 8
@@ -1168,8 +1169,8 @@ Vocabulary:
 ```
 ```python
 cv = CountVectorizer(ngram_range=(2, 2)).fit(malory)
-print("Vocabulary size: {}".format(len(cv.vocabulary_)))
-print("Vocabulary:\n{}".format(cv.get_feature_names()))
+print("Vocabulary size: ", len(cv.vocabulary_))
+print("Vocabulary:\n", cv.get_feature_names())
 ```
 ```
 Vocabulary size: 8
@@ -1179,8 +1180,8 @@ Vocabulary:
 
 ```python
 cv = CountVectorizer(ngram_range=(1, 2)).fit(malory)
-print("Vocabulary size: {}".format(len(cv.vocabulary_)))
-print("Vocabulary:\n{}".format(cv.get_feature_names()))
+print("Vocabulary size: ", len(cv.vocabulary_))
+print("Vocabulary:\n", cv.get_feature_names())
 ```
 ```
 Vocabulary size: 16
@@ -1230,7 +1231,7 @@ Vocabulary Sizes
 ```
 ```python
 cv = CountVectorizer(ngram_range=(1, 4)).fit(text_train)
-print("Vocabulary size 1-4gram: {}".format(len(cv.vocabulary_)))
+print("Vocabulary size 1-4gram: ", len(cv.vocabulary_))
 ```
 ```
 Vocabulary size 1-4gram (min_df=1): 7815528
@@ -1271,11 +1272,11 @@ generalization.
 ```python
 cv = CountVectorizer(ngram_range=(1, 2), min_df=4)
 cv.fit(text_train)
-print("(1, 2), min_df=4: {}".format(len(cv.vocabulary_)))
+print("(1, 2), min_df=4: ", len(cv.vocabulary_))
 cv = CountVectorizer(ngram_range=(1, 2), min_df=4,
                      stop_words="english")
 cv.fit(text_train)
-print("(1, 2), stopwords, min_df=4: {}".format(len(cv.vocabulary_)))
+print("(1, 2), stopwords, min_df=4: ", len(cv.vocabulary_))
 ```
 ```
 (1, 2), min_df=4: 155354
@@ -1509,8 +1510,8 @@ their first name.
 .tiny-code[
 ```python
 cv = CountVectorizer(ngram_range=(2, 3), analyzer="char").fit(malory)
-print("Vocabulary size: {}".format(len(cv.vocabulary_)))
-print("Vocabulary:\n{}".format(cv.get_feature_names()))
+print("Vocabulary size: ", len(cv.vocabulary_))
+print("Vocabulary:\n", cv.get_feature_names())
 ```
 ```
 Vocabulary size: 73
@@ -1527,8 +1528,8 @@ Vocabulary:
 .tiny-code[
 ```python
 cv = CountVectorizer(ngram_range=(2, 3), analyzer="char_wb").fit(malory)
-print("Vocabulary size: {}".format(len(cv.vocabulary_)))
-print("Vocabulary:\n{}".format(cv.get_feature_names()))
+print("Vocabulary size:", len(cv.vocabulary_))
+print("Vocabulary:\n", cv.get_feature_names())
 ```
 ```
 Vocabulary size: 74
