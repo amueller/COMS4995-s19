@@ -19,7 +19,7 @@ class: center, middle
 
 # LSA & Topic Models
 
-04/09/18
+04/08/19
 
 Andreas C. Müller
 
@@ -27,17 +27,16 @@ Andreas C. Müller
 Today, I'm going to talk about LSA and topic models, LSA is
 Latent Semantic Analysis. The overarching theme is
 extracting information from text corpuses in an unsupervised
-way. 
+way.
 
-FIXME classification with LDA?
 FIXME How to apply LDA (and NMF?) to test-data
 FIXME do MCMC LDA (code)?
-FIXME theory before practice?
+FIXME explain MCMC?
 FIXME classification with logisticregressioncv  instead of fixed C?
 FIXME preprocessing for LDA: mention no tfidf.
-FIXME Edward is called bayes flow now?
 FIXME Classification with NMF.
-FIXME dirichlet distribution better explanation
+FIXME Classification with LDA vs LSA?
+FIXME add non-negative constraint on NMF to objective slide?
 ---
 
 # Beyond Bags of Words
@@ -48,7 +47,7 @@ Limitations of bag of words:
 - Very distributed representation of documents
 ???
 One possible reason to do this is that you want to get a
-representation of your text data that's more semantic. 
+representation of your text data that's more semantic.
 
 In bag of words, the semantics of the words are not really
 captured at all. Synonymous words are not represented, if
@@ -57,13 +56,13 @@ feature and will have nothing to do with another feature.
 The representation is very distributed, you have hundreds of
 thousands of features and it's kind of hard to reason about
 such a long vector sometimes, in particular, if you have
-longer documents. 
+longer documents.
 
 Today, we're going to talk about classical unsupervised
 methods. And next time, we're going to talk about word
 vectors and word embedding, which also tries to solve the
 same problem of getting more semantically meaningful
-representations for text data. 
+representations for text data.
 
 ---
 
@@ -94,10 +93,10 @@ This is very easy to compute. You can do the SVD very
 easily. And there's a unique solution that you can compute.
 And then you have something that's like a dense
 representation of the data and hopefully, it's semantic in
-some way. 
+some way.
 
 As with all unsupervised methods, this can be hit or miss a
-little bit. 
+little bit.
 
 ---
 
@@ -130,7 +129,7 @@ that doesn't subtract the mean. We didn't call it LSA,
 because if you do this in the context of text processing,
 you can do this whenever you have a sparse dataset, you
 would want to do something like PCA but it's sparse, then
-you can use the truncated SVD. 
+you can use the truncated SVD.
 
 Here, I'm just using the training set, 25,000 documents, I
 removed the stop words, and I set min_df=4.
@@ -141,7 +140,7 @@ have a more reasonably sized vocabulary. And then I did a
 truncated SVD and extract 100 components. And so the
 components I extracted, are 100 X number of features. So I
 have 100 vectors, where each feature corresponds to one of
-the words in the vocabulary. 
+the words in the vocabulary.
 
 
 ---
@@ -160,7 +159,7 @@ ratio.
 
 Here's is a semi-log scale. And you can see that the first
 one or two explain a lot and then rapidly decreases. A lot
-is captured in the first 10, and then it goes down. 
+is captured in the first 10, and then it goes down.
 
 But still at 100, there's still a lot of variances left, so
 it'll just probably go down logarithmically as it goes on.
@@ -177,19 +176,19 @@ singular values.
 ???
 Here are the 6 first eigenvectors. I'm showing only the
 entries that have the largest magnitude, either positive or
-negative. 
+negative.
 
 I'm showing the 10 largest magnitudes entries of each of the
 eigenvectors. So again, keep in mind that the sign doesn't
 really mean anything, since its eigenvalues, but sort of the
-relative sign means something. 
+relative sign means something.
 
 So the first one is sort of what you would usually get.
 They're all positive because all entries in the data matrix
 are positive since its bag of words. This is sort of, in a
 sense, just translating into the middle of the data,
 somewhat similar to trying to model the mean. ‘Movie’ and
-‘film’ are obviously the most common words. 
+‘film’ are obviously the most common words.
 
 The second eigenvector is whether someone uses the word
 ‘movies’ or ‘films’. You can see that either someone uses
@@ -218,7 +217,7 @@ X_lsa_scaled = lsa_scaled.fit_transform(X_nscaled)
 ???
 There are 2 things that you can do, you can normalize for
 the length of the document, or you can scale so that all the
-features are on the same scale. 
+features are on the same scale.
 
 MaxAbsScaler performs the same way as a standard scaler,
 only it doesn't subtract the mean. So it just scales
@@ -227,7 +226,7 @@ in this sense, I'm basically scaling down film and movie to
 have the same importance across everything, then all the
 other words. I can also normalize and get rid of the length
 of the document. But I don't think it actually had an effect
-here. And then I can compute the same thing. 
+here. And then I can compute the same thing.
 
 
 - "Movie" and "Film" were dominating first couple of components. Try to get rid of that effect.
@@ -252,7 +251,7 @@ comes out from some of the other methods.
 
 And so I looked at a couple of these components and it
 turned out that the component 1 and the component 3 are
-actually related to the good and bad review. 
+actually related to the good and bad review.
 
 
 
@@ -290,26 +289,26 @@ lr_lsa.score(X_lsa_scaled[:, :10], y_train)
 ???
 This scatter plot is positive reviews versus negative
 reviews. Some of the components actually capture the
-semantic attributes we are interested in. 
+semantic attributes we are interested in.
 
 It was completely unsupervised, we didn't put that in and
 this is just a bunch of movie reviews. But these two
 components, actually, seem to be pretty related to the
-sentiment of the comment writer. 
+sentiment of the comment writer.
 
 I also run a logistic regression on 10 components and it was
-at 83% accuracy. 
+at 83% accuracy.
 
 I thought that was actually pretty good. It was 88% using
 the bag of word representation. So you got 88% if you used
 30,000 dimensions, and you get 83% if you used 10
 dimensions. So it is completely unsupervised compression of
 the data. So it's not as good as the original data set but
-if you take 100 components you recover the same accuracy. 
+if you take 100 components you recover the same accuracy.
 
 So these components definitely capture something that’s
 semantic, and it allows us to classify even if we use lower
-dimensional representation. 
+dimensional representation.
 
 
 - Not competitive but reasonable with just 10 components
@@ -328,19 +327,19 @@ The idea of topic models is basically that each document is
 created as a mixture of topics. Each topic is a distribution
 over words. And we want to learn the topics that are
 relevant to our corpus and which of these topics contribute
-to each individual document. 
+to each individual document.
 
 Topics could be the genre of movie, or the sentiment, or the
 comment writer sophistication, or whether English is their
 native language or so on. And so each of them is would be
 topics. So the topic is not necessarily sorted of semantic
 topic, but something that influences the choice of
-vocabulary for a given document. 
+vocabulary for a given document.
 
 For each document, you assume that several of these topics
 are active and others are not and they have very varying
 importance. So movies could be mixtures of different genres
-and then they could have words from multiple genres. 
+and then they could have words from multiple genres.
 
 ---
 class: spacious
@@ -354,7 +353,7 @@ class: spacious
 ???
 This is an unsupervised task, so it’s probably ill-defined
 and so results are open to interpretation, and also depend
-on how exactly you formulate the task. 
+on how exactly you formulate the task.
 ---
 
 # NMF for topic models
@@ -373,17 +372,20 @@ represents the weights.
 
 ---
 # NMF objectives
+# NMF Loss and algorithm
 
-`$$\large d_{Fro} = \frac{1}{2} ||X - HW||_{\mathrm{Fro}}^2 = \frac{1}{2} \sum_{i,j} (X_{ij} - (HW)_{ij})^2$$`
+Frobenius loss / squared loss ($ Y = H W$):
 
-`$$\large d_{KL}(X, HW) = \sum_{i,j} \left(X_{ij} \log\left(\frac{X_{ij}}{(HW)_{ij}}\right) - X_{ij} + (HW)_{ij}\right)$$`
+`$$\large l_{\text{frob}}(X, Y) = ||X - Y||_{\mathrm{Fro}}^2 = \sum_{i,j} (X_{ij} - Y_{ij})^ 2$$`
+
+Kulback-Leibler (KL) divergence:
+`$$\large l_{\text{KL}}(X, Y) = \sum_{i,j} X_{ij} \log\left(\frac{X_{ij}}{Y_{ij}}\right) - X_{ij}  + Y_{ij}$$`
 
 ???
-There are 2 objectives that NMF tries to minimize. One of
-the listed 2.
+There are 2 possible objectives NMF can minimize, you pick one of the two.
 
 You want X to be close to HxW, that’s the whole goal. There
-are 2 common ways in which people measure this. 
+are 2 common ways in which people measure this.
 
 The first one at the top is called x norm, it's just least
 squares basically. So you look at the least squares
@@ -396,16 +398,13 @@ which is basically, a version of the KDE, which is usually a
 measure that finds similarities between distributions. But
 here, it's applied basically to element-wise entries of this
 matrix. The authors use that because then they could drive
-nice ways to minimize this. 
+nice ways to minimize this.
 
 Minimizing either of these is not convex but if you hold one
 of the two fixes, then minimizing the other one is convex.
 So you usually iterate doing either gradient descent or
 coordinate descent on H and then doing it on W, then you're
-iterate between the two. 
-
-
-FIXME add non-negative constraints
+iterate between the two.
 ---
 
 # NMF for topic models
@@ -449,9 +448,9 @@ nmf_scale.fit(X_scaled)
 Sorted by "most active" components
 ???
 NMF, as I said, is an iterative optimization so this runs
-way longer than the LSA. 
+way longer than the LSA.
 
-Q: What’s the variable ’tol’ do? 
+Q: What’s the variable ’tol’ do?
 A: It’s stopping tolerance.
 
 These are subsets of the columns of W. I’m visualizing the
@@ -463,18 +462,18 @@ weight of 7 in this first topic.
 So obviously, they have entries for all words, but I didn't
 put in a penalty so that they're sparse. So they'll have
 non-zero entries for all words, but sort of the interesting
-ones are the big ones. 
+ones are the big ones.
 
 The way that I picked these 9 components here out of the 100
 components was the ones that have the highest activation in
 X. I, then realize it might not be the most interesting
 thing. Might be more interesting to look at the ones that
-are less peaked. 
+are less peaked.
 
 If you look at more components, you'll find other
-genre-specific components. 
+genre-specific components.
 
-One of the things you can do with this is you can look at
+One of the things you can do with this is you can find
 genre specific reviews by looking at the component that
 corresponds to it.
 
@@ -486,7 +485,7 @@ class: center
 ![:scale 70%](images/nmf_topics_no_scaling.png)
 
 ???
-I did the same thing without scaling. 
+I did the same thing without scaling.
 ---
 class: center
 
@@ -501,7 +500,7 @@ components, but it's very hard to do. So I picked out just a
 couple.
 
 This was with a 100 components. That said, if you use fewer
-components, you get something that is much more general. 
+components, you get something that is much more general.
 
 ---
 
@@ -514,7 +513,7 @@ components, you get something that is much more general.
 
 ???
 This is using 9 components. The first one, probably kind of
-models the mean and points in the center. 
+models the mean and points in the center.
 
 Q: is the task here still to classify between good and bad
 reviews?
@@ -523,7 +522,7 @@ The application of that I had in the back of my head is I'm
 interested in the reviews, good or bad, but this is all
 completely unsupervised. So I never put in anything about
 these two classes even existing. This is just trying to help
-me understand corpus overall. 
+me understand corpus overall.
 
 The main things that I found so far are that it finds things
 that are genre specific, some of them are very specific,
@@ -543,24 +542,25 @@ Less number of components will give you more generic things.
 If you use more number of components, there might be generic
 components. If you want to force them to be generic, you can
 use fewer components. Using fewer components definitely
-makes it easy to look at them. 
+makes it easy to look at them.
 
 A friend of mine who is an expert on topic models told me to
 always use thousands of components, and then go through all
-of them and see if something's interesting. 
+of them and see if something's interesting.
 
 ---
 class: center, middle
 
 #Latent Dirichlet Allocation
 # (the other LDA)
+(Not Linear Discriminant Analysis)
 ???
 Next thing I want to talk about is LDA. We are going from
-simple models to more complex model. 
+simple models to more complex model.
 
 What people think about if they hear topic model is usually
 LDA. Dave Blei in the sets department invented LDA. This is
-like an incredibly popular model right now.  
+like an incredibly popular model right now.
 
 ---
 
@@ -579,13 +579,13 @@ down a generative process of how each document is created.
 This is similar to mixture models where basically, for each
 point you want to create, you picked one of the Gaussians
 and then you sample from it. That’s how we create points in
-this distribution. 
+this distribution.
 
 Similarly, in the LDA model, let's say, you're given some
 topics and these topics have, like word importance. Given
 the topics, the way that you generate a document would be,
 first, you draw which of these topics are important, and how
-important are they? 
+important are they?
 
 Each document is a mixture of topics and then for each word,
 you decide which of these topics to you want to draw a word
@@ -596,7 +596,7 @@ This is clearly not really how text is generated but it's
 sort of reasonable proxy. This is based on the bag of word
 model so it only looks at word counts. It doesn't do that
 context at all. You could do it on bigrams, but that's not
-what people usually do. 
+what people usually do.
 
 The idea is how likely is it that a word appears in this
 document and basically, for each word individually, you pick
@@ -643,7 +643,7 @@ because I don’t find it very helpful.
 So this is a depiction of the graphical model where
 basically, each of these circles is a variable. And these
 red things are called plates and they mean a variable is
-duplicated. 
+duplicated.
 
 So here, there are 2 parameters you specified beforehand,
 which are the hyperparameters, Alpha and Beta.
@@ -654,7 +654,7 @@ words, like how important is each word in each topic. Then D
 goes over documents. So for each document, I have a
 distribution over the topics that states that a particular
 document is so much about this topic, and so much about
-another topic. 
+another topic.
 
 So for each document, I have a vector that tells me the
 topic proportions. Finally, inside the document, for each
@@ -668,18 +668,18 @@ inner plate.
 But the only thing that I actually observe is basically the
 W, which is the word count. So I observed which words
 appeared in these documents. I also set alpha and beta as
-some prior parameters usually. 
+some prior parameters usually.
 
 What I want to find out is the topic distribution over words
 and the documents specific distributions over topics. So I
 want to know what the topics are and what topics are a given
 document about.
 
-This is very similar to the thing that we had in NMF. 
+This is very similar to the thing that we had in NMF.
 
-The flight notation graph can be read as 
+The flight notation graph can be read as
 A) The generative process or
-B) Dependency structure in the probability distribution. 
+B) Dependency structure in the probability distribution.
 
 So basically, the distribution that you can easily think of
 is like, what should the work distribution be? And so the
@@ -690,7 +690,7 @@ in this topic and I pick from that distribution.
 So this is a categorical distribution where you say, under
 this distribution, each word is so and so likely. So this
 multinomial distribution, this is how I pick a word given a
-topic. 
+topic.
 
 But the distribution in this is Dirichlet data
 distributions.
@@ -711,8 +711,133 @@ distributions is called Dirichlet.
 - "mixture weights" for each document:
 	* How important is each topic for this document
     * Each document contains multiple topics!
-    
 
+---
+
+
+## Multinomial
+.smaller[It models the probability of counts for rolling a k-sided die n times.]
+.quote_author[wikipedia]
+
+
+$$ P(x_1, \dots, x_k |n, p_1, \dots, p_k) = \frac{n!}{x_1! \dots x_k!} p_1^{x_1} \dots p_k^{x^k}$$
+
+--
+
+## Dirichlet
+`$$ P(x_1, \dots, x_k | \alpha_1, \dots \alpha_k)=\frac{1}{B(\alpha)} x_1^{\alpha_1 - 1} \dots x_k^{\alpha_k - 1} $$`
+
+
+
+
+???
+- if $p(x|\theta)$ is multimnomial (discrete distribution), <br>then $p(\theta) = \text{Dirichlet}(...)$ is a conjugate prior.
+
+This is how it looks in formula. For multinomial, let’s say
+I draw n words from a multinomial. There are k possible
+words, I draw n, so I draw the same word multiple times, and
+the probability of drawing a particular word is P1 to Pk. So
+then the probability of a specific draw is P1 to X1, and so
+on from Pk to the Xk and then normalized.
+
+Dirichlet is basically the same, only the other way around.
+You can see that here, the Ps in multicultural distribution
+become the Xs in Dirichlet distribution. Dirichlet looks
+exactly the same. Only now, you have a distribution over
+these base probabilities.
+
+That makes it very easy to include the data into the prior
+information and compute the posterior.
+---
+
+# Conjugate Prior
+
+- Prior is called "conjugate" of the posterior has the same form as prior
+$$ P(\theta | x) = \frac{p(x | \theta)p(\theta)}{\int_{}^{} p(x | \theta^\prime)p(\theta^\prime)d\theta^\prime} $$
+???
+The reason why we’re using generative prior is because of
+the conjugate prior of the multinomial distribution.  Let’s
+say we have a prior over our word topic distribution and
+then we observe some words belonging to some of the topics,
+we have some evidence that these words are drawn from these
+topics and then we want to update our word topic prior,
+given the information that we saw.
+
+p(x|θ) would be our multinomial distribution, meaning given
+the topic, what are the multinomial distribution. And
+basically, we want p(θ|x) to be easy to compute. And it's
+easiest to compute if we use the conjugate prior here,
+because then posterior will have the same distribution as
+the prior.
+
+---
+
+# Dirichlet Distributions
+
+.left-column[
+PDF:
+$\qquad \frac{1}{B(\alpha)} \Pi_{i=1}^{K}{x_i^{\alpha_i - 1}}$
+]
+
+.right-column[
+Mean:
+$\qquad E[X_i] = \frac{\alpha_i}{\sum_k{\alpha_k}}$
+]
+
+.center[
+![:scale 60%](images/dirichlet_dist.png)
+]
+???
+Here are some examples in 3D. Dirichlet distribution is like
+a distribution over distributions. So a point drawn from
+Dirichlet distribution is a multinomial distribution.
+
+So here, let's say you have a multinomial with 3 variables,
+this lives inside the probability simplex in 3-dimensions.
+The dark blue sector is sort of the space all 3 numbers that
+sum up to one.
+
+And so now you can try put a prior on this. So we want to
+distribution over the simplex of all 3 numbers that add up
+to 1. And so what we're doing for LDA is usually, we make
+this sort of symmetric in all directions because we don't
+really have a preference for like, saying one topic is more
+important than the other topic, that's not our prior
+knowledge, because they are arbitrary.
+
+It’s pretty likely that all the topics are equally
+important, that means I have put math only in the very
+center or I can say, I didn't really know how important each
+of the topics is, and then you can get points at the
+corners, which means that each document can be about only a
+few topics. If you use this, then each document will be
+about many topics.
+
+And similarly, these priors use both on the document topic
+distribution, and on the topic word distribution. So
+similarly, for each topic, you can have each topic being
+very broad.
+
+So the third one means broad, you assign probability mass to
+most words.  While the first one means you can assign
+probability mass only to a couple of the words.
+
+---
+
+.center[
+![:scale 70%](images/lda_params.png)
+]
+
+.smallest[
+- For each topic $k$, draw $\phi_k \sim \text{Dirichlet}(\beta), k = 1 ... K$
+- For each document $d$ draw $\theta_d \sim \text{Dirichlet}(\alpha), d = 1 ... D$
+- For each word $i$ in document $d$:
+	* Draw a topic index $z_{di} \sim \text{Multinomial}(\theta_d)$
+	* Draw the observed word $w_{ij} \sim \text{Multinomial}(\beta_z)$
+
+
+- (taken from Yang Ruan, Changsi An (http://salsahpc.indiana.edu/b649proj/proj3.html)
+]
 ---
 
 # Two Schools (of solvers)
@@ -767,20 +892,21 @@ Blei all the time.
 - “Small data” (<= 10k? Documents):
 	* Gibbs sampling (lda package, MALLET in Java)
 - “Medium data” (<= 1M? Documents):
-	* Variational Inference (scikit-learn future default)
+	* Variational Inference (scikit-learn default)
 - “Large Data” (>1M? Documents):
-	* Stochastic Variational Inference (scikit-learn current default)
+	* Stochastic Variational Inference
 	* SVI allows online learning (partial_fit)
 
 - Edward by Dustin Tran: http://edwardlib.org/
-	* Tensor-flow based framework for stochastic variational inference. 
+  * Tensor-flow based framework for stochastic variational inference.
+  * Now Tensorflow Probability: https://www.tensorflow.org/probability
 
 ???
 Pick a solver depending on the amount of the documents you
-have. 	
+have.
 
 Ida package (Python) and MALLET (Java) works well if you
-have very few documents. Otherwise, it gets too slow. 
+have very few documents. Otherwise, it gets too slow.
 
 Variational inference or batch variational inference, which
 will be the default in scikit-learn in the future. Both are
@@ -792,29 +918,26 @@ sort of an approximation to the approximation. It's
 something like doing stochastic gradient descent on the
 optimization variational inference.
 
-Partial_fit can be used on streaming data. 
+Partial_fit can be used on streaming data.
 
 If you’re more serious about this, look at the works of
 Dustin Tran. He created Edward, I think it's now
 incorporated into TensorFlow. It’s a library for doing
 variational inference in all kinds of different graphical
-models with GPU acceleration. 
+models with GPU acceleration.
 
 Talking about SGD, maybe it's good if have a lot of data,
 maybe it's worth doing an approximation that allows you to
 use all the data, if the other option is to do something
 that’s fairly exact, but you have to subsample your data a
 lot, then that might give you worse results than just doing
-something that's pretty bad. 
+something that's pretty bad.
 
 SVI is maybe not the greatest optimizer but it allows you to
 use large amounts of data, and so in the end to get a better
-result. 
+result.
 
 
-
-- Remember SGD Lecture (and Leon Bottou):
-	* More data beats better inference (often)
 Variational might be more sensitive to hyper parameters? Or give different results?
 ---
 
@@ -862,7 +985,7 @@ X_lda100 = lda100.fit_transform(X_train)
 ![:scale 60%](images/lda_plot_2.png)
 ]
 ???
-This showing 9 out of 100 documents. 
+This showing 9 out of 100 documents.
 ---
 .center[
 ![:scale 80%](images/lda_topics.png)
@@ -900,116 +1023,42 @@ versus bad reviews.
 I want to talk a little bit more about the specifics for
 LDA. There are 2 parameters that you need to tune. Both are
 Dirichlet priors over distribution, one over the topic
-distribution and one over the document topic distribution. 
+distribution and one over the document topic distribution.
 
 Large value use means that they're more dispersed. Small
 values mean they’re more concentrated.
 
 ---
-
-# Dirichlet Distributions
-
-.left-column[
-PDF: 
-$\qquad \frac{1}{B(\alpha)} \Pi_{i=1}^{K}{x_i^{\alpha_i - 1}}$
-]
-
-.right-column[
-Mean: 
-$\qquad E[X_i] = \frac{\alpha_i}{\sum_k{\alpha_k}}$
-]
-
-.center[
-![:scale 60%](images/dirichlet_dist.png)
-]
-???
-Here are some examples in 3D. Dirichlet distribution is like
-a distribution over distributions. So a point drawn from
-Dirichlet distribution is a multinomial distribution. 
-
-So here, let's say you have a multinomial with 3 variables,
-this lives inside the probability simplex in 3-dimensions.
-The dark blue sector is sort of the space all 3 numbers that
-sum up to one. 
-
-And so now you can try put a prior on this. So we want to
-distribution over the simplex of all 3 numbers that add up
-to 1. And so what we're doing for LDA is usually, we make
-this sort of symmetric in all directions because we don't
-really have a preference for like, saying one topic is more
-important than the other topic, that's not our prior
-knowledge, because they are arbitrary. 
-
-It’s pretty likely that all the topics are equally
-important, that means I have put math only in the very
-center or I can say, I didn't really know how important each
-of the topics is, and then you can get points at the
-corners, which means that each document can be about only a
-few topics. If you use this, then each document will be
-about many topics. 
-
-And similarly, these priors use both on the document topic
-distribution, and on the topic word distribution. So
-similarly, for each topic, you can have each topic being
-very broad. 
-
-So the third one means broad, you assign probability mass to
-most words.  While the first one means you can assign
-probability mass only to a couple of the words. 
-
+class: middle
+# Rough overview of MCMC and Gibbs sampling
 ---
+# Markov-Chain Monte-Carlo (MCMC)
 
-# Conjugate Prior
+**Goal**: Sample from complex distribution $p(X_1, ... X_n)$.
 
-- Prior is called "conjugate" of the posterior has the same form as prior
-$$ P(\theta | x) = \frac{p(x | \theta)p(\theta)}{\int_{}^{} p(x | \theta^\prime)p(\theta^\prime)d\theta^\prime} $$
-???
-The reason why we’re using generative prior is because of
-the conjugate prior of the multinomial distribution.  Let’s
-say we have a prior over our word topic distribution and
-then we observe some words belonging to some of the topics,
-we have some evidence that these words are drawn from these
-topics and then we want to update our word topic prior,
-given the information that we saw.
+**Monte Carlo algorithm**: "correct in expectation" / "correct on average"
 
-p(x|θ) would be our multinomial distribution, meaning given
-the topic, what are the multinomial distribution. And
-basically, we want p(θ|x) to be easy to compute. And it's
-easiest to compute if we use the conjugate prior here,
-because then posterior will have the same distribution as
-the prior. 
+**Markov Chain**: a sequence of probability distribution, each depending only on the previous state.
 
+**Markov Chain Monte Carlo**: a sequence of probability distributions so that on average you sample from the target distribution.
+
+(The stationary distribution of the Markof chain is the target distriution $p$)
 ---
+# Gibbs Sampling
 
-Multinomial
-$$ P(x_1, \dots, x_k |n, p_1, \dots, p_k) = \frac{n!}{x_1! \dots x_k!} p_1^{x_1} \dots p_k^{x^k}$$
+**Goal**: Sample from complex distribution $p(X_1, ... X_n)$.
 
+**Assumption**: Can sample from conditional `$p(X_i|X_{j\neq i})$`
+--
+<br \>
+Initialize<br \>
+Start from random initialization $(x^0_1, ..., x^0_n)$
 
-Dirichlet
-`$$ P(x_1, \dots, x_k | \alpha_1, \dots \alpha_k)=\frac{1}{B(\alpha)} x_1^{\alpha_1 - 1} \dots x_k^{\alpha_k - 1} $$`
+Construct $x^{k+1}$ from $x^k$:
 
+`$$ x^{k+1}_0 \propto  p(X_i| x^{k}_{1}, ..., x^{k}_{n})$$`
 
-
-
-???
-- if $p(x|\theta)$ is multimnomial (discrete distribution), <br>then $p(\theta) = \text{Dirichlet}(...)$ is a conjugate prior.
-
-This is how it looks in formula. For multinomial, let’s say
-I draw n words from a multinomial. There are k possible
-words, I draw n, so I draw the same word multiple times, and
-the probability of drawing a particular word is P1 to Pk. So
-then the probability of a specific draw is P1 to X1, and so
-on from Pk to the Xk and then normalized.
-
-Dirichlet is basically the same, only the other way around.
-You can see that here, the Ps in multicultural distribution
-become the Xs in Dirichlet distribution. Dirichlet looks
-exactly the same. Only now, you have a distribution over
-these base probabilities. 
-
-That makes it very easy to include the data into the prior
-information and compute the posterior.
-
+`$$ x^{k+1}_i \propto  p(X_i|x^{k+1}_0, ..., x^{k+1}_{i-1}, x^{k}_{i+1}, ..., x^{k}_{n})$$`
 
 
 ---
@@ -1024,21 +1073,21 @@ what Gibbs sampling does is, we observe the words W and we
 are given the priors, alpha, and beta, so now we want to
 figure out the word topic indicators and the documents
 specific distribution over topics and topic distribution
-over words. 
+over words.
 
 The way that Gibbs sampling works is it basically assigns
 these randomly and then draws the posterior distribution for
-each of these variables, given all the other variables. 
+each of these variables, given all the other variables.
 
 So if we know all the words and the topic assignments of the
 words, then we can look at what's the distribution of the
-topics over words likely to be. 
+topics over words likely to be.
 
 If we know alpha, we know all the topic distributions for
 each document then we can also compute the document specific
 distributions over topics. So basically, if you know all the
 information that's connected to give node, you can draw this
-given node, given all the other information. 
+given node, given all the other information.
 
 And then you just iterate these.
 
@@ -1058,12 +1107,13 @@ distribution over works, then all of the documents become
 independent, because everything that you need to know about
 one document is already covered in the documents specific
 distribution over topics and the other documents don't
-really matter. 
+really matter.
 
 If you do it this way, you can easily paralyze it over
 documents, for example.
 
----
+--
+Updates sampled from:
 
 `$p(z_{iv} = k \, \vert \, \mathbf{\theta}_i, \phi_k) \propto \exp(\log \theta_{ik} + \log \phi_{k, y_{iv}})$`
 
@@ -1082,7 +1132,7 @@ $\theta$ is document topic distribution, $\theta_{ik}$ is the probability of a w
 $y_{iv}$ is the actual word (word-index) of word v in document i.
 
 $\phi_{k, y}$ is the probability of a drawing word y from document k.
-$\phi_{k, y_{iv}}$ is the probability 
+$\phi_{k, y_{iv}}$ is the probability
 
 ---
 
