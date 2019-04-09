@@ -76,17 +76,17 @@ representations for text data.
 ???
 LSA is basically just the same as PCA. The idea is to reduce
 the dimensionality of the data to some semantically
-meaningful components. The thing is, we can't really do PCA
+meaningful components. The thing is, we can't easily do PCA
 here, because we can’t remove the mean. Remember, this is a
 sparse dataset and so the zero is sort of meaningful and if
 we shift the zero, like by trying to subtract the mean, we
 will get a density dataset that won't have many zeros
 anymore and so we won’t be able to even store it.
 
-So for sparse data sets like subtracting mean is not a good
-idea. So we can't really do a real PCA but we can still do a
-singular value decomposition of the data and then throw away
-the least significant singular values. This is exactly the
+There are ways to still compute PCA without explicitly creating
+a big dense matrix, but in the traditional LSA, we just
+ignore that and do a singular value decomposition of the data.
+This is exactly the
 same computation as PCA, only, we don't subtract the mean.
 
 This is very easy to compute. You can do the SVD very
@@ -211,7 +211,7 @@ scaler = MaxAbsScaler()
 X_scaled = scaler.fit_transform(X_train)
 
 lsa_scaled = TruncatedSVD(n_components=100)
-X_lsa_scaled = lsa_scaled.fit_transform(X_nscaled)
+X_lsa_scaled = lsa_scaled.fit_transform(X_scaled)
 ```
 
 ???
@@ -223,7 +223,7 @@ MaxAbsScaler performs the same way as a standard scaler,
 only it doesn't subtract the mean. So it just scales
 everything to have the same maximum absolute value. And so
 in this sense, I'm basically scaling down film and movie to
-have the same importance across everything, then all the
+have the same importance as the
 other words. I can also normalize and get rid of the length
 of the document. But I don't think it actually had an effect
 here. And then I can compute the same thing.
@@ -1042,7 +1042,7 @@ class: middle
 
 **Markov Chain Monte Carlo**: a sequence of probability distributions so that on average you sample from the target distribution.
 
-(The stationary distribution of the Markof chain is the target distriution $p$)
+(The stationary distribution of the Markov chain is the target distribution $p$)
 ---
 # Gibbs Sampling
 
