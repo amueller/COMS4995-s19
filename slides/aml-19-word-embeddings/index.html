@@ -37,7 +37,7 @@ FIXME for CBOW and skip-gram shared weights for context
 FIXME for CBOW, which do we keep?
 FIXME SGDClassifier screenshots
 FIXME so much time on gensim, maybe more time on spacy instead?
-
+FIXME steal from http://mccormickml.com/2016/04/19/word2vec-tutorial-the-skip-gram-model/ ?
 ---
 class: spacious
 
@@ -158,10 +158,16 @@ each word can appear in many different contexts. The goal is
 to learn which contexts are likely, and which are not.
 
 ---
-.center[
-![:scale 50%](images/cbow_skipgram_1.png)
+.left-column[
+![:scale 120%](images/skip_gram_net_arch.png)
+.smallest[http://mccormickml.com/2016/04/19/word2vec-tutorial-the-skip-gram-model/]
 ]
 
+--
+
+.right-column[
+![:scale 100%](images/cbow_skipgram_1.png)
+]
 ???
 Here’s the architecture that we will be using for this. It's
 kind of like neural network only, this is completely linear.
@@ -235,8 +241,8 @@ Efficient Estimation of Word Representations in Vector Space https://arxiv.org/p
 ]
 ???
 
-This is the skip-gram model, here you can see it on the left
-(FIXME?!) So we start with the one-hot-encoding of the word,
+This is the skip-gram model, here you can see it on the right.
+So we start with the one-hot-encoding of the word,
 and we have a matrix multiplication into a latent space. A
 matrix multiplication with a one-hot vector just means that
 each row in that embedding matrix represents one word. From
