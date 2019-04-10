@@ -35,6 +35,7 @@ FIXME: too short?
 FIXME: word embeddings with tensorflow?
 FIXME for CBOW and skip-gram shared weights for context
 FIXME for CBOW, which do we keep?
+FIXME 18, 19 SGDClassifier screenshots
 
 ---
 class: spacious
@@ -1120,7 +1121,7 @@ class: right
 # Decomposing Generalization Error
 
 .center[
-![:scale 100%](images/img_13.png)
+![:scale 100%](images/error_decomposition.png)
 ]
 
 Bottou et. al.
@@ -1151,7 +1152,7 @@ best model.
 class: center, middle
 
 .center[
-![:scale 100%](images/img_14.png)
+![:scale 100%](images/error_decomposition2.png)
 ]
 
 ???
@@ -1208,7 +1209,10 @@ is Stochastic Gradient Descent.
 ---
 # Reminder: Gradient Descent
 
-.right-column[![:scale 1-0%](images/img_15.png)]
+.right-column[
+.padding-top[
+![:scale 100%](images/gradient_descent.png)
+]]
 
 Want: $$\arg \min_w F(w)$$
 
@@ -1231,12 +1235,17 @@ global minimum. Basically, any optimization algorithm you
 can think of will always converge to the same solution, they
 only converge at different speeds.
 
+Severely stolen from
+https://hackernoon.com/dl03-gradient-descent-719aff91c7d6
+
+fixme!!
+
 ---
 
 # Reminder: Gradient Descent
 
 .center[
-![:scale 40%](images/img_16.png)
+![:scale 40%](images/gradient_branin.png)
 ]
 
 $$w^{(i+1)} \leftarrow w^{(i)} - \eta_i\frac{d}{dw}F(w^{(i)})$$
@@ -1250,7 +1259,7 @@ $$w^{(i+1)} \leftarrow w^{(i)} - \eta_i\frac{d}{dw}F(w^{(i)})$$
 # Pick a learning rate
 
 .center[
-![:scale 90%](images/img_17.png)
+![:scale 90%](images/branin_learning_rate.png)
 ]
 
 $$w^{(i+1)} \leftarrow w^{(i)} - \eta_i\frac{d}{dw}F(w^{(i)})$$
@@ -1395,9 +1404,9 @@ different choices for different loss functions.
 ---
 class: center, spacious
 
-![:scale 90%](images/img_18.png)
+![:scale 90%](images/sgd_partial_fit.png)
 
-![:scale 90%](images/img_19.png)
+![:scale 90%](images/sgd_partial_fit2.png)
 
 
 
