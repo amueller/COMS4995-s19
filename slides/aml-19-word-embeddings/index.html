@@ -28,6 +28,7 @@ today we'll talk about word embeddings
 word embeddings are the logical next step in doing text analysis after working
 with topic models on Monday.
 
+FIXME: all the bullet points?!
 FIXME: redo paragraph vector experiments
 FIXME: state of the art?
 FIXME: too short?
@@ -36,6 +37,7 @@ FIXME for CBOW and skip-gram shared weights for context
 FIXME for CBOW, which do we keep?
 
 ---
+class: spacious
 
 # Beyond Bags of Words
 
@@ -55,15 +57,15 @@ connection between them. and we also have a very distributed
 representation of documents, which might be hard to
 understand or hard to learn from.
 ---
-
+class: spacious
 # Last Time
 
 - Latent Semantic Analysis
 - Non-negative Matrix Factorization
 - Latent Dirichlet Allocation
-- All embed documents into a continuous, corpusspecific
+- All embed documents into a continuous, corpus specific
 space.
-- Today: Embed words in a “general” space.
+- Today: Embed words in a “general” space (mostly).
 
 ???
 
@@ -81,6 +83,7 @@ to learn an embedding that's generally useful, and not
 necessarily tied to a particular corpus.
 
 ---
+class: spacious
 # Idea
 
 - Unsupervised extraction of semantics using large
@@ -102,6 +105,8 @@ of each word, as in Bag of words, which basically just
 means each word is identified by some index.
 
 ---
+class: spacious
+
 # Skip-Gram models
 
 - Given a word, predict surrounding word
@@ -200,7 +205,7 @@ loss. But we’re only interested in is getting weights w.
 
 
 .smallest[
-<a href="http://papers.nips.cc/paper/5021-distributed-representations-of-words-and-phrases-and-their-compositionality.pdf">Mikolov et. al. - Distributed Representations of Words and Phrases and their Compositionality (2013)</a>]
+<a href="http://papers.nips.cc/paper/5021-distributed-representations-of-words-and-phrases-and-their-compositionality.pdf">Mikolov et. al. - Distributed Representations of Words and Phrases and their Compositionality (2013)</a>
 ]
 ???
 The problem is you sum over all the outputs. All the outputs
@@ -1093,6 +1098,325 @@ Comparison of CBOW, SGD, skip-gram and Glove on
 the semantic (ie. state→capital) and syntactic (ie
 singular→ plural) word analogy tasks
 
+---
+class: center, middle
+
+# Stochastic Gradient Descent
+
+( see http://leon.bottou.org/projects/sgd
+and http://leon.bottou.org/papers/bottou-bousquet-2008
+and http://scikit-learn.org/stable/modules/scaling_strategies.html )
+
+???
+The last thing I want to talk about today is Stochastic
+Gradient Descent. This is just another solver to solve
+linear models or neural networks. But it's good to
+understand a little bit more in detail because it comes up a
+lot in particular with very large data sets.
+
+---
+class: right
+
+# Decomposing Generalization Error
+
+.center[
+![:scale 100%](images/img_13.png)
+]
+
+Bottou et. al.
+
+???
+The idea here is that if you have a lot of data, maybe
+solving the problem exactly isn't as important as looking at
+all of the data. Let's say I want to find a good function
+that generalizes well over to test dataset and I have a
+budget of how many data points I can look at it and I want
+to approximate the best possible function on the training
+set with an accuracy of epsilon. What we want is a model of
+generalized as well, what we do in practice is we pick a
+family of functions, like the linear functions, we estimate
+the best function using the training set, we want one that's
+the best on the true distribution, but instead we're using
+the training set and then we need to have some numeric
+optimization procedure that optimizes it until the error is
+smaller than epsilon for whatever loss, the loss could be
+regularized or anything but still we need to minimize
+optimization problem to some precision and we can only use
+at most as much data points as their dataset. And we've only
+a particular budget of time that it can use. So these are
+sort of the restrictions we have. And we want to find the
+best model.
+
+---
+class: center, middle
+
+.center[
+![:scale 100%](images/img_14.png)
+]
+
+???
+So now let's look at what happens to these three errors in
+the time if we increase different parts. If we make the
+family of functions bigger, so let's say we use from linear
+function to neural networks or we go to a high dimensional
+space, the approximation error, that’s the error that we get
+by restricting ourselves to do class goes down because we
+have a richer class. The estimation error which means the
+error we get by using the training set, instead of having
+access to the true distribution gets larger because we have
+more flexibility in our model, so the distance between what
+the ideal will be on the true distribution and the training
+data set becomes bigger. And if we have a larger family of
+functions obviously it's going to take longer. If you have
+more data points, the estimation error will go down. So our
+optimization will be closer to what is the true
+distribution, but it will take more time. The final row
+represents the precision to which I want to optimize, the
+epsilon in which I want to stop optimizing the problem that
+I'm optimizing. The optimization error will go up, but the
+time will go down. It's faster if I optimize less strongly.
+
+
+---
+class: spacious
+# The Trade-off
+
+.center[
+![:scale 100%](images/img_math_1.png)
+]
+- If `$n_\text{max}$` is large, we are constraint by $T_\max$!
+- Use a worse algorithm but look at more data!
+
+
+???
+If the number of data points is really large, the thing that
+we really constraint is by the runtime.  If constrained by
+the runtime, can't we just subsample the data? Yes, you
+could. Then you would run faster. But the point that he's
+making is it's better to look at all of the data and so
+we're decreasing estimation error but we don't find a
+precise solution. So now we say it's more important to
+minimize the estimation error, which we can do by looking at
+a lot of data than actually optimizing it very precisely
+because the thing that we are optimizing is a training set
+error, which is not really the thing that we're interested
+in the first place. So we look at the algorithm that does
+worst in terms of optimization, but it's much faster. This
+is the algorithm that’s most commonly used and the algorithm
+is Stochastic Gradient Descent.
+
+---
+# Reminder: Gradient Descent
+
+.right-column[![:scale 1-0%](images/img_15.png)]
+
+Want: $$\arg \min_w F(w)$$
+
+Initialize $w_0$
+
+$$w^{(i+1)} \leftarrow w^{(i)} - \eta_i\frac{d}{dw}F(w^{(i)})$$
+
+Converges to local minimum
+
+???
+First, let's talk about Gradient Descent. So we have some
+function we want to minimize here the function is Lasso
+training data set plus the regularizer. F is the objective
+of the model and I want to find the best parameter setting
+w. The way gradient descent works are that we initialize it
+with some W and then we compute a gradient then we walk down
+the gradient by a small step. This converges to a local
+minimum in the function. For linear models, there's only one
+global minimum. Basically, any optimization algorithm you
+can think of will always converge to the same solution, they
+only converge at different speeds.
+
+---
+
+# Reminder: Gradient Descent
+
+.center[
+![:scale 40%](images/img_16.png)
+]
+
+$$w^{(i+1)} \leftarrow w^{(i)} - \eta_i\frac{d}{dw}F(w^{(i)})$$
+
+
+???
+
+
+---
+
+# Pick a learning rate
+
+.center[
+![:scale 90%](images/img_17.png)
+]
+
+$$w^{(i+1)} \leftarrow w^{(i)} - \eta_i\frac{d}{dw}F(w^{(i)})$$
+
+???
+A little bit of an issue here is picking a learning rate
+which is how big a step are you making. If you make too
+small a step, then you're going to get stuck wherever you're
+started. If you pick the right step size, you can make very
+quick progress. If you pick too a big step size, you're
+going to be missing the target and just jumping around the
+target. This is a very simple optimizer. But it's not great
+and it’s not very fast because you need to compute gradients
+over the whole dataset. What you can do instead is you can
+approximate a gradient by looking only a single data point
+at a time.
+
+
+---
+class: compact
+# Batch vs stochastic optimization
+
+Batch
+`$$ W_i \leftarrow W_i - \eta\sum\limits_{j=1}^N \frac{\partial l(x_j,y_j)}{\partial W_i} $$`
+<br />
+--
+
+Online/Stochastic
+`$$ W_i \leftarrow W_i - \eta\frac{\partial l(x_j,y_j)}{\partial W_i}$$`
+<br />
+
+--
+
+Minibatch
+`$$ W_i \leftarrow W_i - \eta\sum\limits_{j=k}^{k+m} \frac{\partial l(x_j,y_j)}{\partial W_i}$$`
+
+
+???
+So doing standard gradient descent, we would update a weight
+matrix W_i but using the old W_i and taking a gradient step,
+so subtracting the gradient of the loss wrt the paramters,
+summed over the whole training set, times some learning
+rate. The problem with this is that it's quite slow.
+Computing all these gradients means that we need to pass all
+the examples forward through the network, make predictions,
+and then do a backward pass with backpropagation. That's a
+lot of matrix multiplications to do a single gradient step,
+in particular given that we want to do this for very large
+datasets. So what we can do to speed this up is doing a
+stochastic approximation, as we already saw for linear
+models, doing stochastic gradient descent aka online
+gradient descent. Here, you pick a sample at random, compute
+the gradient just considering that sample, and then update
+the parameter. So you update the weights much more often,
+but you have a much less stable estimate of the gradient. In
+practice, we often just iterate through the data instead of
+picking a sample at random. And as with linear models, this
+is much faster than doing full batches for large datasets.
+
+However, it's less stable, and also it doesn't necessarily
+use the hardware in the best way. So we can do a compromise
+in where we look at mini-batches of size k, usually
+something like 64 or 512. So we look at k samples, compute
+the gradients, average them, and update the weights. That
+allows us to update much more often than looking at the
+whole dataset, while still having a more stable gradient,
+and better being able to use the parallel computing
+capabilities of modern CPUs and GPUs. This is what's used in
+practice basically always. The reason why this is faster is
+basically that doing a matrix-matrix multiplication is
+faster than doing a bunch of matrix-vector operations.
+
+In principle we could also be using smarter optimization
+methods, like second order methods or LBFGS, but these are
+often not very effective on these large non-convex problems.
+One, called levenberg-marquardt is actually a possibility,
+but it's not really used these days.
+---
+# Stochastic Gradient Descent
+
+- Logistic Regression:
+
+`$$F(w) = -C \sum_{i=1}^n\log(\exp(-y_iw^T \textbf{x}_i) +1 ) + ||w||_2^2$$`
+
+
+- Pick $x_i$ randomly, then
+
+`$$\frac{d}{dw}F(w) = \frac{d}{dw} -C \log(\exp(-y_iw^T \textbf{x}_i) +1 ) + \frac{1}{n}||w||_2^2$$`
+
+- In practice: just iterate over i.
+
+
+???
+Looking at the Logistic Regression, the functional Logistic
+Regression we want to minimize is the log loss plus the
+regularizer. Instead of looking at the gradient for the
+whole sum here, we can get a stochastic approximation of the
+gradient by looking at only one of the sums at a time. In
+practice, we iterate over the dataset and go one by one
+through all the data points. We make sure we shuffle them
+before. Then we do small gradient steps. This is a very bad
+optimizer compared to the SAG but it can go very quickly
+over a lot of data.
+
+---
+class: spacious
+
+# SGD and partial_fit
+
+- SGDClassifier(), SGDRegressor() fast on very large datasets
+- Tuning learning rate and schedule can be tricky.
+- partial_fit allows working with out-of-memory data!
+
+
+???
+This is implemented in SGD classifier, and SGD regressor and
+you can use it in very large data sets. It's a little bit
+tricky to tune the learning rate and so you can either pick
+as constant learning rate, or you can pick an exponentially
+decreasing learning rate. There's one that's called optimal.
+If you scale your data to standard division 1, then the
+optimal one will often work well but it's not actually
+optimal on any sense. This will allow you to give you
+something quickly on a big data set. There's also another
+thing you can do, there's a method called partial_fit that
+these models have which allows you to iteratively fit feed
+it data. If you have like streaming data coming in and you
+having infinite data, you can just keep giving it more and
+more data called partial_fit. This method will update the
+model. In scikit-learn, if you call fit multiple times it
+will always forget whatever it saw before. Each fit resets
+the model while partial fit will remember what it saw before
+and keeps fitting the model. SGDClassifier() and
+SGDRegressor both have a whole bunch of different loss
+function penalties so they both can do elastic net penalty
+and the classifier can do logistic loss and hinge loss and
+squared hinge loss and the regressor can do Huber loss and
+squared error and absolute error. So there are many, many
+different choices for different loss functions.
+
+
+---
+class: center, spacious
+
+![:scale 90%](images/img_18.png)
+
+![:scale 90%](images/img_19.png)
+
+
+
+???
+Fit works just like everywhere else. Partial fit you can
+call it with different batches of data and this will keep
+fitting the model. One thing that you should keep in mind
+for the classifier is that you need to give it the classes
+at the beginning because it doesn't know how many classes
+there are and at the first time, not all the classes might
+be present in the data you give it to. So you need to
+specify how many classes there are. Partial fit doesn't do
+loops over a dataset. So if you want to use a partial fit,
+and you want to loop over dataset multiple times, you have
+to set the loop yourself. If you loop over a dataset, if you
+do more of gradient descent, then you get better results.
+This code is the same code for all combinations of losses
+and regularizers because it’s very simple to write this
+down.
 ---
 class: middle
 # Questions ?
