@@ -30,12 +30,13 @@ with topic models on Monday.
 
 FIXME: all the bullet points?!
 FIXME: redo paragraph vector experiments
+FIXME more on CBOW and skip-grams?
 FIXME: state of the art?
-FIXME: too short?
 FIXME: word embeddings with tensorflow?
 FIXME for CBOW and skip-gram shared weights for context
 FIXME for CBOW, which do we keep?
-FIXME 18, 19 SGDClassifier screenshots
+FIXME SGDClassifier screenshots
+FIXME so much time on gensim, maybe more time on spacy instead?
 
 ---
 class: spacious
@@ -260,11 +261,14 @@ context. So if I say, I watched a movie or I watched the
 film, it doesn't really matter.
 
 ---
+class: spacious
 # Implementations
 
 - Gensim
 - Word2vec
 - Tensorflow
+- fasttext
+- ...
 - Don't train yourself
 
 ???
@@ -283,7 +287,7 @@ download several of these word2vec models from Google, for
 example.
 
 ---
-
+class: spacious
 
 # Gensim - topic models for humans
 
@@ -482,11 +486,11 @@ w.most_similar(positive=['movie'], topn=5)
 ```
 
 ```
-[('film', 0.8676770925521851),
- ('movies', 0.8013108968734741),
- ('films', 0.7363011837005615),
- ('moive', 0.6830361485481262),
- ('Movie', 0.6693680286407471)]
+[('film', 0.867),
+ ('movies', 0.801),
+ ('films', 0.736),
+ ('moive', 0.683),
+ ('Movie', 0.669)]
 ```
 ???
 Now that we know how we can measure similarities in the
@@ -510,24 +514,24 @@ Trying the same for the word ‘good’ gives ‘great’, ‘bad’,
 ‘terrific’, ‘decent’ and ‘nice’. ‘bad’ is an antonym not a
 synonym for ‘good’, this makes sense since sometimes if we
 replace ‘good’ with ‘bad’, it will still make sense.
----
+--
 ```
-[('great', 0.7291510105133057),
- ('bad', 0.7190051078796387),
- ('terrific', 0.6889115571975708),
- ('decent', 0.6837348341941833),
- ('nice', 0.6836092472076416)]
+[('great', 0.729),
+ ('bad', 0.719),
+ ('terrific', 0.688),
+ ('decent', 0.683),
+ ('nice', 0.683)]
  ```
 --
 ```python
 w.most_similar(positive=['cute', 'dog'], topn=5)
 ```
 ```
-[('puppy', 0.7645270228385925),
- ('chihuahua', 0.7209305763244629),
- ('adorable_puppy', 0.7108923196792603),
- ('yorkie', 0.7013816833496094),
- ('Shitzu', 0.7004074454307556)]
+[('puppy', 0.764),
+ ('chihuahua', 0.720),
+ ('adorable_puppy', 0.710),
+ ('yorkie', 0.701),
+ ('Shitzu', 0.700)]
  ```
 
 ???
@@ -737,25 +741,25 @@ really excited.
 w.most_similar(positive=['woman', 'king'], negative=['man'], topn=3)
 ```
 ```
-[('queen', 0.7118192911148071),
- ('monarch', 0.6189674139022827),
- ('princess', 0.5902431607246399)]
+[('queen', 0.711),
+ ('monarch', 0.618),
+ ('princess', 0.590)]
 ```
 ```python
 w.most_similar(positive=['woman', 'he'], negative=['man'], topn=3)
 ```
 ```
-[('she', 0.8492251634597778),
- ('She', 0.6329933404922485),
- ('her', 0.6029669046401978)]
+[('she', 0.849),
+ ('She', 0.632),
+ ('her', 0.602)]
 ```
 ```python
 w.most_similar(positive=['Germany', 'pizza'], negative=['Italy'], topn=3)
 ```
 ```
-[('bratwurst', 0.5436394810676575),
- ('Domino_pizza', 0.5133179426193237),
- ('donuts', 0.5121968984603882)]
+[('bratwurst', 0.543),
+ ('Domino_pizza', 0.513),
+ ('donuts', 0.512)]
 ```
 
 ]
@@ -951,16 +955,16 @@ the word vectors that I learned are meaningful.
 model.wv.most_similar("movie")
 ```
 ```
-[('film', 0.9482318758964539),
- ('flick', 0.822228193283081),
- ('series', 0.715380072593689),
- ('programme', 0.7032747268676758),
- ('sequel', 0.6939107179641724),
- ('story', 0.6771408319473267),
- ('show', 0.6559576392173767),
- ('documentary', 0.6537493467330933),
- ('picture', 0.6427854299545288),
- ('thriller', 0.6300673484802246)]
+[('film', 0.948),
+ ('flick', 0.822),
+ ('series', 0.715),
+ ('programme', 0.703),
+ ('sequel', 0.693),
+ ('story', 0.677),
+ ('show', 0.655),
+ ('documentary', 0.653),
+ ('picture', 0.642),
+ ('thriller', 0.630)]
  ```
 ???
 I looked at the most similar ones to ‘movie’ and we get
