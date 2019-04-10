@@ -19,7 +19,7 @@ class: center, middle
 
 # Word Embeddings
 
-04/11/18
+04/10/19
 
 Andreas C. Müller
 
@@ -167,7 +167,7 @@ Then we have a weight matrix connecting it to the
 n-dimensional hidden layer. From there, we have multiple
 outputs that correspond to the previous word, previous 2
 words, and previous 3 words and so on. And then the next
-word, next 2 words, next 3 words and so on. 
+word, next 2 words, next 3 words and so on.
 
 Each output is, again, one hot encoding, which allows you to
 predict each possible version of vocabulary. These layers
@@ -211,7 +211,7 @@ words in your vocabulary, this is going to be a lot of work.
 This is a step that you need to do every time when you want
 to optimize it. And so what most of the algorithms do is
 they just approximate the sum by sampling some words. So it
-just normalizes by some words, but not by all words. 
+just normalizes by some words, but not by all words.
 
 This is the model that's most commonly used. This is called
 skip grams.
@@ -251,7 +251,7 @@ The skip grams work better. CBOW might capture some things
 like synonymous words because I can switch the synonyms word
 for another word, and it’ll still make sense in the same
 context. So if I say, I watched a movie or I watched the
-film, it doesn't really matter. 
+film, it doesn't really matter.
 
 ---
 # Implementations
@@ -270,7 +270,7 @@ train it yourself, it's probably the best idea because then
 you can do it on GPU. These are usually like large matrices,
 you have a large corpus which will take forever. With
 TensorFlow, you can do it on a GPU and, and it makes things
-much more bearable. 
+much more bearable.
 
 But generally, just don't train it yourself. You can
 download several of these word2vec models from Google, for
@@ -412,7 +412,7 @@ print(list(tfidf[corpus]))
 
 ]
 ???
-You can do a TFIDF model with Gensim. 
+You can do a TFIDF model with Gensim.
 ---
 
 # Word2Vec in Gensim
@@ -434,10 +434,10 @@ w.vectors.shape
 ```
 ???
 There are 2 benefits to using these prebuilt models.
-A)  It takes a long time to run to train these 
+A)  It takes a long time to run to train these
 B) You probably don't have the corpus, you can download
 Wikipedia, but I don't think you can actually download the
-Google News corpus. 
+Google News corpus.
 
 There are 3,000,000 word vectors in total stored in this
 model. So there’s a vocabulary of size 3,000,000. Each of
@@ -466,7 +466,7 @@ a set of a distance matrix that’s very commonly used in NLP.
 For example, if you want to compare if the two documents are
 similar. For documents in the bag of words representation,
 this might be quite intuitive, since it just sort of
-normalizes the length of document away. 
+normalizes the length of document away.
 
 ---
 class: smallerr
@@ -503,7 +503,7 @@ w.most_similar(positive=['good'], topn=5)
 Trying the same for the word ‘good’ gives ‘great’, ‘bad’,
 ‘terrific’, ‘decent’ and ‘nice’. ‘bad’ is an antonym not a
 synonym for ‘good’, this makes sense since sometimes if we
-replace ‘good’ with ‘bad’, it will still make sense. 
+replace ‘good’ with ‘bad’, it will still make sense.
 ---
 ```
 [('great', 0.7291510105133057),
@@ -539,11 +539,11 @@ print(text_train_sub[0].decode())
 ```
 Maybe it's just because I have an intense fear of hospitals and medical stuff, but this one got under my skin
 (pardon the pun). This piece is brave, not afraid to go over the top and as satisfying as they come in terms
-of revenge movies. Not only did I find myself feeling lots of hatred for the screwer and lots of sympathy 
+of revenge movies. Not only did I find myself feeling lots of hatred for the screwer and lots of sympathy
 towards the "screwee", I felt myself cringe and feel pangs of disgust at certain junctures which is really a
 rare and delightful thing for a somewhat jaded horror viewer like myself. Some parts are very reminiscant of
-"Hellraiser", but come off as tribute rather than imitation. It's a heavy handed piece that does not offer 
-the viewer much to consider, but I enjoy being assaulted by a film once and awhile. This piece brings it and 
+"Hellraiser", but come off as tribute rather than imitation. It's a heavy handed piece that does not offer
+the viewer much to consider, but I enjoy being assaulted by a film once and awhile. This piece brings it and
 doesn't appologize.
 I liked this one a lot. Do NOT watch whilst eating pudding.
 ```
@@ -568,7 +568,7 @@ array(['in', 'for', 'that', 'is', 'the', 'at', 'not', 'as', 'it', 'by',
        'revenge', 'brave', 'whilst', 'sympathy', 'assaulted', 'satisfying',
        'hatred', 'viewer', 'awhile', 'pardon', 'delightful', 'disgust',
        'imitation', 'pudding', 'cringe', 'jaded', 'pun', 'pangs', 'doesn',
-       'junctures', 'hellraiser', 'appologize'], 
+       'junctures', 'hellraiser', 'appologize'],
       dtype='<U98')
 ```
 ]
@@ -589,7 +589,7 @@ has a 300-dimensional vector
 
 So now we have the list of tokens for all the movie reviews.
 And the most common way to use this to represent documents
-is just using the average. 
+is just using the average.
 
 ---
 # Represent doc by average
@@ -633,7 +633,7 @@ for the training dataset and now I only have one
 After computing, we can see that we didn't really gain a
 lot, but definitely, there's still a lot of information
 available to do the sentiment analysis. I think it's better
-than using LSA or LDA. 
+than using LSA or LDA.
 
 This still has some downsides of the bag of words in that
 you discard to word order.
@@ -643,7 +643,7 @@ You can actually also do embedding for bigrams and trigrams.
 
 One of the thing that people found, which was quite
 interesting is that you can actually do some sort of
-semantic algebra with it. 
+semantic algebra with it.
 
 ---
 # Analogues and Relationships
@@ -666,7 +666,7 @@ found that if they look at the difference between men, and
 women, it looks very similar to the difference between uncle
 and aunt or king and queen. They also found that, for
 example, the difference between King and kings is the same
-as between queen and Queens. 
+as between queen and Queens.
 
 If you want to ask a question, what is to Queen as kings are
 to King?
@@ -675,7 +675,7 @@ You can take vector representation of Queen and add the
 vector representation of kings, and subtract the vector
 representation of King. And if you look at the closest point
 to that, you'll find it's going to be queens. People did
-this with a lot of different sort of semantic pairs. 
+this with a lot of different sort of semantic pairs.
 
 ---
 .center[
@@ -688,15 +688,15 @@ this with a lot of different sort of semantic pairs.
 ???
 One thing that's quite interesting is people embedded
 countries and their capitals using a 300-dimensional space
-and then did the PCA on it. 
+and then did the PCA on it.
 
 This is projecting down to 2-dimensional space, all
-different countries and their capitals. 
+different countries and their capitals.
 
 Even after this projection, they all look pretty peril. And
 so basically, the thing that goes from Poland to Warsaw is
 basically the same that goes from Japan to Tokyo. You can
-use this to discover analogies or relations. 
+use this to discover analogies or relations.
 
 ---
 # Finding Relations
@@ -716,11 +716,11 @@ class: middle
 .smallest[<a href="https://cs224d.stanford.edu/lecture_notes/notes2.pdf">Stanford CS 224D: Deep Learning for NLP</a>]
 ???
 The model is able to figure out what the relationship of
-what does it mean for a city to be in a state. 
+what does it mean for a city to be in a state.
 
 So now we have a space in which vector additions have
 semantic meaning. When people found about this, they were
-really excited. 
+really excited.
 
 ---
 
@@ -760,7 +760,7 @@ Queen is the highest since ‘man’ is to ‘king’ as ‘women’ is
 to ‘queen’.
 
 So relationships that are found here definitely depend a lot
-on the corpus that was used. 
+on the corpus that was used.
 
 
 ---
@@ -788,7 +788,7 @@ $\overrightarrow{man} - \overrightarrow{woman} \approx \overrightarrow{computer 
 ???
 This relation is actually in there. If you do ‘man is to
 computer programmer’ as ‘women is to x as to x, you get
-‘homemaker’ and we might not be very happy about this. 
+‘homemaker’ and we might not be very happy about this.
 
 ---
 # Going along he-she direction:
@@ -808,7 +808,7 @@ And this is just one particular instance.
 As with all machine learning models, this learns all the
 biases of the data that you give it, if you give it a lot of
 text, then it uses that to learn all the biases of human
-society. 
+society.
 
 ---
 class: middle
@@ -818,7 +818,7 @@ class: middle
 Alright, so the next thing I want to talk about is a
 slightly smarter way to look at embedding documents, which
 is paragraph vectors. Instead of just taking averages we're
-trying to do a little bit better. 
+trying to do a little bit better.
 
 Fixme rerun experiments from doc2vec paper to show it works?
 ---
@@ -873,7 +873,7 @@ If you get a new document for the word vectors, you just
 look for each word, if it's not in the vocabulary you’re
 lost out anyway, if it’s in the vocabulary, you can just
 take the vector for this word that you have computed
-already. 
+already.
 
 If you get a new paragraph, how do you get the paragraph
 vector?
@@ -887,13 +887,13 @@ them on the training sets. You're basically learning this
 paragraph ID by doing gradient descent. So you initialize
 this paragraph vector randomly and to transform a new
 paragraph, you basically learn the paragraph vector for this
-paragraph, fixing all the word vectors. 
+paragraph, fixing all the word vectors.
 
 In this sense, it’s more of trying to correct what the model
 could not figure out with the word vectors. So now, you have
 a vector that represents everything in the paragraph that
 was not already encoded in the context, or it might encode
-like in a wider context or something like that. 
+like in a wider context or something like that.
 
 And usually, it's just the same dimensionality as the other
 vectors. So here, we would get like a 300-dimensional vector
@@ -971,7 +971,7 @@ These are pretty good but it's maybe not as surprising as
 .smaller[
 ```python
 vectors = [model.infer_vector(train_corpus[doc_id].words)
-          for doc_id in range(len(train_corpus))]    
+          for doc_id in range(len(train_corpus))]
 
 X_train = np.vstack(vectors)
 
@@ -982,7 +982,7 @@ X_train.shape
 ```
 ```python
 test_vectors = [model.infer_vector(test_corpus[doc_id])
-                for doc_id in range(len(test_corpus))]   
+                for doc_id in range(len(test_corpus))]
 X_test = np.vstack(test_vectors)
 ```
 
@@ -994,7 +994,7 @@ want to do classification I can run a logistic regression on
 this vector.
 
 So model.infer_vector does the gradient descent to compute
-the paragraph vectors for each document. 
+the paragraph vectors for each document.
 
 In the paper, they used much more data from the same corpus
 and they used 400-dimensions and probably they also iterated
@@ -1038,12 +1038,12 @@ $X_{ij}$ = How often does work j appear in context of word i
 `$$ J = \sum\limits_{i,j=1}^{V} f(X_{ij}) (w_i^T \tilde{w_j} + b_i + \tilde{b_j} - \log X_{ij})^2$$`
 
 
-`$$ 
-f(x) = 
+`$$
+f(x) =
 \begin{cases}
   (x/x_\text{max})^\alpha & \text{if  } x < x_\text{max}  \\
   1 & \text{otherwise} \\
-\end{cases} 
+\end{cases}
 $$`
 
 .smaller[
