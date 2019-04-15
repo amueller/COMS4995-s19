@@ -99,7 +99,7 @@ The dramatic shift that we've seen is mostly due to the availability of data and
 
 
 ---
-#Logistic regression drawn as neural net
+# Logistic regression as neural net
 
 .center[
 ![:scale 40%](images/log_reg_nn.png)
@@ -261,7 +261,7 @@ SVM or linear models, unlike trees
 - MANY variants (Convolutional nets, Gated Recurrent neural
 networks, Long-Short-Term Memory, recursive neural
 networks, variational autoencoders, generative adverserial
-networks, neural turing machines...)
+networks, deep reinforcement learning, ...)
 
 ???
 
@@ -313,7 +313,7 @@ cover next time. Other common types include recurrent neural
 networks like LSTMs, there's recursive neural networks, GANs
 that are all the rage because they can generate nice faces
 and cats and photos from drawings, neural turing machines
-that can learn algorithms, and FIXME of course deep
+that can learn algorithms, and of course deep
 reinforcement learning that can play better go than any
 human.
 
@@ -326,6 +326,7 @@ human.
 
 `$$ \min_{W_1,W_2,b_1,b_2} \sum\limits_{i=1}^N l(y_i,o(x_i)) $$`
 --
+
 `$$ =\min_{W_1,W_2,b_1,b_2} \sum\limits_{i=1}^N l(y_i,g(W_2f(W_1x+b_1)+b_2)$$`
 --
 - `$l$` Squared loss for regression. Cross-entropy loss for classification
@@ -374,7 +375,7 @@ how this works. Let me know if anything is unclear.
 
 #Backpropagation
 
-- Need `$ \frac{\partial o(x)}{\partial W_i} $` and `$\frac{\partial o(x)}{\partial b_i}$`
+- Need `$ \frac{\partial l(y, o)}{\partial W_i} $` and `$\frac{\partial l(y, o)}{\partial b_i}$`
 
 `$$ \text{net}(x) := W_1x + b_1 $$`
 
@@ -405,8 +406,7 @@ namely h. So to compute the gradient of the first weight
 vector, we need the activation/value of the layer before,
 and the derivative of the activation after.
 FIXME backpropagation image?
-FIXME need deriviative of loss, not output (unless square
-loss kinda)
+
 When computing the predictions, we compute all the
 activations of the layers, and we get an error. So we
 already have all these values. So to compute the gradients,
@@ -974,17 +974,14 @@ for each operation, there is no symbolic
 differentiation involved.
 ---
 
----
 # GPU Support
-
 .center[
-![:scale 45%](images/gpu_support.png)
+![:scale 55%](images/gpu_support.png)
 ]
-
-- From http://www.nvidia.com/object/gpu-accelerated-applic
-ations-tensorflow-benchmarks.html
-
-- Take with a grain of salt.
+.smallest[
+- These numbers are old.
+- Up-to-date graphs at https://developer.nvidia.com/deep-learning-performance-training-inference
+]
 ???
 An important limitation of GPUs is that they usually
 have much less memory than the RAM, and memory
@@ -995,7 +992,7 @@ expensive.
 #Computation Graph
 
 .center[
-![:scale 100%](images/computation_graph.png)
+![:scale 35%](images/computation_graph.png)
 ]
 
 ???
@@ -1025,17 +1022,24 @@ intermediate results and gradient computations.
 
 - Optimization and inspection of computation graph
 
-- on-the-fly generation of the graph?
+- on-the-fly generation of the graph (?)
 
-- distribution over cluster?
+- distribution over muliple GPUs and/or cluster (?)
 
-- Choices:
+--
 
-  – TensorFlow
+- Choices (right now):
 
-  – Theano
+  - TensorFlow
 
-  – Torch (lua)
+  - PyTorch / Torch
+
+  - Chainer
+
+  - CNTK
+
+  - (Theano)
+
 ???
 So create deep learning model efficiently, I need
 support for auto diff, computation on a GPGPU, and
@@ -1057,13 +1061,10 @@ tensorflow got released.
 ---
 #Deep Learning Libraries
 
-- tf.learn (Tensorflow)
 
-- Keras (Tensorflow, Theano)
+- Keras (Tensorflow, CNTK, Theano)
 
-- Lasagna (Theano)
-
-- Torch.nn / PyTorch (torch)
+- PyTorch (torch)
 
 - Chainer (chainer)
 
@@ -1097,15 +1098,18 @@ a bit more. But these all have their pros and cons.
 
 - “down to the metal” - don’t use for everyday tasks
 
-- Three steps for learning:
+- Three steps for learning (originally):
 
-  – Build the computation graph (using array operations
+  - Build the computation graph (using array operations
   and functions etc)
 
-  – Create an Optimizer (gradient descent, adam, …)
+  - Create an Optimizer (gradient descent, adam, …)
   attached to the graph.
 
-  – Run the actual computation.
+  - Run the actual computation.
+
+- Eager mode (default in Tensorflow 2.0):
+  - Write imperative code directly
 
 ???
 If you want to do neural network research, if you want to
@@ -1140,19 +1144,13 @@ graph, and the actual computation.
 This is linear regression in TensorFlow. We have a very
 simple 1D regression tasks that I created with Numpy.
 ---
+class: spacious
+
 # Great Resources!
 
-- https://www.tensorflow.org/versions/r0.10/tutorials/
+- https://www.tensorflow.org/tutorials/
 
 - http://playground.tensorflow.org
-
-- https://www.tensorflow.org/versions/r0.10/get_star
-ted/basic_usage
-
-- https://www.tensorflow.org/versions/r0.10/tutorials
-/mnist/beginners/
-
-- Note: tf.learn is now officially tf.contrib.learn
 
 - Tensorboard web interface
 
