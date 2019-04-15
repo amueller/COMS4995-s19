@@ -19,7 +19,7 @@ class: center, middle
 
 # Neural Networks
 
-04/16/18
+04/15/19
 
 Andreas C. Müller
 ???
@@ -50,7 +50,7 @@ FIXME tf.learn is deprecated (now in core or keras?)
 --
 
   – Faster computers (GPUs)
-  
+
 --
 
   – Some improvements:
@@ -72,14 +72,14 @@ the usefullness of neural nets:
 more data, and computers fast enough to process that data,
 in particular using GPUs.
 Actually, neural nets were kind of successful in the 1990s
-already, Yann LeCun's 
+already, Yann LeCun's
 convolutional networks were used to reach checks
 automatically in ATMs.
 That worked well because for digit recognition we had enough
 traning data becaus the variety was "small" enough.
 For natural images or audio, the variety in the data is much
 much larger, and so we need much larger datasets to learn
-neural networks from those. 
+neural networks from those.
 And using these larger datasets was not possible to collect
 in the 90, and not feasible to learn on without fast GPUs.
 For other datasets, like tabular data as we saw it before in
@@ -325,7 +325,7 @@ human.
 --
 
 `$$ \min_{W_1,W_2,b_1,b_2} \sum\limits_{i=1}^N l(y_i,o(x_i)) $$`
--- 
+--
 `$$ =\min_{W_1,W_2,b_1,b_2} \sum\limits_{i=1}^N l(y_i,g(W_2f(W_1x+b_1)+b_2)$$`
 --
 - `$l$` Squared loss for regression. Cross-entropy loss for classification
@@ -343,7 +343,7 @@ write down the objective. So let's say we have a single
 hidden layer, then the hidden layer is x multiplied by W
 with bias b added, and then a non-linearity f, and the
 output o(x) is another matrix multiplication, another bias,
-and the output non-linearity like softmax. 
+and the output non-linearity like softmax.
 
 If we want to find the parameters W1,w2,b1,b2, we want to do
 empirical risk minimization, so for classification we want
@@ -687,7 +687,7 @@ print(mlp.score(X_test, y_test))
 ???
 Instead of the layer wide, we can add more hidden layers. So
 here, I created 3 hidden layers each of size 10. This is one
-of the main ways to control complexity in the model. 
+of the main ways to control complexity in the model.
 
 The question is, does each hidden layer correspond to some
 representation of the data or a learned feature?
@@ -698,7 +698,7 @@ supervised way, we're learning these to classify. So
 basically, the idea is that the first layer will be more
 sort of related to what did the input look like, whereas the
 last layer will look more like which class does this
-represent. 
+represent.
 
 ---
 #Activation Functions
@@ -758,7 +758,7 @@ in my 1000-dimensional vector into a 2-dimensional space.
 And if I tried to do this, it will probably lose most of the
 information. So if you want to do classification, you
 usually don't want to compress down your input space too
-quickly. 
+quickly.
 
 ---
 class:spacious
@@ -780,7 +780,7 @@ you're looking at a validation set, and you stop, when you
 start to overfit. This is a very weird way to control
 complexity from a machine learning point of view because
 it's a little bit unclear what you're optimizing, but it has
-been proven very successful in practice. 
+been proven very successful in practice.
 
 Basically, you don't try to find the optimum, you just do
 gradient descent and get closer and closer to the optimum,
@@ -800,7 +800,7 @@ X_train, X_test, y_train, y_test = train_test_split(
     data.data, data.target, stratify=data.target, random_state=0)
 
 from sklearn.model_selection import GridSearchCV
-pipe = make_pipeline(StandardScaler(), MLPClassifier(solver="lbfgs", 
+pipe = make_pipeline(StandardScaler(), MLPClassifier(solver="lbfgs",
                      random_state=1))
 param_grid = {'mlpclassifier__alpha': np.logspace(-3, 3, 7)}
 grid = GridSearchCV(pipe, param_grid, cv=5)
@@ -838,7 +838,7 @@ from sklearn.model_selection import GridSearchCV
 pipe = make_pipeline(StandardScaler(), MLPClassifier(solver="lbfgs"
                      ,random_state=1))
 param_grid = {'mlpclassifier__hidden_layer_sizes':
-              [(10,), (50,), (100,), (500,), (10, 10), (50, 50), (100, 100), (500, 
+              [(10,), (50,), (100,), (500,), (10, 10), (50, 50), (100, 100), (500,
               500)]
              }
 grid = GridSearchCV(pipe, param_grid, cv=5)
@@ -849,7 +849,7 @@ grid.fit(X_train, y_train)
 ???
 Ideally, you can do both at once. This is mostly to
 illustrate how you can grid search over the different hidden
-layer sizes. 
+layer sizes.
 
 If you have a big dataset running this will probably take
 too long.
@@ -1030,11 +1030,11 @@ intermediate results and gradient computations.
 - distribution over cluster?
 
 - Choices:
-  
+
   – TensorFlow
-  
+
   – Theano
-  
+
   – Torch (lua)
 ???
 So create deep learning model efficiently, I need
@@ -1098,30 +1098,30 @@ a bit more. But these all have their pros and cons.
 - “down to the metal” - don’t use for everyday tasks
 
 - Three steps for learning:
-  
+
   – Build the computation graph (using array operations
   and functions etc)
-  
+
   – Create an Optimizer (gradient descent, adam, …)
   attached to the graph.
-  
+
   – Run the actual computation.
 
 ???
 If you want to do neural network research, if you want to
 build new kinds of neural network that no one ever thought
-about, then using TensorFlow might be good. 
+about, then using TensorFlow might be good.
 
 You can use TensorFlow for things that are are not neural
 networks, you can just do like find elements simulations, or
-you can run a linear model or some matrix factorization. 
+you can run a linear model or some matrix factorization.
 
 If you have a complex computation graph that you want to
 optimize or if you want to compute gradients, then
-TensorFlow can help you. 
+TensorFlow can help you.
 
 If you want to do this for actual learning, there are
-basically three steps. 
+basically three steps.
 
 The first step is to build a computation graph. The second
 step is to create an optimizer and tell the optimizer to
@@ -1129,7 +1129,7 @@ optimize the graph. Third, then you want to run the actual
 computation.
 
 Here, we are decoupling the building of the computation
-graph, and the actual computation. 
+graph, and the actual computation.
 
 ---
 .center[
@@ -1138,7 +1138,7 @@ graph, and the actual computation.
 
 ???
 This is linear regression in TensorFlow. We have a very
-simple 1D regression tasks that I created with Numpy. 
+simple 1D regression tasks that I created with Numpy.
 ---
 # Great Resources!
 
