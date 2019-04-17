@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>More Neural Networks</title>
+    <title>Keras & Convolutional Neural Nets</title>
     <meta charset="utf-8">
         <style>
        @import url(https://fonts.googleapis.com/css?family=Garamond);
@@ -418,7 +418,7 @@ the network, which cannot be done with scikit-learn.
 # Drop-out Regularization
 
 .center[
-![:scale 65%](images/dropout_reg.png)
+![:scale 75%](images/dropout_reg.png)
 ]
 ???
 For each sample, during training, you actually remove
@@ -450,13 +450,15 @@ also perturbing the hidden units in a very particular way.
 As it turns out that actually works much better than just
 adding noise to the input.
 
----
+--
 
+.smallest[
 - https://www.cs.toronto.edu/~hinton/absps/JMLRdropout.pdf
 
 - Rate often as high as .5, i.e. 50% of units set to zero!
 
 - Predictions: use all weights, down-weight by rate
+]
 
 ???
 
@@ -479,7 +481,7 @@ class:spacious
 - Every possible configuration represents different
 network.
 
-- With p=.5 we jointly learn `$\binom{n}{n/2}$` networks
+- With p=.5 we jointly learn `$\binom{n}{\frac{n}{2}}$` networks
 
 - Networks share weights
 
@@ -594,6 +596,12 @@ differently or rotating, it will not change the label.
 Unless your label is a person holding something in the left
 hand versus holding something in the right hand and then you
 know you need to switch the label.
+class: center, middle
+# Deep Residual Networks (ResNet)
+[He et. al. - Deep Residual Learning for Image Recognition (2015)](https://arxiv.org/pdf/1512.03385.pdf)
+???
+One that made quite a big jump in performance is deep
+residual networks.
 
 ---
 class:center,middle
@@ -1075,6 +1083,149 @@ FIXME label axes
 Here's the same thing with a larger network where we have 64
 filters instead of 8. This learns even faster and learns to
 overfit really well.
+
+---
+class: middle
+# Residual Neural Networks
+---
+# Problem
+![:scale 90%](images/resnet-no-deep-nets.png)
+???
+We can't fit deep networks well - not even on training set!
+"vanishing gradient problem" - was motivation for relu, but not solved yet.
+
+
+The deeper the network gets, usually the performance gets
+better. But if you make your network too deep, then you
+can't learn it anymore.
+
+This is on CIFAR-10, which is a relatively small dataset.
+But if you try to learn a 56-layer convolutional, you cannot
+even optimize it on the training set. So basically, it's not
+that we can't generalize, we can't optimize. So these are
+universal approximators, so ideally, we should be able to
+overfit completely the training set.
+
+But here, if we make it too deep, we cannot overfit the
+training set anymore. It's kind of a bad thing. Because we
+can’t really optimize the problem. So this is sort of
+connected to this problem of vanishing gradient that it's
+very hard to backpropagate the error through a very deep net
+because basically, the idea is that the further you get from
+the output, the gradients become less and less informative.
+We talked about RELU units, which sort of helped to make
+this a little bit better. Without RELU units, you had like 4
+or 5 layers, with RELU units, you have like 20 layers. But
+if you do 56 layers, it's not going to work anymore.
+
+Even it's not going to work anymore, even on the training
+set. So this has been like a big problem. And it has a
+surprisingly simple solution, which is the RES-NET layer.
+
+---
+class: center
+# Solution
+![:scale 60%](images/residual-layer.png)
+
+`$$y = F(x, \{W_i\}) + x  \quad \text{ for same size layers}$$`
+
+--
+
+`$$y = F(x, \{W_i\}) + W_sx \quad \text{ for different size layers}$$`
+
+???
+instead of learning a function. learn the difference to identity.
+if sizes different, add linear projection.
+
+Here's how the residual layer looks like. And the idea is,
+let's say you have a bunch of weight layers, instead of
+learning a function, we learn how the function is different
+from the identity.
+
+So you're not trying to model the whole relationship between
+x and y, you want to model how is y different from x.
+
+In practice, what happens is you have multiple weight
+layers, usually like 2, and you have skip connection that
+gives the identity from before these layers to after these
+layers.
+
+So basically, if you set these weights all to zero, you have
+a pass-through layer. And this allows information to be
+back-propagated much more easily because you have all these
+identity matrices, so something always gets backpropagated.
+So this obviously only works if y and x have the same shape.
+
+
+So in CNNs, often the convolutional layers have sort of the
+same shape. But then you also have max-pooling layers. And
+so what you can do is, instead of having the identity, you
+use a linear transformation.
+
+And this way, the gradients can propagate better. So just
+seems like a very simple idea but people have tried it
+before and it really made a big difference.
+
+---
+class: center, middle
+![:scale 25%](images/resnet-architecture.png)
+???
+dotted lines are linear projection, others are identity.
+
+
+MTG19, which a state of the art neural network before and
+these are all the layers.
+
+Next to it is a 34 layered, convolutional neural network.
+
+And then is the residual network. For each pair of two
+layers, you add in a skip connection. This black arrow is
+just an identity mapping because things are the same size.
+If there's pooling, there's this dashed arrow, which is a
+linear transformation. But basically, they're sort of a
+pathway that allows you to project the identity from the
+very beginning to the very end. Or from the output signal
+you get back towards the beginning.
+
+---
+class: center, middle
+![:scale 100%](images/resnet-success.png)
+???
+Here’s the result. The solid line is the training error and
+the bold line is the test error. The lines are depicted over
+the number of iterations.
+
+So what you can see here is the 18 layers works well than
+the 34 layers. And the training set is worse than the test
+set everywhere. But with the 34 layers, even the training
+set can’t beat the test set of the 18 layers.
+
+The next one is exactly the same architecture, but we put in
+all these identity matrices. And now we can see that the 18
+layer is pretty unchanged. But the 34 layer is now actually
+better than the 18 layers. And in particular, we can overfit
+the dataset a little bit. This is a much better result than
+before. And when you publish this, this was state of the art
+and quite a big jump.
+
+---
+class: center
+![:scale 70%](images/resnet-results.png)
+
+--
+
+This was Dec 2015. Current SOTA: 15.7% top-1 error
+https://paperswithcode.com/sota/image-classification-on-imagenet
+
+???
+uses batch normalization and dropout.
+
+
+152 layers is a whole lot of layers. ResNet is by Microsoft.
+So after this came out, people in Google stole the ResNet
+trick from Microsoft and then they got better. So residual
+networks become widely used after they published this.
+
 ---
 
 class: middle
