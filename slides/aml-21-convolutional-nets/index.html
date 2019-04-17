@@ -32,10 +32,8 @@ FIXME update with state-of-the-art instead of VGG16
 FIXME slide full vs valid vs same convolutions
 FIXME update syntax conv2d!
 FIXME doc screenshots resolution
-FIXME densenet
-FIXME resnet
-FIXME new convnet architectures
-FIXME move batch-norm before conv-nets
+FIXME new convnet architectures? Amobea
+FIXME move batch-norm and resnet before conv-nets? Maybe?
 FIXME add slide on imagenet?
 FIXME y_i in batch normalization confusing.
 FIXME add something about data augmentation
@@ -754,6 +752,48 @@ So you end up with more and more feature maps with
 lower and lower resolution.
 At the end, you have some fully connected layers to do
 the classificattion.
+--
+#Max Pooling
+
+.center[
+![:scale 100%](images/maxpool.png)
+]
+
+???
+- Need to remember position of maximum for back-propagation.
+
+- Again not differentiable → subgradient descent
+
+One of the many things that changed since the research paper
+MNest is that, instead of averaging, we're now doing max
+pooling usually.
+
+Looking at the 4x4 pixels, instead of subsampling,
+subsampling basically means just average them, what people
+are doing now is just taking the maximum. So this is again,
+used to reduce the size of the input.
+
+For example, if we do 2x2 non-overlapping max pooling, we go
+from 4x4 to 2x2. And people also sometimes do like bigger
+max pooling, overlapping max pooling, and there are many
+different variants of what you can do.
+
+But people now usually use max pooling for decreasing the
+resolution. If you do this, this is not differentiable,
+again, similar to the relu. Again, you need to do separating
+descend but in reality, you don't really need to worry about
+it. If you want to do gradient descent, you need to store
+where the maximum came from, though. If you just store the
+output, you can’t backpropagate through it, you need to know
+that the 20 came from here.
+
+Q: Can we take the minimum instead of the maximum?
+
+Probably no if you're using rectified linear units because
+the minimum will usually be zero, it caps at zero. If you
+use tan-H, it should be all symmetric and probably doesn't
+matter.
+
 ---
 .center[
 ![:scale 60%](images/cnn_digits.png)
@@ -814,50 +854,40 @@ was just trained. The dogs in these images are of different
 breeds and different vehicles, and so on. So there was never
 any location information in the training, but it's still
 picked up a lot of things.
-
 ---
+class: middle
+![:scale 100%](images/distill-feature-vis.png)
 
-#Max Pooling
-
-.center[
-![:scale 100%](images/maxpool.png)
-]
-
+.smaller[https://distill.pub/2017/feature-visualization/]
 ???
-- Need to remember position of maximum for back-propagation.
+This is a paper on feature visualization in neural networks.
+This is from Google net, also trained on the same set as
+image net. What they’re doing is they’re taking the network,
+they’re fixing the activation in a particular feature map
+and then they do backpropagation through the network to
+adjust the input image so that this particular feature map
+is most activated. This way, you want to create an image
+that activates this particular feature map or particular
+filter the most.
 
-- Again not differentiable → subgradient descent
+This is one of the papers in a series of papers about how to
+restrict gradient descent on the input image to get some
+nice outputs.
 
-One of the many things that changed since the research paper
-MNest is that, instead of averaging, we're now doing max
-pooling usually.
+These are deeper into the network. In the beginning, it’s
+like edges of different frequencies and orientations, then
+you get something like textures, which are already quite
+rich, and then you get the larger textures, and then you get
+sort of more object like things and if you go further up,
+you get something that is very close to object.
 
-Looking at the 4x4 pixels, instead of subsampling,
-subsampling basically means just average them, what people
-are doing now is just taking the maximum. So this is again,
-used to reduce the size of the input.
-
-For example, if we do 2x2 non-overlapping max pooling, we go
-from 4x4 to 2x2. And people also sometimes do like bigger
-max pooling, overlapping max pooling, and there are many
-different variants of what you can do.
-
-But people now usually use max pooling for decreasing the
-resolution. If you do this, this is not differentiable,
-again, similar to the relu. Again, you need to do separating
-descend but in reality, you don't really need to worry about
-it. If you want to do gradient descent, you need to store
-where the maximum came from, though. If you just store the
-output, you can’t backpropagate through it, you need to know
-that the 20 came from here.
-
-Q: Can we take the minimum instead of the maximum?
-
-Probably no if you're using rectified linear units because
-the minimum will usually be zero, it caps at zero. If you
-use tan-H, it should be all symmetric and probably doesn't
-matter.
-
+This sort of allows you to try to understand what the higher
+layers of these networks detect and it's quite interesting
+because a lot of these become quite specific. And this is
+all learned in a completely supervised way so the only
+feedback that the model got was learning to label these
+images correctly. But we get very fine-grained features in
+the network.
 ---
 
 .center[
