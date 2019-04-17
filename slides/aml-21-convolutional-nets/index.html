@@ -17,9 +17,9 @@ class: center, middle
 
 ### W4995 Applied Machine Learning
 
-# Neural Networks in Practice
+# Keras & Convolutional Neural Nets
 
-04/18/18
+04/17/19
 
 Andreas C. Müller
 
@@ -139,7 +139,7 @@ Each of parameters can be either a string or you can provide
 a callable or like an object that implements the right
 interface.
 
-The metrics here are just for monitoring. 
+The metrics here are just for monitoring.
 
 ---
 
@@ -181,12 +181,12 @@ y_test = keras.utils.to_categorical(y_test, num_classes)
 
 
 ???
-Running it on MNIST. 
+Running it on MNIST.
 
 To use the labels with keras, you need to convert them to
 one hot encoding. The output layer is 10-dimensional and
 each of the dimension corresponds to one of the possible
-outputs. 
+outputs.
 
 Since the number of classes is 10, this will give 60,000x10
 labels for the training set and 10,000x10 labels for the
@@ -215,7 +215,7 @@ everything.
 Question is, why I scaled between 0 and 1 instead of mean 0
 and standard deviation 1?
 
-There are 3 reasons for that. 
+There are 3 reasons for that.
 
 First, that’s what people do. Secondly, the minimum and
 maximum value mean something, they mean, black and white and
@@ -230,13 +230,13 @@ slightly gray sometimes and so this would be scaled up
 enormously, even though that doesn’t really mean a lot. So I
 kind of used my prior knowledge saying, all these pixels
 should have the same scale and so I scaled them all in the
-same way. 
+same way.
 
 ---
 #Fit with Validation
 
 ```python
-model.fit(X_train, y_train, batch_size=128, epochs=10, verbose=1, 
+model.fit(X_train, y_train, batch_size=128, epochs=10, verbose=1,
           validation_split=.1)
 ```
 
@@ -247,10 +247,10 @@ model.fit(X_train, y_train, batch_size=128, epochs=10, verbose=1,
 
 
 ???
-This is with the validation set. 
+This is with the validation set.
 
 This is very similar to scikit-learn, only you have more
-options than fit. 
+options than fit.
 
 ---
 #Evaluating on Test Set
@@ -297,7 +297,7 @@ training set goes up all the time while the loss on the
 training set goes down all the time. Accuracy in the
 validation set stops and stays stable after a certain point.
 The loss on the validation set actually gets worse. So the
-loss overfits while accuracy doesn't overfit. 
+loss overfits while accuracy doesn't overfit.
 
 This gives you a lot of information to debug and check if
 overfitting happening, how long does it take to train,
@@ -306,7 +306,7 @@ should you train longer?
 This interface is pretty simple and pretty similar to
 scikit-learn but it’s not entirely compatible but sometimes
 you want to use these Keras models with scikit-learn tools
-like grid search CV or cross-validation or pipeline. 
+like grid search CV or cross-validation or pipeline.
 
 ---
 #Wrappers for sklearn
@@ -323,7 +323,7 @@ def make_model(optimizer="adam", hidden_size=32):
         Dense(10),
         Activation('softmax'),
     ])
-    model.compile(optimizer=optimizer,loss="categorical_crossentropy",   
+    model.compile(optimizer=optimizer,loss="categorical_crossentropy",
                   metrics=['accuracy'])
     return model
 
@@ -348,14 +348,14 @@ Searching over epochs in this way is not necessarily a good idea, though.
 
 Keras also has wrappers to scikit-learn. These objects
 behave exactly like scikit-learning objects. To use these,
-you need to define a function that would return the model. 
+you need to define a function that would return the model.
 
 I can then give the make model function to the Keras
 classifier. The CLF behaves like a scikit-learn estimator.
 And this enables me to grid search things. I can grid search
 the parameters of this make model function. So I can grid
 search, for example, the hidden size. But I could have
-arbitrary Python code in his make model function. 
+arbitrary Python code in his make model function.
 
 So it could also grid search, what the activations are or
 how many layers there are or something like that. And you
@@ -365,11 +365,11 @@ epochs was part of fit in keras. But for the keras
 classifier, it's obviously part of the constructor because
 it's a scikit-learn API. So you could search both over the
 fit parameters and over the parameters of the make model
-function. 
+function.
 
 In practice, maybe grid searching number of epochs is not
 the smartest thing to do. Maybe looking at the validation
-set is better. But these are things you could do. 
+set is better. But these are things you could do.
 
 And now I can use grid search CV with the keras classifier
 object, parameter grid, and cross-validation. And everything
@@ -382,7 +382,7 @@ a single split of the data.
 
 Stratified shuffled split and iterate equal to one is
 basically the same as using a single validation holdout set
-and you can use this for grid search if you want. 
+and you can use this for grid search if you want.
 
 ---
 .smaller[
@@ -435,20 +435,20 @@ remove different information.
 
 The goal is that you then learn weights that are more robust
 and since you're trying to prevent overfitting that possibly
-generalizes better. 
+generalizes better.
 
 The dropout rate is often pretty high, sometimes it 50%,
-which means you set 50% of your units to zero. 
+which means you set 50% of your units to zero.
 
 This is only during learning. You only want to add noise in
 the learning process. When you want to do predictions, you
 use all the weights but down weight them by the drop out
-rate. 
+rate.
 
 Here, we're not only perturbing the input image, but we're
 also perturbing the hidden units in a very particular way.
 As it turns out that actually works much better than just
-adding noise to the input. 
+adding noise to the input.
 
 ---
 
@@ -521,22 +521,22 @@ class:spacious
 don’t have a GPU) but should be possible
 
 ???
-This is basically a regularizer. 
+This is basically a regularizer.
 
 You're can learn much, much bigger networks with drop out so
 you can do deeper and wider networks without overfitting.
-That was the original intent. 
+That was the original intent.
 
 It slows down training even for the same size because you
 basically zero out a portion of the weights and these
 weights will not be updated. And so you need to do more
 iterations before you've learned all the weights.
 
-The question was, can we paralyze over different networks. 
+The question was, can we paralyze over different networks.
 
 It's not really implemented as different networks, it's more
 helpful to think of it as different networks. There are way
-too many networks as to store them separately. 
+too many networks as to store them separately.
 
 Generally, drop out is one of the techniques that people use
 that usually improve generalization and decrease
@@ -544,25 +544,25 @@ overfitting.
 
 Another technique that you should look up is residual
 networks. It’s another generic strategy to speed up training
-and it allows to learn deeper networks. 
+and it allows to learn deeper networks.
 
 Not all state of the art neural networks you will see use
 drop out, but some of them might. And similarly, you will
-see some that use residual networks or batch normalization. 
+see some that use residual networks or batch normalization.
 
 There’s basically a toolbox of different tricks that people
-use and plot together to get good networks. 
+use and plot together to get good networks.
 
 Another technique that is often used with neural networks is
 augmenting the training data. So adding noise to training
 data, or changing the training data in some way so that you
-get more data is something that is often very helpful. 
+get more data is something that is often very helpful.
 
 We'll talk about images next. With natural images, you can
 flip it on the y-axis and it will still semantically be the
 same image unless you want to do OCR. And so if you do that,
 you just doubled the size of your training set. And for
-neural networks, the bigger training set, the better. 
+neural networks, the bigger training set, the better.
 
 If you do something like add noise, this actually gives you
 an infinite sized training set because every time you see a
@@ -571,7 +571,7 @@ fly, generate arbitrarily big training datasets. Drop out is
 sort of a way to do this generically and do this on the
 hidden layer. But if you have domain knowledge, like for
 images, and you can do this in a way that's specific to the
-domain, then that is often more helpful. 
+domain, then that is often more helpful.
 
 Another thing that is used with images, for example, is
 looking at different crops/scales of the image. So if you
@@ -581,7 +581,7 @@ sample, this way, you can also get infinitely many samples.
 Obviously, they're all correlated but it's better than just
 using the same sample over and over and makes overfitting
 harder. And these are actually very, very important
-techniques. 
+techniques.
 
 So if you look at state of the art models they will always
 use these techniques to augment the training dataset,
@@ -589,7 +589,7 @@ because getting images is easy, for example, but getting
 labeled images is very hard. And so if you know how you
 interpret the image, you know what you should do with the
 label. If you're just doing classification and cropping it
-differently or rotating, it will not change the label. 
+differently or rotating, it will not change the label.
 
 Unless your label is a person holding something in the left
 hand versus holding something in the right hand and then you
@@ -625,7 +625,7 @@ or bottom, detecting a person will always be the same thing.
 
 
 Weight sharing is that basically, you can detect something
-no matter where it is in an image. 
+no matter where it is in an image.
 
 ---
 #Definition of Convolution
@@ -659,7 +659,7 @@ Also not that the filter g is flipped as it’s indexed with
 
 It’s easier to think about this in a signal processing
 context, where we have some signal, and you have a filter
-that you want to apply to the signal. 
+that you want to apply to the signal.
 ---
 #1d example: Gaussian smoothing
 
@@ -674,12 +674,12 @@ I can try to smooth this signal out by, for example, using a
 Gaussian filter. So here, the top left would be F and the
 top right would be G. Computing the convolution between F
 and G basically means each point in the new series is a
-Gaussian weighted average of the surrounding points. 
+Gaussian weighted average of the surrounding points.
 
-The result I get is displayed in the bottom. 
+The result I get is displayed in the bottom.
 
 So smoothing is one of the simplest things we can do with
-convolutions. 
+convolutions.
 
 ---
 #2d Smoothing
@@ -706,7 +706,7 @@ color are smooth.
 You can also compute Laplacian, and you can detect simple
 parent images. So what a convolution neural network does is,
 most layers apply convolutions of this form and what we want
-to learn are these entries in these filters. 
+to learn are these entries in these filters.
 
 In convolutional neural network, the weights that I'm going
 to learn are not weights to multiply, but it's these filters
@@ -751,7 +751,7 @@ the classificattion.
 ![:scale 60%](images/cnn_digits.png)
 ]
 ???
-These are the activations. 
+These are the activations.
 ---
 # Deconvolution
 .center[
@@ -761,7 +761,7 @@ https://www.cs.nyu.edu/~fergus/papers/zeilerECCV2014.pdf
 ???
 If you do it on natural images, you get something like this.
 This is one of the standard neural networks trained on image
-net dataset. 
+net dataset.
 
 So you can look at the filters in the input layer and
 because they're in image space, you can just visualize them.
@@ -774,7 +774,7 @@ image. And if you do that, then you get something like
 these. So this is sort of a visualization of what the second
 layer learned, this is sort of what they try to detect in
 the input. And for each of these, here, you can see the
-patches in the training set that most corresponded to them. 
+patches in the training set that most corresponded to them.
 
 ---
 class: center, middle
@@ -805,7 +805,7 @@ information about the location of anything in the image, it
 was just trained. The dogs in these images are of different
 breeds and different vehicles, and so on. So there was never
 any location information in the training, but it's still
-picked up a lot of things. 
+picked up a lot of things.
 
 ---
 
@@ -822,17 +822,17 @@ picked up a lot of things.
 
 One of the many things that changed since the research paper
 MNest is that, instead of averaging, we're now doing max
-pooling usually. 
+pooling usually.
 
 Looking at the 4x4 pixels, instead of subsampling,
 subsampling basically means just average them, what people
 are doing now is just taking the maximum. So this is again,
-used to reduce the size of the input. 
+used to reduce the size of the input.
 
 For example, if we do 2x2 non-overlapping max pooling, we go
 from 4x4 to 2x2. And people also sometimes do like bigger
 max pooling, overlapping max pooling, and there are many
-different variants of what you can do. 
+different variants of what you can do.
 
 But people now usually use max pooling for decreasing the
 resolution. If you do this, this is not differentiable,
@@ -946,7 +946,7 @@ Dense Network for MNIST
 ???
 Convolutional networks have many more activations but they
 have fewer weights to learn because they’re shared
-everywhere. 
+everywhere.
 ---
 #Train and Evaluate
 
@@ -997,7 +997,7 @@ class:center,middle
 The next thing I want to talk about is one more trick that
 we can use to improve learning called batch normalization.
 This is a heuristic people found that speeds up learning and
-often gives better results. 
+often gives better results.
 
 The idea here is that you want the hidden units to be scaled
 well. So what this does is kind of trying to scale hidden
@@ -1063,7 +1063,7 @@ The solid lines are with batch normalization and the dotted
 lines are without batch normalization.
 
 You can see the learning is much faster and also gets to a
-better accuracy. 
+better accuracy.
 
 ---
 # For larger net (64 filters)
