@@ -19,7 +19,7 @@ class: center, middle
 
 # Advanced Neural Networks
 
-04/23/18
+04/22/19
 
 Andreas C. Müller
 
@@ -30,7 +30,9 @@ FIXME update with state-of-the-art instead of VGG16
 FIXME data augmentation before dropout!
 FIXME show how permuting pixels doesn't affect fully connected network,
 but does affect convolutional network
-
+---
+# Convnets vs Fully Connected Nets Illustrated
+---
 class: middle
 # Residual Neural Networks
 ---
@@ -171,166 +173,68 @@ uses batch normalization and dropout.
 So after this came out, people in Google stole the ResNet
 trick from Microsoft and then they got better. So residual
 networks become widely used after they published this.
+---
+# ResNets in Keras
+---
+class: middle, center
+# Densely Connected Convolutional Networks (DenseNet)
+[Huang et. al - Densely Connected Convolutional Networks (2016)](https://arxiv.org/pdf/1608.06993)
+???
+DenseNet tries to solve a similar problem in trying to learn
+deeper networks. But the approach they take is somewhat
+different.
+---
+class: center
+![:scale 60%](images/densenet-architecture.png)
+???
+Previously we had each layer connected to the layer before
+it. In DenseNet, each layer is connected to all the layers
+before it.
 
+This allows the last layer to be connected to the input and
+the output in a more direct way. The hope is that you can
+learn more easily. But since these are all convolutions,
+this only works if they have the same size.
 
 ---
-
-class:center,middle
-# VGG and Imagenet Filters
+![:scale 80%](images/densenet-architecture2.png)
 ???
-Last time, I showed you a network called VGG, which is a
-relatively simple network made out of convolutional
-max-pooling layers and that stated if the art image net at
-some point. So now, I want to get started by looking a
-little bit deeper to the architecture of this.
+So basically, they added dense blocks into the convolutional
+network. And then between the dense blocks is convolutional
+pooling to basically reduce the dimension. The connections
+between the convolutional layers are not just only the next
+one but all other convolutional layers.
 ---
-# Inspecting VGG16
-.left-column[.smaller[
-```python
-from keras import applications
+class: center, middle
+![:scale 70%](images/densenet-vs-resnet.png)
 
-# load the VGG16 network
-model = applications.VGG16(
-    include_top=False,
-    weights='imagenet')
-model.summary()
-```]]
-.right-column[
-![:scale 90%](images/vgg_model_summary.png)
-]
 ???
-This is not really state of the art any more.
+uses batch normalization and dropout.
 
-Here is how you can load the weights trained on image net
-for his network in keras. So Keras has this application
-sub-module which has all of these pre-trained models and
-architectures from the literature and VGG16 is one of them.
+These networks get even better than ResNet. If you make the
+network bigger and bigger, error drops down. But DenseNet
+gets the same accuracy with three times fewer parameters.
+And if you add parameters or layers, it gets even better.
 
-One thing that's interesting here is that these filters are
-actually quite small.
+One of the reasons why you might be interested in parameters
+is because you need to store them, which means you need
+bigger GPUs. And if you want to do prediction, it takes
+longer, because you need to compute more.
+
+So they also showed a graph of computation, and DenseNet
+basically computes quite a bit faster than ResNet.
+
+If you're interested in this kind of architectures, you
+should also look up Inception.
 
 ---
-#VGG filters
-.smaller[
-```python
-vgg_weights, vgg_biases = model.layers[1].get_weights()
-vgg_weights.shape
-```
-```
-(3, 3, 3, 64)
-```]
-.center[![:scale 45%](images/vgg_filters.png)]
+class: center, middle
+![:scale 90%](images/pretrained-nets-in-keras.png)
+https://keras.io/applications/
 ???
-Here are the filters learned in the first layer. There are
-64 filters in the first layer. And these filters are on RGB
-image so I showed them in RGB.
-
-It's very easy to look at the lowest level of weights
-because the weights work on the image. And as I said before,
-looking at higher layers of weights is a little bit harder.
-
----
-.left-column[![:scale 90%](images/bkny_image.png)]
-.right-column[.smallest[
-```python
-get_3rd_layer_output = K.function([model.layers[0].input],
-                                  [model.layers[3].output])
-get_6rd_layer_output = K.function([model.layers[0].input],
-                                  [model.layers[6].output])
-
-layer3_output = get_3rd_layer_output([[image]])[0]
-layer6_output = get_6rd_layer_output([[image]])[0]
-print(layer3_output.shape)
-print(layer6_output.shape)
-```
-```
-(1, 300, 192, 64)
-(1, 150, 96, 128)
-```
-]]
-???
-K.function() allows me to look at a particular input and
-output of layers. So here, this model.layer[0].input and
-model.layer[3].output, what it says is, I want to create a
-function that takes the input of layer 0, then passes it
-through the graph of the network, and gives me back the
-output of layer 3. So basically, here I'm plugging into this
-graph of the neural network.
-
-I do the same thing for the sixth layer. With the first max
-pooling and after the second max pooling. And then I can put
-in the put in my image and I get as the results the
-activations.
-
-After the first max pooling layer there’s 1 image of height
-300, width 192 and 64 channels. After the second max pooling
-layer there’s 1 image of height 150, width 96 and 128
-channels.
-
-The convolutions didn't change, the image size, otherwise,
-would be like 3 pixels less.
-
----
-
-.center[![:scale 75%](images/after_first_pooling.png)]
-.center[![:scale 75%](images/after_second_pooling.png)]
-???
-Here is the output of a couple of the filters. The main
-thing that I want you to take away is that this filter looks
-at very different things. Some of them are clearly color
-filter, others look at corners and some looks at the
-vertical edges and so on. But these are not really easy to
-interpret in any way.
-
-This is very local because this is after two convolutional
-layers so each pixel in this output image can see at about
-six pixels in the input image and so these are only very
-small areas that it can model.
-
-After the second pooling layer, it can look at much more
-pixels in the neighborhood, because each convolution
-basically extends the area that each unit can see giving
-different structures, different edge orientations and
-different edge frequencies.
-
-This is one way to sort of look at what the neural network
-does.
-
----
-class: middle
-![:scale 100%](images/distill-feature-vis.png)
-
-.smaller[https://distill.pub/2017/feature-visualization/]
-???
-This is a paper on feature visualization in neural networks.
-This is from Google net, also trained on the same set as
-image net. What they’re doing is they’re taking the network,
-they’re fixing the activation in a particular feature map
-and then they do backpropagation through the network to
-adjust the input image so that this particular feature map
-is most activated. This way, you want to create an image
-that activates this particular feature map or particular
-filter the most.
-
-This is one of the papers in a series of papers about how to
-restrict gradient descent on the input image to get some
-nice outputs.
-
-These are deeper into the network. In the beginning, it’s
-like edges of different frequencies and orientations, then
-you get something like textures, which are already quite
-rich, and then you get the larger textures, and then you get
-sort of more object like things and if you go further up,
-you get something that is very close to object.
-
-This sort of allows you to try to understand what the higher
-layers of these networks detect and it's quite interesting
-because a lot of these become quite specific. And this is
-all learned in a completely supervised way so the only
-feedback that the model got was learning to label these
-images correctly. But we get very fine-grained features in
-the network.
-
+Here are all the things that are inside Keras. Inception is
+created by Google by copying from Microsoft. These are
+pretty well-performing models but this list changes daily.
 ---
 class: middle
 # Transfer learning
@@ -681,7 +585,10 @@ really important to use something that's aware of the image
 structure.
 
 ---
-#Adverserial Samples
+# Finetuning with Keras
+
+---
+# Adverserial Samples
 
 .center[
 ![:scale 80%](images/adverserial.png)
@@ -711,435 +618,8 @@ not very surprising from a mathematical perspective,
 but it might be somewhat unexpected.
 
 requires the weights, done by gradient descent.
----
-class: middle
-# Convolutional Neural Networks
-# for Text Classification
----
-# Word Level CNNs for Text Classification
-.smallest[[Kim - Convolutional Neural Networks for Sentence Classification (2014)](https://arxiv.org/pdf/1408.5882.pdf)]
-![:scale 100%](images/word-level-cnn.png)
-???
-One way you could do text classification is to do
-convolutional networks over words.
+FIXME where should this go?
 
-The input is “wait for the video and don't rent it”. You
-could represent each of these words, either using one hot
-encoder, or a word2vec representation which is used here.
-
-Then you can apply convolution neural network in 1D, to
-basically do convolutions over the sentence, and do max
-pooling over the words in the sentence and then at the end
-do a fully connected layer.
-
-And as we did for images, you can use this for
-classification tasks. So in theory, you could start with one
-hot encoding of the words and just sort of learn this
-representation in a supervised way here. But people found
-that initializing them with word2vec representation might be
-better.
-
-Here, basically, we learn fixed length k representation, for
-example, 300 for each word, then over these we do
-convolutions. The convolution filters are very long and
-narrow since here they go only over two or three words but
-they go over all of the k features.
-
----
-class: center
-# Datasets
-![:scale 60%](images/word-level-datasets.png)
-???
-Here are some datasets that tried this on.
-
-The convolution neural network needs a fixed size input. So
-we had to reshape all the images to be the same size.
-Basically, they have a maximum size for the sentences.
-
----
-class: center
-![:scale 100%](images/word-level-cnn-results.png)
-???
-rand: random initialized
-static: used word2vec embedding (and random for out-of-vocabulary)
-non-static: fine-tuning
-multi-channel: one fixed and one fine-tuned word2vec channel
-
-rand doesn't seem so good. Rest pretty much the same. Pretty competative (at the time) against
-highly specialized networks.
-
-
-Here are some results of this compared against ‘then’ state
-of the art. They’ve tried 4 things.
-
-Doing CNN initializing everything randomly.
-
-In CNN static, the first layer is initialized with the
-word2vec representation. So you just use the word2vec
-representation that was learned on like the Google News
-dataset, and you keep them fixed, and you only tune the
-consecutive layers. This works quite a bit better.
-
-In CNN non-static, you do also sort of fine-tuning of the
-first layer. You initialize with a bag of words, and then
-you train the whole neural network also changing the input
-representations.
-
-CNN multi-channel is doing both of these. So it has one-word
-representation initialized to word2vec that keeps fixed and
-one that's initialized with word2vec but that can be
-modified.
-
-CNN random, static, and non-static performs relatively
-similar over these datasets. But you can see that
-initializing with word2vec is kind of important, and it
-doesn't really matter if you fine-tune or not that much.
-
----
-class: center
-# Learned Representations
-![:scale 30%](images/word-level-embeddings.png)
-???
-removes sentiment ambiguity in word2vec
-
-If we fine-tuned or if we changed these word2vec, we’ll have
-new representations. And we can look at what does this word
-embedding now look like, after we fine-tune them for the
-supervised classification task.
-
-Here, this is on a sentiment task. The static channel is
-basically what's closest in the original word2vec space.
-Closest to bad is good, terrible, horrible, and lousy.
-
-Since good and bad are in the same context, the closest word
-to bad is good, which for classification task doesn't really
-make a lot of sense. Similarly, the second closest one to
-good is bad.
-
-You can see that if you allow your model to fine-tune that,
-you actually get something more reasonable and so now we can
-learn that good is actually quite different from bad.
-
-People tune this all the time. But this is sort of a
-reasonable way to approach a text application task, doing
-convolutions over words and initializing with word
-representations learned on a bigger dataset.
-
----
-class: middle
-# Character Level
-# Convolutional Neural Networks
-# for Text Classification
-???
-There's also a different way you can apply convolution nets
-for text classification, which is doing character levels.
-This can be particularly helpful if you have very short
-texts or if you have weird characters in your text like
-tweets.
----
-class: center
-# Character Level CNNs for Text Classification
-.smallest[[Zhang et. al. - Character-level Convolutional Networks for Text
-Classification (2015)](http://papers.nips.cc/paper/5782-character-level-convolutional-networks-for-text-classification.pdf)]
-![:scale 100%](images/character-level-cnn.png)
---
-![:scale 50%](images/character-nn-characters.png)
-???
-Need to cut to fixed-length input.
-70 characters
-temporal max-pooling.
-
-Now, instead of basically each input being a word, each
-input can be a character. We have one hot encoding of the
-characters here and then again, we can do convolutional
-filters over time, and do max pooling over time. Again, we
-can look at the text as a 1D sequence. Now it's a sequence
-of characters not of words.
-
-They used 70 characters here in this work. They looked only
-at the beginning 1024 characters of each document. So this
-is kind of neat because you don’t get rid of the
-tokenization. For the other one, we need to do tokenization,
-and we need to do preprocessing and normalization. For this,
-it just takes the raw text. So basically, you forget all
-that you’ve learned about NLP, and you can just do this
-convolution.
-
----
-class: center
-# Datasets
-.padding-top[
-![:scale 100%](images/character-cnn-datasets.png)
-]
-???
-Much bigger than for word-level!
-epoch size: dataset size / minibatch size.
-
-
-These datasets are of one or two orders of magnitude bigger.
-So previously we had like 10,000 samples, now we have 3
-million samples. So you need a lot more data to learn
-character level CNNs since you threw away a lot of the
-information but what we knew about words. We know about the
-text, that text is made out of words, if we learned this
-model, you basically threw away this information. Like the
-white space, character is not encoded in any special way,
-it's just like any other character.
----
-class: center, middle
-![:scale 75%](images/character-cnn-results.png)
-
-.smallest[
-Later improved in [Conneau et. al - Very Deep Convolutional Networks
-for Text Classification - 2016](http://www.aclweb.org/anthology/E17-1104)]
-???
-Might be good for very short texts, not necessarily the go-to solution (yet).
-
-
-Here are some results on this.
-
-First thing I want you to notice is that ngrams with TFIDF
-are state of the art on half of these datasets. They are
-doing like a whole thing to learn… like they’re using a
-1,000,000 samples to train this very complex CNN that tries
-to learn character levels, but they're not doing better than
-what we did with the bag of words and TFIDF.
-
-Bag of means is using word2vec and this is slightly more
-sophisticated than just averaging all but basically, this is
-using pre-trained word2vec and tries to do classification on
-this word2vec representation. This worked way worse than a
-bag of words.
-
-The other thing that's interesting to notice is that the
-bigger the network, the better it gets. ‘Th’ means they
-augmented the dataset with a thesaurus. So they replaced
-words by synonyms from a thesaurus. And that makes the model
-a little better.
-
-It helps if you have 3 million samples to augment the
-dataset using a lexicon. I think it's a little bit weird to
-use a lexicon here because sort of the point of all of it
-was to learn language understanding from scratch. That was
-actually the title of this paper originally.
-
-This also works if you have very short text. So if you have
-short text and giant datasets, this might work better than
-the bag of words. But you definitely try the bag of words
-first, because this will be hard to train, and it will take
-longer. Whereas, the bag of words will probably take like
-half an hour.
-
----
-class: center, middle
-
-# Advanced Architectures
-???
-Two of the main tricks that we talked about were drop out
-and batch normalization. These are 2 things that are
-basically used in all state of the art models. Now, we're
-going to talk about some more recent tricks that people keep
-using.
----
-class: center, middle
-# Deep Residual Networks (ResNet)
-[He et. al. - Deep Residual Learning for Image Recognition (2015)](https://arxiv.org/pdf/1512.03385.pdf)
-???
-One that made quite a big jump in performance is deep
-residual networks.
----
-# Problem
-![:scale 90%](images/resnet-no-deep-nets.png)
-???
-We can't fit deep networks well - not even on training set!
-"vanishing gradient problem" - was motivation for relu, but not solved yet.
-
-
-The deeper the network gets, usually the performance gets
-better. But if you make your network too deep, then you
-can't learn it anymore.
-
-This is on CIFAR-10, which is a relatively small dataset.
-But if you try to learn a 56-layer convolutional, you cannot
-even optimize it on the training set. So basically, it's not
-that we can't generalize, we can't optimize. So these are
-universal approximators, so ideally, we should be able to
-overfit completely the training set.
-
-But here, if we make it too deep, we cannot overfit the
-training set anymore. It's kind of a bad thing. Because we
-can’t really optimize the problem. So this is sort of
-connected to this problem of vanishing gradient that it's
-very hard to backpropagate the error through a very deep net
-because basically, the idea is that the further you get from
-the output, the gradients become less and less informative.
-We talked about RELU units, which sort of helped to make
-this a little bit better. Without RELU units, you had like 4
-or 5 layers, with RELU units, you have like 20 layers. But
-if you do 56 layers, it's not going to work anymore.
-
-Even it's not going to work anymore, even on the training
-set. So this has been like a big problem. And it has a
-surprisingly simple solution, which is the RES-NET layer.
-
----
-class: center
-# Solution
-![:scale 60%](images/residual-layer.png)
-
-`$$y = F(x, \{W_i\}) + x$$`
-
---
-
-`$$y = F(x, \{W_i\}) + W_sx$$`
-
-???
-instead of learning a function. learn the difference to identity.
-if sizes different, add linear projection.
-
-Here's how the residual layer looks like. And the idea is,
-let's say you have a bunch of weight layers, instead of
-learning a function, we learn how the function is different
-from the identity.
-
-So you're not trying to model the whole relationship between
-x and y, you want to model how is y different from x.
-
-In practice, what happens is you have multiple weight
-layers, usually like 2, and you have skip connection that
-gives the identity from before these layers to after these
-layers.
-
-So basically, if you set these weights all to zero, you have
-a pass-through layer. And this allows information to be
-back-propagated much more easily because you have all these
-identity matrices, so something always gets backpropagated.
-So this obviously only works if y and x have the same shape.
-
-
-So in CNNs, often the convolutional layers have sort of the
-same shape. But then you also have max-pooling layers. And
-so what you can do is, instead of having the identity, you
-use a linear transformation.
-
-And this way, the gradients can propagate better. So just
-seems like a very simple idea but people have tried it
-before and it really made a big difference.
-
----
-class: center, middle
-![:scale 25%](images/resnet-architecture.png)
-???
-dotted lines are linear projection, others are identity.
-
-
-MTG19, which a state of the art neural network before and
-these are all the layers.
-
-Next to it is a 34 layered, convolutional neural network.
-
-And then is the residual network. For each pair of two
-layers, you add in a skip connection. This black arrow is
-just an identity mapping because things are the same size.
-If there's pooling, there's this dashed arrow, which is a
-linear transformation. But basically, they're sort of a
-pathway that allows you to project the identity from the
-very beginning to the very end. Or from the output signal
-you get back towards the beginning.
-
----
-class: center, middle
-![:scale 100%](images/resnet-success.png)
-???
-Here’s the result. The solid line is the training error and
-the bold line is the test error. The lines are depicted over
-the number of iterations.
-
-So what you can see here is the 18 layers works well than
-the 34 layers. And the training set is worse than the test
-set everywhere. But with the 34 layers, even the training
-set can’t beat the test set of the 18 layers.
-
-The next one is exactly the same architecture, but we put in
-all these identity matrices. And now we can see that the 18
-layer is pretty unchanged. But the 34 layer is now actually
-better than the 18 layers. And in particular, we can overfit
-the dataset a little bit. This is a much better result than
-before. And when you publish this, this was state of the art
-and quite a big jump.
-
----
-class: center, middle
-![:scale 80%](images/resnet-results.png)
-???
-uses batch normalization and dropout.
-
-
-152 layers is a whole lot of layers. ResNet is by Microsoft.
-So after this came out, people in Google stole the ResNet
-trick from Microsoft and then they got better. So residual
-networks become widely used after they published this.
-
----
-class: middle, center
-# Densely Connected Convolutional Networks (DenseNet)
-[Huang et. al - Densely Connected Convolutional Networks (2016)](https://arxiv.org/pdf/1608.06993)
-???
-DenseNet tries to solve a similar problem in trying to learn
-deeper networks. But the approach they take is somewhat
-different.
----
-class: center
-![:scale 60%](images/densenet-architecture.png)
-???
-Previously we had each layer connected to the layer before
-it. In DenseNet, each layer is connected to all the layers
-before it.
-
-This allows the last layer to be connected to the input and
-the output in a more direct way. The hope is that you can
-learn more easily. But since these are all convolutions,
-this only works if they have the same size.
-
----
-![:scale 80%](images/densenet-architecture2.png)
-???
-So basically, they added dense blocks into the convolutional
-network. And then between the dense blocks is convolutional
-pooling to basically reduce the dimension. The connections
-between the convolutional layers are not just only the next
-one but all other convolutional layers.
----
-class: center, middle
-![:scale 70%](images/densenet-vs-resnet.png)
-
-???
-uses batch normalization and dropout.
-
-These networks get even better than ResNet. If you make the
-network bigger and bigger, error drops down. But DenseNet
-gets the same accuracy with three times fewer parameters.
-And if you add parameters or layers, it gets even better.
-
-One of the reasons why you might be interested in parameters
-is because you need to store them, which means you need
-bigger GPUs. And if you want to do prediction, it takes
-longer, because you need to compute more.
-
-So they also showed a graph of computation, and DenseNet
-basically computes quite a bit faster than ResNet.
-
-If you're interested in this kind of architectures, you
-should also look up Inception.
-
----
-class: center, middle
-![:scale 90%](images/pretrained-nets-in-keras.png)
-https://keras.io/applications/
-???
-Here are all the things that are inside Keras. Inception is
-created by Google by copying from Microsoft. These are
-pretty well-performing models but this list changes daily.
 ---
 class: center, middle
 # Recurrent Neural Networks
