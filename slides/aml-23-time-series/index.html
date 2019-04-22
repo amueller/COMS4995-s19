@@ -19,14 +19,15 @@ class: center, middle
 
 # Time Series and Forecasting
 
-04/25/18
+04/24/19
 
 Andreas C. Müller
 
 ???
-Today we'll talk about time series and forecasting. 
+Today we'll talk about time series and forecasting.
 
 FIXME much more polish
+FIXME not equally spaced = point processes
 FIXME time series classification
 FIXME PCA / clustering on time series
 FIXME general autoregressive models.
@@ -35,11 +36,11 @@ FIXME too short?!
 FIXME deprecated pandas API on slides.
 ---
 class: center, middle
-# Tasks 
+# Tasks
 
 ???
 I want to talk about different tasks that are associated
-with time series that you might come across. 
+with time series that you might come across.
 ---
 
 # 1d Forecasting
@@ -56,7 +57,7 @@ forecasting means you have a time series, you have the
 history of the time series, and you want to predict how this
 time series will evolve in the future. There are no
 additional features here, only the history of how does 1D
-signal evolve. 
+signal evolve.
 
 This example here is of a toy dataset of the CO2
 concentration on top of a volcano in Hawaii.
@@ -74,7 +75,7 @@ concentration on top of a volcano in Hawaii.
 You can also do ND forecasting where you're simultaneously
 trying to forecast multiple times series. Here are 3
 different stocks. You might observe the history of these and
-determine how they will evolve in the future. 
+determine how they will evolve in the future.
 
 These 3 stocks are simultaneously the featured input that we
 learned from and things we want to predict. I don't
@@ -102,13 +103,13 @@ you have a measure of them from the past so you’d know how
 much energy the household consumed, what the weather was,
 how much was spent on heating and light and something like
 that. And also, when you want to make a prediction, you also
-know for that point in time what the weather was. 
+know for that point in time what the weather was.
 
 So this more closely resembles the supervisor models that
 we’ve seen so far. Here, we have the features and the
 targets separated. In the other cases, we didn't really have
 features and the target separated, we just had the 1D
-series. 
+series.
 
 ---
 
@@ -144,7 +145,7 @@ the time series? Do you have explanatory variables there? Or
 do you want to just label a whole time series?
 
 Depending on what you want to do, there are several
-different challenges. 
+different challenges.
 
 ---
 class: spacious
@@ -162,7 +163,7 @@ targets are independent of each other, given the features,
 but you have temporal component and over time, they might be
 a trend there or at least, a correlation. So at different
 times, the output will be correlated. We need to have
-basically completely different tools to work with this. 
+basically completely different tools to work with this.
 
 You could try to make an assumption that given your
 explanatory variables, your targets are IID, but it will
@@ -174,7 +175,7 @@ in the concepts, things just don't stay constant over time
 so when you evaluate, you need to take into account that
 things change. Usually, you want to learn from the past and
 predict the future. So you need to make sure that you do
-this in your evolution. 
+this in your evolution.
 
 If you want to do time series classification, we're actually
 not going to talk about this today. But the main the
@@ -187,7 +188,7 @@ Usually, these time series are not the same length or you
 have a continuous series and you want to classify parts of
 it, you want to detect an event happening. To make this into
 a standard supervised classification problem is a little bit
-tricky. 
+tricky.
 
 The main thing we're going to talk about today is 1D
 forecasting.
@@ -197,11 +198,11 @@ class: middle
 # Preliminaries
 ???
 I want to talk about some preliminaries about how to handle
-time series. 
+time series.
 
 The first thing you should think about with time series is
 what the measurements look like, or how are the measurements
-taken. 
+taken.
 
 ---
 
@@ -211,12 +212,12 @@ taken.
 
 Equally spaced:
 
-$$ t_{i+1} - t_i = const$$ 
+$$ t_{i+1} - t_i = const$$
 
 --
 Unevenly spaced:
 
-$$ t_{i+1} - t_i  \quad varies $$ 
+$$ t_{i+1} - t_i  \quad varies $$
 
 
 
@@ -240,7 +241,7 @@ The offset obviously is if you have unevenly spaced time
 series. This is often the case if you have events. So if you
 look at stocks on a very granular level, and look at every
 buy and sell event, for example, they would be at arbitrary
-times. 
+times.
 
 ---
 # Examples
@@ -281,11 +282,11 @@ York. Every individual bike ride has like a different start
 and end date at completely irregular times but you can say
 how many people rode a bike every hour, or how many people
 rented a bike in a specific hour, how many people returned a
-bike at a specific hour. 
+bike at a specific hour.
 
 This doesn't always make sense so be careful if you do this.
 But this is one of the easiest ways to go from unevenly
-spaced time series to evenly spaced time series. 
+spaced time series to evenly spaced time series.
 
 The reason for an evenly spaced time series is that
 basically all of the models assume this and if you want to
@@ -293,7 +294,7 @@ make a prediction, you need to state what you want to make a
 prediction for. And so if you have evenly spaced time
 series, you can determine when the next step is going to be.
 If you don't know when the next time steps are going to be
-then it’s much harder to make a prediction. 
+then it’s much harder to make a prediction.
 
 ---
 class: center, middle
@@ -308,7 +309,7 @@ things Pandas was developed for. Tabular data and time
 series are somewhat distinct things, but Pandas does both of
 them. The interface is a little bit weird because it tries
 to do these two things that are sort of not entirely
-related. 
+related.
 ---
 
 # Parse Dates
@@ -316,7 +317,7 @@ related.
 .smaller[
 ```python
 url = "ftp://aftp.cmdl.noaa.gov/products/trends/co2/co2_weekly_mlo.txt"
-names = ["year", "month", "day", "year_decimal", "co2", "days", "1 yr ago", 
+names = ["year", "month", "day", "year_decimal", "co2", "days", "1 yr ago",
           "10 yr ago", "since 1800"]
 maunaloa = pd.read_csv(url, skiprows=49, header=None, delim_whitespace=True,
                        names=names, na_values=[-999.99])
@@ -336,7 +337,7 @@ maunaloa.head()
 ```python
 maunaloa = pd.read_csv(url, skiprows=49, header=None, delim_whitespace=True,
                        names=names, parse_dates=[[0, 1, 2]], na_values=[-999.99])
-maunaloa.head()                       
+maunaloa.head()
 ```
 ]
 
@@ -347,24 +348,24 @@ maunaloa.head()
 Multiple columns combined to a single date !
 
 You can parse multiple columns in a data frame together as a
-single date. 
+single date.
 
 Parse_dates is very, very flexible, and allows you to
 basically parse any string representation of dates into a
 date object. You can give it a single column, and it’ll try
 it's best to figure out how does the single column represent
 the date or here, in this case, I gave it 3 columns, year,
-month, day and it just automatically parsed them together. 
+month, day and it just automatically parsed them together.
 
 This is now not just a concatenation of these strings, this
 is actually a representation of the date, which is much
 harder to get. Don't try to do date parsing yourself, Pandas
-is pretty good at it. 
+is pretty good at it.
 
 Pandas have a lot of time series functionality and it
 assumes that the data is indexed by a time series. If you
 want to do time series analysis, you really need to use the
-index for the time dimension. 
+index for the time dimension.
 
 ---
 
@@ -375,7 +376,7 @@ index for the time dimension.
 maunaloa = pd.read_csv(url, skiprows=49, header=None, delim_whitespace=True,
                        names=names, parse_dates=[[0, 1, 2]], na_values=[-999.99],
                        index_col="year_month_day")
-maunaloa.head()                       
+maunaloa.head()
 ```
 ]
 
@@ -393,7 +394,7 @@ frame a different kind of object, because now it's really
 representing a time series.
 
 Pandas think quite differently about things that are indexed
-by time data. 
+by time data.
 
 
 ---
@@ -426,7 +427,7 @@ Name: co2, dtype: float64
 
 ???
 The gaps in the plot are missing values. The timestamp is
-always regular but there are some missing values. 
+always regular but there are some missing values.
 ---
 
 # Backfill and Forward Fill
@@ -440,7 +441,7 @@ maunaloa.co2.isnull().sum()
 20
 ```python
 maunaloa.fillna(method="ffill", inplace=True)  # or bfill
-maunaloa.co2.isnull().sum()                      
+maunaloa.co2.isnull().sum()
 ```
 0
 ]
@@ -449,17 +450,17 @@ maunaloa.co2.isnull().sum()
 
 ???
 In time series, there's actually a very simple way to do
-imputation, which is very stupid, but very common. 
+imputation, which is very stupid, but very common.
 
 So here, there are actually 20 missing values in this whole
 series. If we have very few missing values, or if we really
 don’t care about the precision as much, there are methods
 called FFILL (forward fill) and BFILL (backward fill). They
-basically just fill in the last value. 
+basically just fill in the last value.
 
 Usually, you don't want to have information from the future
 propagate to the past so ffill in many application makes
-more sense than bfill. 
+more sense than bfill.
 
 This is only possible because we set the index to be a time
 series index otherwise it wouldn't really make sense to say
@@ -472,7 +473,7 @@ irregular intervals, or if you think that the data is much
 too granular and you want to accumulate it, you can also
 just drop the columns. So if afterwards, you're just going
 to average, you can just average less values, and it's going
-to be fine. 
+to be fine.
 
 Q: Can the index column be unsorted?
 
@@ -491,9 +492,9 @@ resampled_co2 = maunaloa.co2.resample("MS")
 resampled_co2
 ```
 ```
-DatetimeIndexResampler 
-[freq=<MonthBegin>, axis=0, 
-  closed=left, label=left, 
+DatetimeIndexResampler
+[freq=<MonthBegin>, axis=0,
+  closed=left, label=left,
   convention=start, base=0]
 ```
 ```python
@@ -534,13 +535,13 @@ If I want to represent each resample period, for example, by
 its mean, I can do mean and this will give me the mean over
 each aggregate period. On the right, we have a table of all
 these different periods, MS is month start frequency, it
-resamples to months, starting at the start of every month. 
+resamples to months, starting at the start of every month.
 
 There's many more of those. That's mostly because Pandas was
 developed in a business context where there are many
 different time steps that might be of interest, like
 business days, or quarters, or business years, and things
-like that. 
+like that.
 
 This is sort of the easiest way in which you can get a
 homogenous time series. Here, I have for each month, a
@@ -569,7 +570,7 @@ in the blue time series, and that's completely gone in the
 green time series. And the question you have to ask yourself
 is, what do we actually care about? Do we care about the
 fine grain patterns? Do we only care about the
-coarse-grained patterns? 
+coarse-grained patterns?
 
 If we care about the fine grain patterns, do we have enough
 data to learn them? If you go to fine-grained, at some
@@ -585,7 +586,7 @@ class: center, middle
 ???
 There's a couple of concepts that are very important for
 forecasting. Forecasting is traditionally a very statistics
-influenced field. 
+influenced field.
 ---
 class: spacious
 
@@ -606,7 +607,7 @@ independent of time and covariance between observations k
 steps apart is independent of time. So that means basically,
 there is no trend, there is no real evolution of the time
 series over time. The things that happened yesterday are
-sort of the same kind of things that will happen tomorrow. 
+sort of the same kind of things that will happen tomorrow.
 ---
 
 .center[![:scale 75%](images/stationarity.png)]
@@ -627,7 +628,7 @@ stationary tests, and there's many of them. But one thing
 you can always do, you can apply the model, see if it works
 or if it doesn't work, try to make the time series
 stationary or you can use some of the standard models to
-make the time series stationary. 
+make the time series stationary.
 
 ---
 
@@ -651,7 +652,7 @@ minus the last time step, and it gives me a new time series,
 it looks like this.
 
 This now looks much more stationary. The variance, mean and
-the covariance doesn't seem to change too much. 
+the covariance doesn't seem to change too much.
 
 Doing this differencing the derivative is a very common
 preprocessing method.
@@ -666,13 +667,13 @@ $$ R(s,t) = \frac{\operatorname{E}[(X_t - \mu_t)(X_s - \mu_s)]}{\sigma_t\sigma_s
 
 Autocorrelation basically asks you what does each time step
 tell you about the next time step, how much correlation is
-there between one-time step and the future. 
+there between one-time step and the future.
 
 For each step length, you can compute the autocorrelation
 between time s and t. Usually, you look at each data point
 or each time step, and then say, 10 times steps in the
 futures or 100 times steps in the futures and look at the
-correlation between them. 
+correlation between them.
 
 ---
 
@@ -693,11 +694,11 @@ ppm.autocorr(lag=12)
 The autocorrect() function does the autocorrelation with the
 next time step with a lag of 1, and you can see that is
 pretty high. It's very close to one meaning each time step
-is a very, very good predictor of the next time step. 
+is a very, very good predictor of the next time step.
 
 Lag 12 is even more of a predictor. So this is after 12
 weeks, after 12 weeks things are basically perfectly
-correlated, which is also interesting. 
+correlated, which is also interesting.
 
 ---
 # Autocorrelation function
@@ -721,18 +722,18 @@ Another library that has a lot of the time series analysis
 in Python is stats models. A lot of the more high level,
 more analysis-driven things in Pandas actually use stats
 models under the hood. Stats model has a couple of very
-helpful methods. 
+helpful methods.
 
 ACF is the autocorrelation function and I pass it my time
 series and it computes the autocorrelation. So stats models
 actually work directly on data frames, while scikit-learn
 does not. And so now I can plot the autocorrelation
-function. 
+function.
 
 Here, by default, it gave me all the lags from 0 to 14. You
 can see that the autocorrelation starts at very high and
 then decreases over time, but there's also more
-autocorrelation in 3 places, in multiples of 12. 
+autocorrelation in 3 places, in multiples of 12.
 
 
 ---
@@ -749,16 +750,16 @@ autocorrelation_plot(ppm)
 
 ???
 You can also do this directly in Pandas with a little bit
-more of a high-level interface. 
+more of a high-level interface.
 
 If you actually want to have access to the autocorrelation
 function, you can use it with stat models. If you just want
-to do the plot, you can look at the autocorrelation plot. 
+to do the plot, you can look at the autocorrelation plot.
 
 Here, everything outside of this interval means there's a
 significant correlation. And again, you can see there's a
 very fine wavy pattern where there's more autocorrelation
-every 12 weeks. 
+every 12 weeks.
 
 ---
 # Autocorrelation of differenced series
@@ -786,26 +787,26 @@ plt.plot(autocorrelation)
 ]
 ???
 This drop in autocorrelation is related to the trend in the
-data. We can also de-trend the data. 
+data. We can also de-trend the data.
 
 Diff is used to de-trend a time series. And if you do
 autocorrelation function with this, you can see there are
 very strong periodic patterns in here. But the overall
 pattern is positive and negative correlations with a very
-strong periodicity. 
+strong periodicity.
 
 On the right, we have it in more detail. You can see that
 things are very, very correlated after 12 weeks, and 24 and
-36. This is part of the natural weather cycle.  
+36. This is part of the natural weather cycle.
 
 So the most basic analysis you can do is looking at
 stationarity and looking at autocorrelation function. Here,
 we discovered there's a lot of correlation and there's a
-periodic pattern. 
+periodic pattern.
 
 Another quite useful analysis step is trying to
 automatically extract these periodic patterns, they're very
-common in all kinds of time series. 
+common in all kinds of time series.
 
 ---
 class: compact
@@ -830,7 +831,7 @@ There's a very simple one built into stats models, which is
 tsa.seasonal. And that tries to basically, this is not a
 predictive model, it's trying to decompose the data into a
 trend and a seasonal model. And it does this basically by
-smoothing. 
+smoothing.
 
 Here, the trend is basically a non-parametric fit to a
 smoothed version of the time series. The seasonal model is a
@@ -842,17 +843,17 @@ You can see over the whole time frame, this is very much
 dominated by the trend, which goes from, 300 to 400. There's
 the seasonal variation that goes from 0.5 to -0.5. And then
 there's basically some noise left, but the noise is actually
-quite small compared to the rest. 
+quite small compared to the rest.
 
 So you can actually understand the signal very well using
 this long term trend component that’s very smooth and this
-very periodic seasonal component. 
+very periodic seasonal component.
 
 This is why people like the time series because it's very
-regular, so you can actually do something with it. 
+regular, so you can actually do something with it.
 
 So this was more like exploratory analysis, trying to figure
-out what does the time series look like. 
+out what does the time series look like.
 
 
 ---
@@ -871,13 +872,13 @@ The most commonly used methods for being forecasting is
 autoregressive models, in particular, autoregressive linear
 models. The assumption behind these models is that you can
 predict the next time step value as a linear function of
-previous time steps. 
+previous time steps.
 
-The last x should be x_(t+(k-1)) 
+The last x should be x_(t+(k-1))
 
 So basically, you take the last k steps and you linearly
 weight them and then you learn linear regression model that
-basically has these constant coefficients, 0, 1 and so on. 
+basically has these constant coefficients, 0, 1 and so on.
 
 So the simplest way is just try to break each next time step
 from the last time step, which would mean just learn c_0,
@@ -885,7 +886,7 @@ maybe also learn an offset bias or something like that.
 
 You can also obviously think about doing more complicated
 models. But these linear models are actually quite common
-and pretty simple to implement. 
+and pretty simple to implement.
 
 ---
 
@@ -922,7 +923,7 @@ dtype: float64
 .smaller[
 ```python
 ppm[300:].plot(label="true")
-res.predict(ppm.index[500], 
+res.predict(ppm.index[500],
   ppm.index[-1]).plot(label="predict")
 ```
 ]
@@ -935,12 +936,12 @@ series. Max lag is how many coefficients I want to learn, or
 how many time steps I want to look back. We saw that there's
 a very strong periodicity in a 12 week periods. So it makes
 sense to at least cover 1 period of this periodicity.
-Anything shorter will not be able to capture this pattern. 
+Anything shorter will not be able to capture this pattern.
 
 And so here are parameters that the model learned, so these
 are just linear coefficients. Only that sort of linear
 coefficients is applied to the time series itself. So there
-are the constant and 12 values. 
+are the constant and 12 values.
 
 Stats models have a bunch of models, but the API is sort of
 quite different from scikit-learn and not as homogeneous. So
@@ -951,7 +952,7 @@ with scikit-learn.
 
 If we want to make a prediction, we take a value to start
 from or a history and then do a forecast until a certain
-time step. 
+time step.
 
 What this does is to predict the first time step for the
 forecast, it looks at the last 12 time steps, uses these
@@ -962,13 +963,13 @@ uses previous predictions to make the next prediction. This
 way, you can forecast more and more for the future. As you
 might expect, the more you forecast the future, the sort of
 more uncertain you get, because you always based your
-prediction on previous predictions. 
+prediction on previous predictions.
 
 Here, it actually covered the periodicity pretty well. So
 after a while, the periodicity becomes a little bit too
 small and we overpredict a little bit, but generally, you
 could say this sort of looks somewhat reasonable. That said,
-the order of the model is quite important. 
+the order of the model is quite important.
 
 ---
 
@@ -979,7 +980,7 @@ the order of the model is quite important.
 ```python
 ar6 = ar_model.AR(ppm[:500])
 res = ar6.fit(maxlag=6)
-ar_pred = res.predict(ppm.index[500], 
+ar_pred = res.predict(ppm.index[500],
                       ppm.index[-1])
 ```
 ]
@@ -991,7 +992,7 @@ ar_pred = res.predict(ppm.index[500],
 ```python
 ar25 = ar_model.AR(ppm[:500])
 res = ar25.fit(maxlag=25)
-ar_pred = res.predict(ppm.index[500], 
+ar_pred = res.predict(ppm.index[500],
                       ppm.index[-1])
 ```
 ]
@@ -1000,7 +1001,7 @@ ar_pred = res.predict(ppm.index[500],
 
 ???
 So here, if I take a maxlag=6, that means I don't actually
-cover the whole periodicity. 
+cover the whole periodicity.
 
 If I give it a larger lag, the model becomes more powerful
 because it has more coefficients. But it also can stabilize
@@ -1012,7 +1013,7 @@ With maxlag=25, which is basically 2 periods, it can do like
 a near perfect prediction.
 
 AR model is not really supposed to work with non-stationary
-things, but it still does. 
+things, but it still does.
 
 If you use too large of a max lag, you would overfit. This
 is not overfitting here because I didn't use this in fitting
@@ -1022,10 +1023,10 @@ do a prediction on the training dataset but I could always
 make a prediction perfectly on the training dataset by using
 more and more lag, but then it would possibly not
 generalize. Here, since I'm using a separate test set to
-evaluate, I know it's not overfitting. 
+evaluate, I know it's not overfitting.
 
 There's actually a whole family of different models that are
-related to this. 
+related to this.
 
 ---
 # Autoregressive integrated moving average (ARIMA)
@@ -1057,7 +1058,7 @@ more powerful model that tries to build a more complex
 statistical model. I tried to tune this whole bunch but I
 couldn't really get it to work on this dataset. But I think
 it might be that the optimization in stats models is
-possibly not ideal, that said, I’m no expert on this. 
+possibly not ideal, that said, I’m no expert on this.
 
 ARIMA works on difference time series, it then tries to
 model the data using moving averages and an autoregressive
@@ -1067,7 +1068,7 @@ the moving averages.
 
 This is a very commonly used model. Here, in this example,
 I’ve provided the data and also the order of instantiation
-and provide nothing to fit. 
+and provide nothing to fit.
 
 ---
 
@@ -1075,7 +1076,7 @@ and provide nothing to fit.
 
 .smaller[
 ```python
-ppm.shape 
+ppm.shape
 ```
 ```
 (709,)
@@ -1110,7 +1111,7 @@ looking at the index and make it a series and I make it in
 ordinals. So now I have all the time steps as integers and I
 split them into training and test set. And then I just build
 a linear model on this. So this basically just fits a line
-to the whole dataset. 
+to the whole dataset.
 
 ---
 
@@ -1119,7 +1120,7 @@ to the whole dataset.
 .center[![:scale 85%](images/linear model for trend.png)]
 
 ???
-And looks like this. 
+And looks like this.
 
 This helps me a little bit to understand the trend. So
 there’s a somewhat linear trend.
@@ -1131,7 +1132,7 @@ there’s a somewhat linear trend.
 .smaller[
 ```python
 from sklearn.preprocessing import PolynomialFeatures
-lr_poly = make_pipeline(PolynomialFeatures(include_bias=False), 
+lr_poly = make_pipeline(PolynomialFeatures(include_bias=False),
                           LinearRegression())
 lr_poly.fit(X_train, train)
 plt.plot(ppm.index, lr_poly.predict(X))
@@ -1145,7 +1146,7 @@ ppm.plot()
 ???
 I then used polynomial features. And you can see that it's
 actually very well modeled by a quadratic (Polynomial
-features by default, use first and second degrees) 
+features by default, use first and second degrees)
 
 If I want to model the trend, I can now try to globally
 model the trend with the quadratic. This is very different
@@ -1154,7 +1155,7 @@ the trend, or basically, the ARIMA model that worked pretty
 well which didn’t have a global model at all, it had a very
 local model, just dependent on the last couple of times
 steps. Meanwhile here, we're trying to do something much
-more global. 
+more global.
 
 ---
 
@@ -1169,7 +1170,7 @@ y_res.plot()
 .center[![:scale 60%](images/detrending with trend model.png)]
 
 ???
-So we could use this for example for de-trending. 
+So we could use this for example for de-trending.
 
 Here, this is training the model on a training set and then
 de-trending on the whole dataset. And it looks like this. So
@@ -1190,7 +1191,7 @@ ar_model_res = ar_model.AR(y_res[:500])
 res_res = ar_model_res.fit(maxlag=12)
 ar_pred_res = res_res.predict(
         ppm.index[500], ppm.index[-1])
-pred_ar_res = ar_pred_res + 
+pred_ar_res = ar_pred_res +
               r_poly.predict(X_test)
 res_res.params
 ```
@@ -1234,7 +1235,7 @@ the autoregressive model less lag.
 So this was trying to model the trend globally and trying to
 model it locally with the autoregressive model. We could’ve
 also tried to capture the model with a linear regression
-model. 
+model.
 
 ---
 
@@ -1252,7 +1253,7 @@ X_month.head()
 ```python
 X_train_month = X_month[:500]
 X_test_month = X_month[500:]
-lr_poly_month = make_pipeline(PolynomialFeatures(include_bias=False), 
+lr_poly_month = make_pipeline(PolynomialFeatures(include_bias=False),
 								LinearRegression())
 lr_poly_month.fit(X_train_month, train)
 X_test_month.shape # (209,2)
@@ -1262,7 +1263,7 @@ X_test_month.shape # (209,2)
 
 ???
 Here, I'm adding to the dataset, not only the year_month,
-but also the month. 
+but also the month.
 
 So now I have two features. And I tried to build a linear
 model on this. This allows me to model periodicity because
@@ -1288,9 +1289,9 @@ the level of co2 should be.
 .smaller[
 ```python
 from sklearn.preprocessing import OneHotEncoder
-lr_poly_month_ohe = make_pipeline(OneHotEncoder(categorical_features=[1], 
+lr_poly_month_ohe = make_pipeline(OneHotEncoder(categorical_features=[1],
 												 sparse=False),
-                                  PolynomialFeatures(include_bias=False), 
+                                  PolynomialFeatures(include_bias=False),
                                   LinearRegression())
 lr_poly_month_ohe.fit(X_train_month, train)
 ```
@@ -1308,24 +1309,24 @@ model. This model is a very simple seasonal model that
 learns for each month an offset and the quadratic model.
 
 I find this slightly easier to understand than the AR model
-even though it’s worse than the AR model. 
+even though it’s worse than the AR model.
 
 In this model, we have a one hot encoding of the month, we
 have a global quadratic model. And so we have something like
-a 13-dimensional feature space plus the quadratic features. 
+a 13-dimensional feature space plus the quadratic features.
 
 The r-square of this model is 0.505 while the r-square of
-the ARIMA model is 0.577. 
+the ARIMA model is 0.577.
 
 I find this a little bit easier to understand because the
 ARIMA models basically model relationships between past
 values and future values whereas the linear model models the
 values directly. So you won't get as much of this drift over
-time. 
+time.
 
 You could now try and engineer more and more features that
 would be one way to attack this. Another way would be to use
-a different model other than a linear model. 
+a different model other than a linear model.
 
 ---
 class: spacious
@@ -1346,7 +1347,7 @@ k data points and the target is the next data point.
 
 It’s very easy, given any machine learning algorithm to
 build an autoregressive model based on this algorithm. And
-trees always works well and it will also work for this. 
+trees always works well and it will also work for this.
 
 The autoregressive models work best if there's no trend, but
 if there's autocorrelation. Basically, you will look at this
@@ -1375,7 +1376,7 @@ FIXME formulas
 I think it’s very useful to go through these and try to
 build a seasonal model yourself to understand what's
 happening. But there's actually a very good package for
-seasonal modeling provided by Facebook called FB Prophet. 
+seasonal modeling provided by Facebook called FB Prophet.
 
 This is an additive model that fits a yearly seasonal and a
 weekly seasonal, and then possibly holidays. So this is
@@ -1384,7 +1385,7 @@ a weekly seasonal component, if you look at any kinds of
 sales data, or any kinds of user data, weekdays and weekends
 are very different. Everything is like very much dominated
 by these weekly patterns. And this is what this is geared
-towards. 
+towards.
 
 So FB prophet only does 1D forecasting and I don't think
 they have any explanatory variables so you just do like a 1D
@@ -1399,12 +1400,12 @@ This doesn’t only fit a very simple linear model or
 something like this for the growth curve, but it actually
 fits probabilistic models on all of these so it keeps
 uncertainties about all its estimates. And so this gives you
-a pretty good model. 
+a pretty good model.
 
 In contrast to the model that we saw from stats models,
 which was basically just smoothing and then showing you
 decomposition, this is a forecasting model. So you can
-actually use the seasonal model to make forecasts. 
+actually use the seasonal model to make forecasts.
 
 ---
 ```python
@@ -1420,7 +1421,7 @@ forecast = m.predict(fb_ppm)
 Here, I’m using the seasonal model on the co2 dataset. It
 doesn't work that well here because it only uses a linear
 trend, it could also use a logistic trend that we saw before
-that actually the quadratic trend would be much better. 
+that actually the quadratic trend would be much better.
 
 But it detected here right away and told me there is no
 daily and weekly trends. It found out that there are only
@@ -1440,7 +1441,7 @@ prediction. So here, you can see that the model is very
 certain, very certain, very certain, and then keeps getting
 more and more uncertain as time goes on. And that's
 something that's often very useful if you want to base any
-business decisions on this. 
+business decisions on this.
 ---
 # Seasonal Components
 .center[
@@ -1449,7 +1450,7 @@ business decisions on this.
 ???
 detected that there are no daily or weekly trends!
 
-Finally, you get a season decomposition. 
+Finally, you get a season decomposition.
 
 I guess there's not more because the only seasonal component
 is the yearly one. And so you can see that here, this is
@@ -1459,7 +1460,7 @@ linear model again, and this is sort of the monthly model
 that it fitted.
 
 If you have more seasonal trends it will also give you
-weekly and daily patterns. 
+weekly and daily patterns.
 
 ---
 class: spacious
@@ -1472,12 +1473,12 @@ class: spacious
 ???
 Basically, the tools you want are autoregressive models,
 seasonal models, Gaussian processes, which we didn't talk
-about in this class, recurrent neural nets and LSTMs. 
+about in this class, recurrent neural nets and LSTMs.
 
 We talked about RNNs last time, but you can obviously use
 these to do time series prediction. And so these are sort of
 the more advanced tools that a lot of people use for time
-series. 
+series.
 
 If you actually come across these problems, these are the
 kind of tools you want to look into.
