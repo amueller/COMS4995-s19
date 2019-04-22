@@ -30,8 +30,166 @@ FIXME update with state-of-the-art instead of VGG16
 FIXME data augmentation before dropout!
 FIXME show how permuting pixels doesn't affect fully connected network,
 but does affect convolutional network
+FIXME my resnet is broken
+FIXME add finetuning with keras example
 ---
+#Definition of Convolution
+
+
+`$$ (f*g)[n] = \sum\limits_{m=-\infty}^\infty f[m]g[n-m] $$`
+
+`$$ = \sum\limits_{m=-\infty}^\infty f[n-m]g[m] $$`
+
+.center[
+![:scale 80%](images/convolution.png)
+]
+
+???
+The definition is symmetric in f, but usually one is the
+input signal, say f, and g is a fixed “filter” that is
+applied to it.
+You can imagine the convolution as g sliding over f.
+If the support of g is smaller than the support of f (it’s
+a shorter non-zero sequence) then you can think of it
+as each entry in f * g depending on all entries of g
+multiplied with a local window in f.
+Not that the output is shorter than the input by half the
+size of g. this is called a valid convolution.
+We could also extend f with zeros, and get a result that
+is larger than f by half the size of g, that’s called a
+full convolution. We can also just pad a little bit and
+get something that is of the same size as f.
+Also not that the filter g is flipped as it’s indexed with
+-m
+
+It’s easier to think about this in a signal processing
+context, where we have some signal, and you have a filter
+that you want to apply to the signal.
+---
+#Convolution Neural Networks
+
+.center[
+![:scale 100%](images/CNET1.png)
+]
+
+- Y. LeCun, L. Bottou, Y. Bengio, and P. Haffner: Gradient-based learning applied to document recognition
+
+???
+Here is the architecture of an early convolutional net
+form 1998. The basic architecture in current
+networks is still the same.
+You can multiple layers of convolutions and resampling
+operations. You start convolving the image, which
+extracts local features. Each convolutions creates
+new “feature maps” that serve as input to later
+convolutions.
+To allow more global operations, after the convolutions
+the image resolution is changed. Back then it was
+subsampling, today it is max-pooling.
+So you end up with more and more feature maps with
+lower and lower resolution.
+At the end, you have some fully connected layers to do
+the classificattion.
+---
+class: middle
 # Convnets vs Fully Connected Nets Illustrated
+---
+# MNIST and Permuted MNIST
+![:scale 90%](images/mnist_org.png)
+.smallest[
+
+```python
+rng = np.random.RandomState(42)
+perm = rng.permutation(784)
+X_train_perm = X_train.reshape(-1, 784)[:, perm].reshape(-1, 28, 28)
+X_test_perm = X_test.reshape(-1, 784)[:, perm].reshape(-1, 28, 28)
+```
+
+]
+![:scale 90%](images/mnist_permuted.png)
+---
+# Fully Connected vs Convolutional
+.tiny[
+.left-column[
+```python
+model = Sequential([
+    Dense(512, input_shape=(784,), activation='relu'),
+    Dense(10, activation='softmax'),
+])
+model.compile("adam", "categorical_crossentropy",
+              metrics=['accuracy'])
+```
+```
+_____________________________________________________
+Layer (type)          Output Shape         Param #
+=====================================================
+dense_7 (Dense)       (None, 512)           401920
+_____________________________________________________
+dense_8 (Dense)       (None, 10)            5130
+=====================================================
+Total params: 407,050
+Trainable params: 407,050
+_____________________________________________________
+```
+]
+]
+--
+
+.tiny[
+.right-column[
+```python
+num_classes = 10
+cnn = Sequential()
+cnn.add(Conv2D(32, kernel_size=(3, 3),
+               activation='relu',
+               input_shape=input_shape))
+cnn.add(MaxPooling2D(pool_size=(2, 2)))
+cnn.add(Conv2D(32, (3, 3), activation='relu'))
+cnn.add(MaxPooling2D(pool_size=(2, 2)))
+cnn.add(Flatten())
+cnn.add(Dense(64, activation='relu'))
+cnn.add(Dense(num_classes, activation='softmax'))
+```
+```
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #
+=================================================================
+conv2d_1 (Conv2D)            (None, 26, 26, 32)        320
+_________________________________________________________________
+max_pooling2d_1 (MaxPooling2 (None, 13, 13, 32)        0
+_________________________________________________________________
+conv2d_2 (Conv2D)            (None, 11, 11, 32)        9248
+_________________________________________________________________
+max_pooling2d_2 (MaxPooling2 (None, 5, 5, 32)          0
+_________________________________________________________________
+flatten_1 (Flatten)          (None, 800)               0
+_________________________________________________________________
+dense_9 (Dense)              (None, 64)                51264
+_________________________________________________________________
+dense_10 (Dense)             (None, 10)                650
+=================================================================
+Total params: 61,482
+Trainable params: 61,482
+_________________________________________________________________
+```
+]
+
+]
+---
+# Training curves
+
+.left-column[
+## Original Data
+
+![:scale 90%](images/mnist_org_curve.png)
+
+]
+--
+.right-column[
+## Shuffled Data
+
+![:scale 90%](images/mnist_perm_curve.png)
+]
 ---
 class: middle
 # Residual Neural Networks
@@ -175,6 +333,156 @@ trick from Microsoft and then they got better. So residual
 networks become widely used after they published this.
 ---
 # ResNets in Keras
+.smallest[
+Requires functinal API:
+https://keras.io/getting-started/functional-api-guide/
+
+```python
+from keras.layers import Input, Dense
+from keras.models import Model
+
+# This returns a tensor
+inputs = Input(shape=(784,))
+
+# a layer instance is callable on a tensor, and returns a tensor
+x = Dense(64, activation='relu')(inputs)
+x = Dense(64, activation='relu')(x)
+predictions = Dense(10, activation='softmax')(x)
+
+# This creates a model that includes
+# the Input layer and three Dense layers
+model = Model(inputs=inputs, outputs=predictions)
+model.compile(optimizer='adam',
+              loss='categorical_crossentropy',
+              metrics=['accuracy'])
+model.fit(data, labels)  # starts training
+```
+]
+---
+# CNN with Functional API
+.tiny[
+.left-column[
+```python
+from keras.layers import Input, Conv2D, MaxPooling2D, Flatten
+from keras.models import Model
+
+num_classes = 10
+inputs = Input(shape=(28, 28, 1))
+conv1_1 = Conv2D(32, (3, 3), activation='relu',
+                 padding='same')(inputs)
+conv1_2 = Conv2D(32, (3, 3), activation='relu',
+                 padding='same')(conv1_1)
+maxpool1 = MaxPooling2D(pool_size=(2, 2))(conv1_2)
+conv2_1 = Conv2D(32, (3, 3), activation='relu',
+                 padding='same')(maxpool1)
+conv2_2 = Conv2D(32, (3, 3), activation='relu',
+                 padding='same')(conv2_1)
+maxpool2 = MaxPooling2D(pool_size=(2, 2))(conv2_2)
+flat = Flatten()(maxpool2)
+dense = Dense(64, activation='relu')(flat)
+predictions = Dense(num_classes, activation='softmax')(dense)
+
+model = Model(inputs=inputs, outputs=predictions)
+```
+]
+.right-column[
+```
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #
+=================================================================
+input_3 (InputLayer)         (None, 28, 28, 1)         0
+_________________________________________________________________
+conv2d_9 (Conv2D)            (None, 28, 28, 32)        320
+_________________________________________________________________
+conv2d_10 (Conv2D)           (None, 28, 28, 32)        9248
+_________________________________________________________________
+max_pooling2d_5 (MaxPooling2 (None, 14, 14, 32)        0
+_________________________________________________________________
+conv2d_11 (Conv2D)           (None, 14, 14, 32)        9248
+_________________________________________________________________
+conv2d_12 (Conv2D)           (None, 14, 14, 32)        9248
+_________________________________________________________________
+max_pooling2d_6 (MaxPooling2 (None, 7, 7, 32)          0
+_________________________________________________________________
+flatten_3 (Flatten)          (None, 1568)              0
+_________________________________________________________________
+dense_13 (Dense)             (None, 64)                100416
+_________________________________________________________________
+dense_14 (Dense)             (None, 10)                650
+=================================================================
+Total params: 129,130
+Trainable params: 129,130
+Non-trainable params: 0
+_________________________________________________________________
+```
+]
+]
+
+---
+# Adding Skip connections
+.tiny[
+.left-column[
+```python
+from keras.layers import Input, Conv2D, MaxPooling2D, Flatten
+from keras.models import Model
+
+num_classes = 10
+inputs = Input(shape=(28, 28, 1))
+conv1_1 = Conv2D(32, (3, 3), activation='relu',
+                 padding='same')(inputs)
+conv1_2 = Conv2D(32, (3, 3), activation='relu',
+                 padding='same')(conv1_1)
+maxpool1 = MaxPooling2D(pool_size=(2, 2))(conv1_2)
+conv2_1 = Conv2D(32, (3, 3), activation='relu',
+                 padding='same')(maxpool1)
+conv2_2 = Conv2D(32, (3, 3), activation='relu',
+                 padding='same')(conv2_1)
+# Actually doesn't work, this net is too small
+skip2 = add([maxpool1, conv2_2])
+maxpool2 = MaxPooling2D(pool_size=(2, 2))(skip2)
+flat = Flatten()(maxpool2)
+dense = Dense(64, activation='relu')(flat)
+predictions = Dense(num_classes, activation='softmax')(dense)
+
+model = Model(inputs=inputs, outputs=predictions)
+```
+]
+.right-column[
+```
+__________________________________________________________________________________________________
+Layer (type)                    Output Shape         Param #     Connected to
+==================================================================================================
+input_14 (InputLayer)           (None, 28, 28, 1)    0
+__________________________________________________________________________________________________
+conv2d_57 (Conv2D)              (None, 28, 28, 32)   320         input_14[0][0]
+__________________________________________________________________________________________________
+conv2d_58 (Conv2D)              (None, 28, 28, 32)   9248        conv2d_57[0][0]
+__________________________________________________________________________________________________
+max_pooling2d_23 (MaxPooling2D) (None, 14, 14, 32)   0           conv2d_58[0][0]
+__________________________________________________________________________________________________
+conv2d_59 (Conv2D)              (None, 14, 14, 32)   9248        max_pooling2d_23[0][0]
+__________________________________________________________________________________________________
+conv2d_60 (Conv2D)              (None, 14, 14, 32)   9248        conv2d_59[0][0]
+__________________________________________________________________________________________________
+add_11 (Add)                    (None, 14, 14, 32)   0           max_pooling2d_23[0][0]
+                                                                 conv2d_60[0][0]
+__________________________________________________________________________________________________
+max_pooling2d_24 (MaxPooling2D) (None, 7, 7, 32)     0           add_11[0][0]
+__________________________________________________________________________________________________
+flatten_14 (Flatten)            (None, 1568)         0           max_pooling2d_24[0][0]
+__________________________________________________________________________________________________
+dense_35 (Dense)                (None, 64)           100416      flatten_14[0][0]
+__________________________________________________________________________________________________
+dense_36 (Dense)                (None, 10)           650         dense_35[0][0]
+==================================================================================================
+Total params: 129,130
+Trainable params: 129,130
+Non-trainable params: 0
+__________________________________________________________________________________________________
+```
+]
+]
+
 ---
 class: middle, center
 # Densely Connected Convolutional Networks (DenseNet)
@@ -196,7 +504,7 @@ the output in a more direct way. The hope is that you can
 learn more easily. But since these are all convolutions,
 this only works if they have the same size.
 
----
+--
 ![:scale 80%](images/densenet-architecture2.png)
 ???
 So basically, they added dense blocks into the convolutional
@@ -585,42 +893,6 @@ really important to use something that's aware of the image
 structure.
 
 ---
-# Finetuning with Keras
-
----
-# Adverserial Samples
-
-.center[
-![:scale 80%](images/adverserial.png)
-]
-
-.smallest[
-<br />
-[Szegedy et. al.: Intriguing properties of neural networks](https://arxiv.org/abs/1312.6199)
-]
-???
-Since convolutional neural nets are so good at image
-recognition, some people think they are pretty
-infallible. But they are not. There is this interesting
-paper about intriguing properties of neural networks,
-that introduces adverserial samples.
-Adverserial samples are samples that were created by
-an adversary or attacker to fool your model. Here,
-they changed images to be classified as Ostrich by
-AlexNet trained on imagenet.
-The picture on the left is change just slightly, and went
-from correctly classified to classified as Ostrich.
-This technique uses gradient descent on the input and
-requires access to all the weights in the network to
-create the samples.
-Given how high-dimensional the input space is, this is
-not very surprising from a mathematical perspective,
-but it might be somewhat unexpected.
-
-requires the weights, done by gradient descent.
-FIXME where should this go?
-
----
 class: center, middle
 # Recurrent Neural Networks
 ???
@@ -825,6 +1097,38 @@ space.
 People have been using recurrent neural networks also to
 learn word representations that are sort of more powerful
 than word2vec.
+---
+# Adverserial Samples
+
+.center[
+![:scale 80%](images/adverserial.png)
+]
+
+.smallest[
+<br />
+[Szegedy et. al.: Intriguing properties of neural networks](https://arxiv.org/abs/1312.6199)
+]
+???
+Since convolutional neural nets are so good at image
+recognition, some people think they are pretty
+infallible. But they are not. There is this interesting
+paper about intriguing properties of neural networks,
+that introduces adverserial samples.
+Adverserial samples are samples that were created by
+an adversary or attacker to fool your model. Here,
+they changed images to be classified as Ostrich by
+AlexNet trained on imagenet.
+The picture on the left is change just slightly, and went
+from correctly classified to classified as Ostrich.
+This technique uses gradient descent on the input and
+requires access to all the weights in the network to
+create the samples.
+Given how high-dimensional the input space is, this is
+not very surprising from a mathematical perspective,
+but it might be somewhat unexpected.
+
+requires the weights, done by gradient descent.
+FIXME where should this go?
 
 ---
 class: middle
