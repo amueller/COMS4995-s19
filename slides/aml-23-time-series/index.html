@@ -26,6 +26,7 @@ Andreas C. Müller
 ???
 Today we'll talk about time series and forecasting.
 
+FIXME screenshots of pandas dataframes :(
 FIXME much more polish
 FIXME not equally spaced = point processes
 FIXME time series classification
@@ -219,6 +220,7 @@ Unevenly spaced:
 
 $$ t_{i+1} - t_i  \quad varies $$
 
+aka "Point processes" in statistics
 
 
 ???
@@ -610,7 +612,7 @@ series over time. The things that happened yesterday are
 sort of the same kind of things that will happen tomorrow.
 ---
 
-.center[![:scale 75%](images/stationarity.png)]
+.center[![:scale 75%](images/maunaloa plot.png)]
 
 - Mean changes -> not stationary, there is a trend
 
@@ -631,32 +633,6 @@ stationary or you can use some of the standard models to
 make the time series stationary.
 
 ---
-
-# De-trending
-
-- Model trend
-- Or differencing (compute new series)....  $\quad x_{t + 1} - x_t$
-
-.smaller[
-```python
-ppm.diff.plot()
-```]
-.center[![:scale 55%](images/detrending.png)]
-
-???
-There are 2 main ways to do de-trend a model. Either you
-model the trend and subtract it or you difference the time
-series. So here, I just differenced the time series, which
-is basically computing the gradients. I do every time step
-minus the last time step, and it gives me a new time series,
-it looks like this.
-
-This now looks much more stationary. The variance, mean and
-the covariance doesn't seem to change too much.
-
-Doing this differencing the derivative is a very common
-preprocessing method.
----
 class: spacious
 
 # Autocorrelation
@@ -675,21 +651,31 @@ or each time step, and then say, 10 times steps in the
 futures or 100 times steps in the futures and look at the
 correlation between them.
 
----
-
+--
+.smaller[
 ```python
+ppm = maunaloa.co2
 ppm.autocorr()
-```
-```
-0.9989
-```
-```python
-ppm.autocorr(lag=12)
 ```
 ```
 0.9997
 ```
-
+]
+--
+.smaller[
+```python
+ppm.autocorr(lag=26)
+```
+```
+0.9826
+```
+```python
+ppm.autocorr(lag=52)
+```
+```
+0.9994
+```
+]
 ???
 The autocorrect() function does the autocorrelation with the
 next time step with a lag of 1, and you can see that is
@@ -697,10 +683,11 @@ pretty high. It's very close to one meaning each time step
 is a very, very good predictor of the next time step.
 
 Lag 12 is even more of a predictor. So this is after 12
-weeks, after 12 weeks things are basically perfectly
+weeks, after 12 month things are basically perfectly
 correlated, which is also interesting.
 
 ---
+class: compact
 # Autocorrelation function
 .smaller[
 ```python
@@ -760,7 +747,33 @@ Here, everything outside of this interval means there's a
 significant correlation. And again, you can see there's a
 very fine wavy pattern where there's more autocorrelation
 every 12 weeks.
+---
+class: compact
 
+# De-trending
+
+- Model trend
+- Or differencing (compute new series)....  $\quad x_{t + 1} - x_t$
+
+.smaller[
+```python
+ppm.diff().plot()
+```]
+.center[![:scale 55%](images/detrending.png)]
+
+???
+There are 2 main ways to do de-trend a model. Either you
+model the trend and subtract it or you difference the time
+series. So here, I just differenced the time series, which
+is basically computing the gradients. I do every time step
+minus the last time step, and it gives me a new time series,
+it looks like this.
+
+This now looks much more stationary. The variance, mean and
+the covariance doesn't seem to change too much.
+
+Doing this differencing the derivative is a very common
+preprocessing method.
 ---
 # Autocorrelation of differenced series
 
@@ -807,7 +820,19 @@ periodic pattern.
 Another quite useful analysis step is trying to
 automatically extract these periodic patterns, they're very
 common in all kinds of time series.
+---
+# Original vs differenced
+.padding-top[
+.left-column[
 
+.center[![:scale 100%](images/autocorr 2.png)]
+]
+.right-column[
+
+.center[![:scale 100%](images/autocorr 4.png)]
+
+]
+]
 ---
 class: compact
 # Seasonal model for CO2
