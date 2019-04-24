@@ -35,6 +35,8 @@ FIXME general autoregressive models.
 FIXME dynamic time warping
 FIXME too short?!
 FIXME deprecated pandas API on slides.
+FIXME resampling slides bad images
+FIXME resampling slides weird scroll bar
 ---
 class: center, middle
 # Tasks
@@ -518,7 +520,7 @@ Freq: MS, Name: co2, dtype: float64
 
 .right-column[
 
-.center[![:scale 75%](images/resampling 1.png)]
+.center[![:scale 70%](images/resampling 1.png)]
 .center[![:scale 70%](images/resampling 2.png)]
 
 ]
@@ -558,7 +560,7 @@ maunaloa.co2.resample("AS").mean().plot(marker="o")
 maunaloa.co2.resample("3AS").mean().plot(marker="o")
 ```]
 
-.center[![:scale 75%](images/maunaloa resample.png)]
+.center[![:scale 70%](images/maunaloa resample.png)]
 
 ???
 We can also look at what this looks like. So here I have
@@ -753,7 +755,7 @@ class: compact
 # De-trending
 
 - Model trend
-- Or differencing (compute new series)....  $\quad x_{t + 1} - x_t$
+- Or differencing (compute new series)....  `$\quad \hat{x_t} = x_{t} - x_{t - 1}$`
 
 .smaller[
 ```python
@@ -824,11 +826,11 @@ common in all kinds of time series.
 # Original vs differenced
 .padding-top[
 .left-column[
-
+Autocorrelation on original data
 .center[![:scale 100%](images/autocorr 2.png)]
 ]
 .right-column[
-
+Autocorrelation on differenced data
 .center[![:scale 100%](images/autocorr 4.png)]
 
 ]
