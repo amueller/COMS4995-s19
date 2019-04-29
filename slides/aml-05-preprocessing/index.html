@@ -1012,9 +1012,9 @@ values are actually in the data set.
 
 
 ---
+class:compact
 
 #OneHotEncoder
-- Deprecated mode, don't use.
 
 ```python
 from sklearn.preprocessing import OneHotEncoder
@@ -1033,10 +1033,10 @@ array([[   1.,    0.,    0.,    0.,  103.],
        [   0.,    0.,    1.,    0.,   63.],
        [   0.,    0.,    0.,    1.,  219.]])
 ```
-
+.smaller[
 - Legacy mode: Only works for integers right now, not strings.
 - New mode: works on strings and integers, but always transforms all columns.
-
+]
 ???
 You can also do this with scikit-learn. There are two ways
 to do this scikit-learn. Here's the old way.
@@ -1136,7 +1136,7 @@ FIXME add code
 
 class: some-space
 
-# OneHot vs Statisticians
+# Dummy variables and colinearity
 
 - One-hot is redundant (last one is 1 – sum of others)
 - Can introduce co-linearity
@@ -1406,7 +1406,7 @@ and so on. And so now I just have a single feature that
 hopefully encodes the information of the country.
 ---
 
-class: left, middle
+class: middle
 
 # Feature Distributions
 

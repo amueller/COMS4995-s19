@@ -98,7 +98,7 @@ semi-supervised learning where you have the true target or
 the true class only for some data points, but not for all of
 them. So there's the first method which is very obvious.
 Let's say your data looks like this. All my illustrations
-today we'll be adding randomness to the iris data set. 
+today we'll be adding randomness to the iris data set.
 
 
 FIXME: Better digram for feature selection. What are the
@@ -106,7 +106,7 @@ hypothesises for the tests
 ---
 
 .center[
-![:scale 80%](images/img_1.png)
+![:scale 80%](images/row_nan_col_nan.png)
 ]
 
 ???
@@ -139,13 +139,13 @@ values. And so by excluding them from your training data,
 you're also excluding them from the validation. So it means
 you think you're doing very well because you discarded all
 the hard data points. Discarding data points is a little bit
-trickier and it depends on your situation. 
+trickier and it depends on your situation.
 
 
 ---
 
 .center[
-![:scale 100%](images/img_2.png)
+![:scale 100%](images/imputation-schema.png)
 ]
 
 ???
@@ -222,7 +222,7 @@ regression model and 10 fold baseline, I get 77.2% accuracy.
 # Mean and Median
 
 .center[
-![:scale 100%](images/img_4.png)
+![:scale 100%](images/imputation-median-schema.png)
 ]
 
 ???
@@ -257,7 +257,7 @@ So there are two things about this. One, I kind of lost the
 class information a lot. Two, the data is now in places
 where there was no data before, which is not so great. You
 could do smart things like doing the mean per class, but
-that's actually not something that I've seen a lot. 
+that's actually not something that I've seen a lot.
 
 
 ---
@@ -312,7 +312,7 @@ and then fill in the missing values as the average of the
 features of these neighbors. The difficulty here is
 measuring distances if there are missing values. If there
 are missing values, I can't just compute Euclidean
-distances. 
+distances.
 
 ---
 .smaller[
@@ -365,7 +365,7 @@ missing features using a regression model trained on the
 non-missing features and then you iterate this until stuff
 doesn't change anymore. You can use any model you like, and
 this is very flexible, and it can be fast if you have a fast
-model. 
+model.
 
 ---
 class: spacious
@@ -389,7 +389,7 @@ class: left, middle
 ???
 I want to talk a little bit about feature engineering and in
 particular about interaction features. For linear models,
-interaction features are actually quite interesting. 
+interaction features are actually quite interesting.
 
 ---
 
@@ -400,7 +400,7 @@ class: center
 ![:scale 70%](images/img_33.png)
 
 ???
-So let's look at this 2 dimensional dataset, 2 classes. 
+So let's look at this 2 dimensional dataset, 2 classes.
 ---
 
 class: center
@@ -415,7 +415,7 @@ class: center
 If I fit the model, do logistic regression, I get something
 like this, which does very badly. But if I do feature
 engineering, it means I add new features to dataset which
-will make my linear model more powerful. 
+will make my linear model more powerful.
 ---
 
 class: center, middle
@@ -456,7 +456,7 @@ linear classifier only in the expanded 3-dimensional feature
 space where it added the interaction. Interactions are one
 way to who blow up the feature space, adding more features
 in particular for linear models makes the model much more
-powerful. So you can do this for continuous features. 
+powerful. So you can do this for continuous features.
 
 
 ---
@@ -490,7 +490,7 @@ interaction with men and the feature interaction with women.
 So you have a shared model, and then you have how men and
 women deviate from this model. So now you basically if you
 do that you have three times as many degrees of freedom in
-your linear model. 
+your linear model.
 
 ---
 # More interactions
@@ -516,7 +516,7 @@ adding these interaction features to basically create a
 bigger, bigger features space, which allows you to have
 linear models that adjust for a subpopulation of the overall
 dataset. So now I have instead of having six features, I now
-have 36 features and can have a much more powerful model. 
+have 36 features and can have a much more powerful model.
 
 ---
 
@@ -970,7 +970,7 @@ going to do next is I'm going to modify this dataset a
 little bit so that we can see the effect of the
 regularization. I’m going to modifying by using a polynomial
 expansion, again we're going to talk about a little bit more
-on Wednesday. 
+on Wednesday.
 
 ---
 # Adding features
@@ -1018,7 +1018,7 @@ restrictive. But if you look at a very high dimensional
 space, if you have more features than samples, then you can
 solve any problem perfectly. So it's not restrictive at all.
 The powerfulness of the linear models depends a lot on the
-majority of the features. 
+majority of the features.
 
 ---
 .center[
@@ -1047,7 +1047,7 @@ regularization. This is sort of a more robust model and it
 generalizes this better. Using regularization, I found the
 best alpha and the best R square. It actually improved quite
 a bit. The alpha doesn't really mean anything depending on
-how you scale your data, don't think too much about that. 
+how you scale your data, don't think too much about that.
 
 ---
 # Plotting coefficient values (LR)
@@ -1116,7 +1116,7 @@ equal to 100, it's negative. That means depending on how
 much you regularize the direction of effect goes in opposite
 directions, what that tells me is don't interpret your
 models too much because clearly, either it has a positive or
-negative effect, it can't have both. 
+negative effect, it can't have both.
 
 ---
 ```python
@@ -1142,7 +1142,7 @@ Basically, I looped over all of the different alphas and you
 can see how they shrink towards zero to increase alpha.
 There are some very big coefficients that go to zero very
 quickly and some coefficients here that stay the same for a
-long time. 
+long time.
 ---
 # Learning Curves
 
@@ -1185,7 +1185,7 @@ together with prediction. Ideally what you would want is,
 let's say you want a model that does features selections.
 The goal is to make our model automatically select the
 features that are good. What you would want to penalize the
-number of features that it uses, that would be L0 norm. 
+number of features that it uses, that would be L0 norm.
 
 
 ---
@@ -1211,7 +1211,7 @@ hard to optimize. Basically, we just gave up on this and we
 use the next best thing we can do, which is the L1 norm. The
 L1 norm is not differentiable, there’s like this kink in
 zero, but we can still optimize it pretty well. The L2 norm
-penalizes large values much more than small values. 
+penalizes large values much more than small values.
 
 ---
 
@@ -1318,7 +1318,7 @@ that if you increase the regularization, this model gets
 really bad. The ridge regression didn't go this badly. If
 you set the realization to one, all coefficients become
 zero. Other than that there's reasonable performance, which
-is about as good as the ridge performance. 
+is about as good as the ridge performance.
 ---
 .center[
 ![:scale 60%](images/lasso_coefficients.png)
@@ -1399,7 +1399,7 @@ Ridge and set alpha zero, because the solver will not handle
 it well. If you actually want alpha equal to zero, use
 linear regression. Now we have more parameters to tune, but
 we just have a more general model. This actually works
-pretty well often. 
+pretty well often.
 
 ---
 # Grid-searching ElasticNet
@@ -1427,7 +1427,7 @@ l1_ratio, I use something that’s very close to zero and
 something that's very close to one and some stuff in
 between. If you want to analyze the output of a 2D grid
 search a little bit harder we can’t do the nice curve
-anymore. 
+anymore.
 
 ---
 class: smaller
@@ -1484,7 +1484,7 @@ parts. The two most times regularization we looked at is
 Ridge which is L2 penalty, Lasso which is an L1 penalty and
 combining two of them which is Elastic Net. So now I want to
 talk about changing the first part, which was the squared
-loss of the predictions, basically. 
+loss of the predictions, basically.
 
 
 
