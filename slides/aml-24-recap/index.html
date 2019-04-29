@@ -239,8 +239,41 @@ the data.
 
 
 Learn underlying “manifold” structure, use for dimensionality reduction.
+---
+.smaller[```python
+from sklearn.manifold import TSNE
+from sklearn.datasets import load_digits
+digits = load_digits()
+X = digits.data / 16.
+X_tsne = TSNE().fit_transform(X)
+X_pca = PCA(n_components=2).fit_transform(X)
+```]
+.left-column[![:scale 95%](images/pca-digits.png)]
+--
+.right-column[![:scale 95%](images/tsne-digits.png)]
+???
+Now I want to show you some of the outcomes. This is a PCA
+visualization of digit dataset, so both PCA and peacenik are
+completely unsupervised. This is just doing PCA with two
+components, first principle, and second principal component,
+and then I color it by the class labels.
 
-# Goals of Clustering
+PCA obviously doesn’t anything about the class labels, I
+just put them in here so we can see what's happening. You
+can see that sort of some of these classes is pretty well
+separated, others are like, kind of smooshed together.
+
+This is in t-SNE, when I first saw this I thought this was
+pretty impressive, because this Algorithm is completely
+unsupervised, but it still manages to mostly group nearly
+all of these classes in very compact clusters.
+
+In this completely unsupervised method, I could sort of draw
+boundaries by hand in 2D from the original 64-dimensional
+space and I could group the data. This 2D view can help me
+understand the data.
+---
+# Clustering
 
 - Data Exploration
   - Are there coherent groups ?
@@ -331,8 +364,6 @@ computing the distances to all the cluster centers.
 So in this case, if we build a model on some data that we
 collected, we can easily apply this clustering to new data
 points. That's not the case for all clustering algorithms.
----
-# NMF
 ---
 # NMF
 
@@ -549,10 +580,6 @@ this with a lot of different sort of semantic pairs.
 ---
 # Neural Networks
 
----
-
-#Basic Architecture
-
 .center[
 ![:scale 50%](images/nn_basic_arch.png)
 ]
@@ -609,8 +636,6 @@ them for latent dirichlet allocation.
 All these nodes here are completely deterministic functions,
 and the graph just illustrates very simple computations.
 
----
-# Convolutional neural Networks
 ---
 #Convolution Neural Networks
 
@@ -714,8 +739,7 @@ To keep the expressive power of the model, additional
 scale and shift parameters are learned that are
 applied after the per-batch normalization.
 ---
-# Residual Neural Networks
-# # Problem
+# Problem
 ![:scale 90%](images/resnet-no-deep-nets.png)
 ???
 We can't fit deep networks well - not even on training set!
@@ -751,7 +775,8 @@ surprisingly simple solution, which is the RES-NET layer.
 
 ---
 class: center
-# Solution
+# Solution: Residual Neural Networks
+
 ![:scale 60%](images/residual-layer.png)
 
 `$$y = F(x, \{W_i\}) + x  \quad \text{ for same size layers}$$`
