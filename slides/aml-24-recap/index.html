@@ -26,6 +26,10 @@ Andreas C. Müller
 ???
 Only gonna talk about stuff for final, so not including first 11 lectures.
 Also: this lecture will not be comprehensive, there will be things in the exam not in this lecture.
+
+FIXME t-sne plot
+FIXME CASH what does it stand for again
+FIXME word2vec for document representations via averages
 ---
 # Model inspection
 ???
@@ -71,45 +75,6 @@ def permutation_importance(est, X, y, n_bootstrap=100):
 - Implementation: ELI5,<br> https://github.com/scikit-learn/scikit-learn/pull/13146
 - For RF: https://github.com/parrt/random-forest-importances (uses oob)
 ---
----
-
-# Partial Dependence Plots
-- Marginal dependence of prediction on one or two features
-
-.smaller[
-```python
-from sklearn.ensemble.partial_dependence import plot_partial_dependence
-boston = load_boston()
-X_train, X_test, y_train, y_test = train_test_split(
-    boston.data, boston.target,random_state=0)
-
-gbrt = GradientBoostingRegressor().fit(X_train, y_train)
-
-fig, axs = plot_partial_dependence(
-    gbrt, X_train, np.argsort(gbrt.feature_importances_)[-6:],
-    feature_names=boston.feature_names, n_jobs=3,
-    grid_resolution=50)
-```
-]
-
-???
-But there's also something else that's quite interesting,
-which is called Partial Dependence Plots that's actually
-possible for all trees. Unfortunately, in scikit-learn, it’s
-available only for the gradient boosting. So the idea here
-is to not only see what parameters are important but how
-will they influence the target. And so after you fit your
-model, I'm using the Boston data set to the gradient
-boosting regressor, there's a thing called plot partial
-dependence, which gets the model and the training data set
-and then the features for which I want to make the partial
-dependence plots.
-
-So here, I'm looking at the six most important features. The
-feature importance is important according to the trees. So I
-sort this and take the six most important ones.
-
----
 # Partial Dependence Plots
 
 .center[
@@ -147,20 +112,10 @@ feature influences it. Unfortunately, it’s not available in
 scikit-learn. You could do the same thing for random
 forests. Because in the end, the way they predict is quite
 similar.
----
-# Partial Dependence
-- Idea: Get marginal predictions given feature.
-- How? "integrate out" other features using validation data
-- Fast methods available for trees!
-- Nonsensical for linear models.
-- sklearn master: only gradient boosting
-- Next sklearn: fast for gradient boosting, slow for everything else
-- future: fast for all tree-based models
 
 ---
 # Feature selection
----
-# Why Select Features?
+# # Why Select Features?
 
 - Avoid overfitting (?)
 - Faster prediction and training
@@ -191,10 +146,6 @@ of 500, it's probably much easier for you to grasp what the
 model does. If you can have a model that is as good with way
 fewer features, it will be much easier to explain and most
 people will be happy with it.
----
-FIXME wrapper vs univariate
-What happens with correlated features
-compare to Kuhn book
 
 ---
 # AutoML
@@ -207,68 +158,675 @@ compare to Kuhn book
 # CASH problem
 - Find the best configuration
 - Global optimization on complex (high-dim?) space
-???
-FIXME what does cash stand for?
----
-# Issues with Grid-Search
-- Need to define Grid
-- Exponential in number of dims
----
-class: middle
-# Black-Box Search Procedures
+
 `$$\Lambda^* = \arg\max_\Lambda f(\Lambda)$$`
 Parameters $\Lambda$, model-evaluation $f$.
+
 ???
+FIXME what does cash stand for?
 General optimization of unknown, non-differentiable f, possibly no-smooth.
 NP Hard in general.
 Function f is very slow to evaluate - think training a neural net for a week.
 ---
-# Random Search
-![:scale 100%](images/bergstra_random.jpeg)
----
-# Bayesian Optimization, SMBO
-.wide-left-column[
+# Approaches
 
-- fit 'cheap' probabilistic function to black-box
 
-- pick next point using exploration / exploitation
+##  Random Search
 
-- Implemented as acquisition function
-]
-.narrow-right-column[
-.center[
-![:scale 110%](images/smbo.png)
-]]
----
-# Successive Halving
-- Given $n$ configuration and budget $B$
-- pick $\eta=2$ or $\eta=3$ (wording follows 2)
-- Each iteration, keep best halve of configurations
-- after $k=\log_\eta(n)$ left with single configuration.
-- initially allocate $\frac{B}{kn}$ to each configuration, double each iteration.
---
-![:scale 70%](images/halving_algorithm.png)
+##  Bayesian Optimization, SMBO
+
+## Successive Halving
 
 ---
 # Dimensionality Reduction
 ---
-# NMF & Outliers
+class:split-40
+# PCA
+.left-column[
+`$$\large\max\limits_{u_1 \in R^p, \| u_1 \| = 1} \text{var}(Xu_1)$$`
+`$$\large\max\limits_{u_1 \in R^p, \| u_1 \| = 1} u_1^T \text{cov} (X) u_1$$`
+]
+.smaller.right-column[
+.center[
+![:scale 90%](images/pca-intuition.png)
+]
+]
+???
+So second way to describe PCA is using Reconstruction Error.
+I can look at how well this reconstruction here matches the
+input space. And if I want a reconstruction X’, that is the
+best possible in the least squares sense, so that is the
+square norm. If I look at the square norm of X – X’, then
+this is minimized exactly when I'm using X’, X’ is the PCA
+reduction.
+
+This is like written in a slightly different way. Because if
+you solve this minimization problem, then you don't get the
+rotation back, you get the data back. But this problem is
+exactly solved by basically rotating using PCA direction,
+dropping the data and then rotating back.
+
+Maximizing the variance is the same thing as minimizing the
+Reconstruction Error, given a fixed number of dimensions.
+
+
+
+Find directions of maximum variance. (Find projection (onto
+one vector) that maximizes the variance observed in the
+data.)
+
+Subtract projection onto u1, iterate to find more components.
+Only well-defined up to sign / direction of arrow!
 ---
-# Text Data
+# Manifold Learning
+
+![:scale 100%](images/manifold-learning-structure.png)
+
+???
+Manifold learning is basically a class of algorithms that
+are the much more complicated transformation of the data. A
+manifold is a geometric structure in higher dimensions.
+
+So the idea is that you have low dimensional space, and sort
+of embedded into a high dimensional space. The classical
+example is this Swiss roll.
+
+Here, this is sort of a two-dimensional data set that was
+embedded in a weird way in the three-dimensional data set.
+And you hope to recover the structure of the data. And the
+structure of the data here would be the 2D structure of the
+layouts with Swiss roll. So PCA can't do that, because PCA
+is only linear. So if you would project this down with two
+dimensions, it's going to smooch all of these together and
+the blue points will be very close to the red points, if it
+projects down this axis, for example. And that's sort of not
+really what the geometry of the data is like.
+
+So for this, you would need nonlinear transformations of the
+input space that can sort of try to capture the structure in
+the data.
+
+
+
+Learn underlying “manifold” structure, use for dimensionality reduction.
+
+# Goals of Clustering
+
+- Data Exploration
+  - Are there coherent groups ?
+  - How many groups are there ?
+
+--
+
+- Data Partitioning
+  - Divide data by group before further processing
+
+--
+
+- Unsupervised feature extraction
+  - Derive features from clusters or cluster distances
+
+--
+
+- Evaluation and parameter tuning
+  - Quantitative measures of limited use
+  - Usually qualitative measures used
+  - Best: downstream tasks
+  - What is your goal?
+???
+So why would we want to use a clustering algorithm? The
+main usage that I've come across is exporation of the data
+and understanding the structure of the data. Are there
+similar groups within the data? What are these? How many are
+there?  You can also use clustering to summarize or compress
+the data by representing each group by a single prototype,
+say the center. You can also use clustering if you want to
+divide your data, for example if you want to know different
+parts of the dataset behave fundamentally differently, so
+you could for example cluster a dataset, and then apply,
+say, a linear model, to each cluster. That would create a
+more powerfull model than just learning a linear model on
+the whole dataset.
+
+
+Another use is unsupervised feature extraction. You can also
+use clustering to derive a different representation of the
+data.
+
+An often cited application of clustering is customer
+segmentation, though I'd say data exploration or feature
+extraction are more common.
 ---
-# Topic models
+# K-Means algorithm
+.wide-left-column[
+.center[
+![:scale 100%](images/kmeans.png)
+]
+]
+
+.narrow-right-column[
+.smaller[
+- Pick number of clusters k.
+- Pick k random points as
+“cluster center”
+- While cluster centers change:
+  1. Assign each data point to it’s closest cluster center
+  2. Recompute cluster centers as the mean of the assigned points.
+]
+]
+
+???
+The algorithm proceeds like this: you pick the number of
+clusters k, then you randomly pick k data points from the
+data, and declare those as cluster centers. Then, you label
+each data point according to which cluster center it is
+closest to. Finally, you recompute the cluster centers as
+the means of the clusters, and you iterate. The algorithm
+always converges, which is when the assignment of the points
+to the clusters doesn't change any more. Often you might
+want to not wait until full convergence, but just stop if
+the cluster centers don't move much between iterations.
+
+So you can see the green cluster center moving towards the
+red here until it has captured all the points in this group.
+Questions? Who has seen this before?
+
+There's a couple of nice things about this algorithm;
+
+It's very easy to write down and understand. Each cluster is
+represented by a center, which makes things simple, and you
+can reassign any new point you observe to a cluster by just
+computing the distances to all the cluster centers.
+
+So in this case, if we build a model on some data that we
+collected, we can easily apply this clustering to new data
+points. That's not the case for all clustering algorithms.
+---
+# NMF
+---
+# NMF
+
+<br>
+
+.center[
+![:scale 80%](images/nmf.png)
+]
+
+???
+In NMF, we compute X as a product of W and H. W stands for
+weights, and H stands for hidden representation. We want to
+find W and H so that their product is as close as possible
+to X.
+
+
+.center[
+PCA (ordered by projection, not eigenvalue)
+
+![:scale 70%](images/pca_projection.png)
+]
+
+.center[
+NMF (ordered by hidden representation)
+![:scale 70%](images/nmf_hid_rep.png)
+]
+
+???
+Here's an example of what this looks like in practice. Here
+we have NMF and PCA.
+
+This is the digit dataset, so the images are 28x28 grayscale
+images. I have these the digits, 0 and 1, and I tried to
+express them as a linear combination of the PCA components
+and as a linear combination of the NMF components. Here, I
+ordered them by which component is the most important for
+each of these data points.
+
+For both, 0 and 1, the most active component is this one,
+which is a guess either 0 or 1, depending on whether it's
+positive or negative. You can see that neither of these
+latter components looks a hardly like a 0 or a 1.
+
+What you’re seeing here is the cancellation effect taking
+place.
+
+The idea with NMF is that in NMF, hopefully, you got
+something that’s more interpretable in particular, since
+everything is positive.
+
+Usually, we can't actually look at our data this easily and
+so being able to interpret the component might be quite
+important. Often, people use this for gene analysis, for
+example, where you have very high dimensional vectors, and
+if you want to see which genes act together and so having
+these positive combinations really helps with
+interpretability.
+
+---
+
+# Text Data: Bag of Words
+.center[
+<br>
+![:scale 85%](images/bag_of_words.png)
+]
+???
+The most common approach that people use for this is bag of
+words, which is a very simple approach.
+
+We start with a string which would be your whole document.
+The first step is to tokenize it, which is basically
+breaking it up the document into words. And then, you built
+a vocabulary over all documents over all words.
+
+So you look over all the movie reviews, or all the emails or
+the text you have, and you collect all the tokens which are
+representing the words.
+
+Finally, using the vocabulary, you create a group
+representation. The length of your feature vector will be
+the size of the vocabulary. For each word in the vocabulary,
+you count how often this word appears in the string that you
+want to encode.
+
+Most of the words in the English language don't appear in a
+sentence. So most of these entries will be 0. But the word
+‘ants’ appears once, so increment the count for ‘ants’ by 1
+and so on.
+
+So I'll have 6 non-zero entries and all the other entries
+will be 0. So this is what we call like a very sparse vector
+so most entries of this vector are 0.
+
+When coding this, we’ll use a sparse matrix encoding. The
+idea of sparse matrix encoding is that you only store the
+non-zero entries.
+
+So basically, we will only store the 1s, so storing the
+string as a bag of word will cost us a nearly 6 floating
+point numbers.
+
+---
+# N-grams: Beyond single words
+- Bag of words completely removes word order.
+- "didn't love" and "love" are very different!
+
+--
+
+.center[
+![:scale 80%](images/single_words.png)
+]
+???
+Because there's a big difference between ‘didn't love’ and
+‘love’ and the default settings in the count vectorizer
+cannot distinguish between the two because somewhere along
+the document, it could appear ‘don't’ and you don't know if
+it's in front of ‘love’, or if it’s ‘love, don't hate’ or
+‘don't love hate’, since they basically have the same
+representation.
+
+The idea behind N-grams is you look at pairs of words that
+appear next to each other. Unigrams looks at single words,
+bigrams look at pairs of two words next to each other, and
+trigrams looks at three words next to each other, and so on.
+
+
+Here instead of splitting it up into single tokens, we can
+split it up into pairs of tokens allowing me to have a
+little bit of context around each of the words.
+
+
+- N-grams: tuples of consecutive words
+
 ---
 # Word Embeddings
+.left-column[
+![:scale 120%](images/skip_gram_net_arch.png)
+.smallest[http://mccormickml.com/2016/04/19/word2vec-tutorial-the-skip-gram-model/]
+]
+
+--
+
+.right-column[
+![:scale 100%](images/cbow_skipgram_1.png)
+]
+???
+Here’s the architecture that we will be using for this. It's
+kind of like neural network only, this is completely linear.
+In the left-hand side, we have the input layer with one hot
+encoding services in V-dimensional. V represents the size of
+vocabulary. And basically, only one of them will be 1 and
+the others will be 0.
+
+Then we have a weight matrix connecting it to the
+n-dimensional hidden layer. From there, we have multiple
+outputs that correspond to the previous word, previous 2
+words, and previous 3 words and so on. And then the next
+word, next 2 words, next 3 words and so on.
+
+Each output is, again, one hot encoding, which allows you to
+predict each possible version of vocabulary. These layers
+here are very large in size.
+
+Behind the hidden layer is basically a logistic regression.
+So this is just a linear classifier with a softmax
+activation. So each of these Ws will try to predict what the
+words are before and after.
+
+Basically, you have one hot encoding, you've multiplied with
+the first matrix, and then you multiply it with another
+matrix and then you do softmax. The reason why you have
+these two matrix multiplication is basically you want to
+create a bottleneck so if you had a very wide vector, you
+could do one matrix multiplication, basically, you want this
+matrix to have a lower rank. So you want to compress a
+representation to something small.
+
+Each row of W corresponds to a single word. We train this
+whole thing in a supervised fashion to minimize the log
+loss. But we’re only interested in is getting weights w.
+
+---
+# Analogues and Relationships
+
+.center[
+![:scale 100%](images/king_queen.png)
+]
+
+
+.smaller[
+Answer “King is to Kings as Queen is to ?”:<br/>
+Find closest vector to vec(“Queen”) + (vec(“Kings”) - vec(“King”))
+]
+
+.smallest[
+<a href="http://www.aclweb.org/anthology/N13-1090">Mikolov et. al. Linguistic Regularities in Continuous Space Word Representations (2013)</a>]
+???
+You can use these vectors to find relationships. So people
+found that if they look at the difference between men, and
+women, it looks very similar to the difference between uncle
+and aunt or king and queen. They also found that, for
+example, the difference between King and kings is the same
+as between queen and Queens.
+
+If you want to ask a question, what is to Queen as kings are
+to King?
+
+You can take vector representation of Queen and add the
+vector representation of kings, and subtract the vector
+representation of King. And if you look at the closest point
+to that, you'll find it's going to be queens. People did
+this with a lot of different sort of semantic pairs.
+
 ---
 # Neural Networks
+
+---
+
+#Basic Architecture
+
+.center[
+![:scale 50%](images/nn_basic_arch.png)
+]
+
+`$ h(x) = f(W_1x+b_1) $`
+
+`$ o(x) = g(W_2h(x) + b_2) $`
+???
+So now let's look at what a neural network is. It's very
+similar to the logistic regression, only applied several
+times.
+So here I drew three inputs x, from which we compute
+weighted sums. But now there is not only a single output,
+but we compute several intermediate outputs,
+the hidden units.
+Each of the hidden units is a weighted sum of the inputs,
+using different weights. Each hidden unit corresponds to an
+inner product with a weight vector, so all together they
+correspond to multiplying the input by a matrix, here a 3 by
+4 matrix.
+We also add a bias for each of the hidden units, so a vector
+of dimension 4 for all of them. Then, we basically repeat
+the process and compute again weighted sums of the hidden
+units, to arrive at the outputs. Here this would correspond
+to multiplying by a 4 by 2 matrix, and adding a vector of
+dimension 2. Then we could apply for example a logistic
+sigmoid or softmax to get a classification output.
+So we basically do two matrix multiplications. If that was
+all, we could simplify this by just multiplying the matrices
+together into a single matrix, and we would just have a
+linear model. But the interesting part is that in the hidden
+layer, after we compute the weighted sum, we apply a
+non-linear function, often called activation function or
+just nonlinearity. That is what makes this whole function
+non-linear, and allows us to express much more interesting
+relationships. You can think of this as doing logistic
+regression with learning non-linear basis functions. The
+process is written here in formulas, we take the input x,
+multiply with a matrix W, add a bias b, and apply a
+non-linearity f, to get h. Then we multipy h by another
+matrix W', add a bias b' and apply a non-linearity g. This
+looks a bit like the word2vec we had last time, though here
+it's really very important to have the non-linear activation
+functions. Wha we want to learn from data are the weights
+and biases, so in this case a 3x4 matrix, a vector of dim 4,
+a 2x4 matrix and a vector of dim 2. Each of these steps of
+computation is usually called a layer. Here we have an input
+layer, one hidden layer, and an output layer. The hidden
+layer is called hidden because the computation is not
+actually part of the result, it's just internal to the
+algorithm. Though I'm drawing all these things in a similar
+way, don't confuse them with graphical models, as I drew
+them for latent dirichlet allocation.
+All these nodes here are completely deterministic functions,
+and the graph just illustrates very simple computations.
+
 ---
 # Convolutional neural Networks
 ---
+#Convolution Neural Networks
+
+.center[
+![:scale 100%](images/CNET1.png)
+]
+
+- Y. LeCun, L. Bottou, Y. Bengio, and P. Haffner: Gradient-based learning applied to document recognition
+
+???
+Here is the architecture of an early convolutional net
+form 1998. The basic architecture in current
+networks is still the same.
+You can multiple layers of convolutions and resampling
+operations. You start convolving the image, which
+extracts local features. Each convolutions creates
+new “feature maps” that serve as input to later
+convolutions.
+To allow more global operations, after the convolutions
+the image resolution is changed. Back then it was
+subsampling, today it is max-pooling.
+So you end up with more and more feature maps with
+lower and lower resolution.
+At the end, you have some fully connected layers to do
+the classificattion.
+
+---
 # Tricks for learning Deep Nets
 ---
-# Practical Considerations for Neural Nets
+# Drop-out Regularization
+
+.center[
+![:scale 75%](images/dropout_reg.png)
+]
+???
+For each sample, during training, you actually remove
+certain hidden nodes. So basically, you just X out the
+activations.
+
+You do this every time you trade over a training sample
+anew. So, this will be different for every example. The idea
+at the very high level is to add noise into the training
+procedure so that you basically make it harder to overfit.
+Since you drop out these parts, it gets much harder for the
+model to learn the training set by heart because you always
+remove different information.
+
+The goal is that you then learn weights that are more robust
+and since you're trying to prevent overfitting that possibly
+generalizes better.
+
+The dropout rate is often pretty high, sometimes it 50%,
+which means you set 50% of your units to zero.
+
+This is only during learning. You only want to add noise in
+the learning process. When you want to do predictions, you
+use all the weights but down weight them by the drop out
+rate.
+
+Here, we're not only perturbing the input image, but we're
+also perturbing the hidden units in a very particular way.
+As it turns out that actually works much better than just
+adding noise to the input.
+
+--
+
+.smallest[
+- https://www.cs.toronto.edu/~hinton/absps/JMLRdropout.pdf
+
+- Rate often as high as .5, i.e. 50% of units set to zero!
+
+- Predictions: use all weights, down-weight by rate
+]
+
+???
 ---
-# Time Series Data
+#Batch Normalization
+
+.center[
+![:scale 80%](images/batch_norm.png)
+]
+
+.smallest[
+[Ioffe, Szegedy: Batch Normalization: Accelerating Deep Network Training by Reducing Internal Covariate Shift](https://arxiv.org/abs/1502.03167)
+]
+
+???
+Another relatively recent advance in neural networks is
+batch normalization. The idea is that neural networks
+learn best when the input is zero mean and unit
+variance. We can scale the data to get that.
+But each layer inside a neural network is itself a neural
+network with inputs given by the previous layer. And
+that output might have much larger or smaller scale
+(depending on the activation function).
+Batch normalization re-normalizes the activations for a
+layer for each batch during training (as the
+distribution over activation changes). The avoids
+saturation when using saturating functions.
+To keep the expressive power of the model, additional
+scale and shift parameters are learned that are
+applied after the per-batch normalization.
+---
+# Residual Neural Networks
+# # Problem
+![:scale 90%](images/resnet-no-deep-nets.png)
+???
+We can't fit deep networks well - not even on training set!
+"vanishing gradient problem" - was motivation for relu, but not solved yet.
+
+
+The deeper the network gets, usually the performance gets
+better. But if you make your network too deep, then you
+can't learn it anymore.
+
+This is on CIFAR-10, which is a relatively small dataset.
+But if you try to learn a 56-layer convolutional, you cannot
+even optimize it on the training set. So basically, it's not
+that we can't generalize, we can't optimize. So these are
+universal approximators, so ideally, we should be able to
+overfit completely the training set.
+
+But here, if we make it too deep, we cannot overfit the
+training set anymore. It's kind of a bad thing. Because we
+can’t really optimize the problem. So this is sort of
+connected to this problem of vanishing gradient that it's
+very hard to backpropagate the error through a very deep net
+because basically, the idea is that the further you get from
+the output, the gradients become less and less informative.
+We talked about RELU units, which sort of helped to make
+this a little bit better. Without RELU units, you had like 4
+or 5 layers, with RELU units, you have like 20 layers. But
+if you do 56 layers, it's not going to work anymore.
+
+Even it's not going to work anymore, even on the training
+set. So this has been like a big problem. And it has a
+surprisingly simple solution, which is the RES-NET layer.
+
+---
+class: center
+# Solution
+![:scale 60%](images/residual-layer.png)
+
+`$$y = F(x, \{W_i\}) + x  \quad \text{ for same size layers}$$`
+
+--
+
+`$$y = F(x, \{W_i\}) + W_sx \quad \text{ for different size layers}$$`
+
+???
+instead of learning a function. learn the difference to identity.
+if sizes different, add linear projection.
+
+Here's how the residual layer looks like. And the idea is,
+let's say you have a bunch of weight layers, instead of
+learning a function, we learn how the function is different
+from the identity.
+
+So you're not trying to model the whole relationship between
+x and y, you want to model how is y different from x.
+
+In practice, what happens is you have multiple weight
+layers, usually like 2, and you have skip connection that
+gives the identity from before these layers to after these
+layers.
+
+So basically, if you set these weights all to zero, you have
+a pass-through layer. And this allows information to be
+back-propagated much more easily because you have all these
+identity matrices, so something always gets backpropagated.
+So this obviously only works if y and x have the same shape.
+
+
+So in CNNs, often the convolutional layers have sort of the
+same shape. But then you also have max-pooling layers. And
+so what you can do is, instead of having the identity, you
+use a linear transformation.
+
+And this way, the gradients can propagate better. So just
+seems like a very simple idea but people have tried it
+before and it really made a big difference.
+---
+class: center, middle
+![:scale 25%](images/resnet-architecture.png)
+???
+dotted lines are linear projection, others are identity.
+
+
+MTG19, which a state of the art neural network before and
+these are all the layers.
+
+Next to it is a 34 layered, convolutional neural network.
+
+And then is the residual network. For each pair of two
+layers, you add in a skip connection. This black arrow is
+just an identity mapping because things are the same size.
+If there's pooling, there's this dashed arrow, which is a
+linear transformation. But basically, they're sort of a
+pathway that allows you to project the identity from the
+very beginning to the very end. Or from the output signal
+you get back towards the beginning.
+
+---
+
+
+# Practical Considerations for Neural Nets
 ---
 class: middle
 # Questions ?
