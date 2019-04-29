@@ -1030,6 +1030,8 @@ array([[   1.,    0.,    0.,    0.,  103.],
        [   0.,    0.,    0.,    1.,  219.]])
 ```
 
+- Legacy mode: Only works for integers right now, not strings.
+- New mode: works on strings and integers, but always transforms all columns.
 
 ???
 You can also do this with scikit-learn. There are two ways
@@ -1061,7 +1063,6 @@ to apply it to a subset of the columns.
 ---
 
 # OneHotEncoder
-- New mode: always transforms all columns
 
 ```python
 import pandas as pd
@@ -1081,6 +1082,7 @@ array([[ 0.,  0.,  1.,  0.,  0.,  0.,  0.,  1.,  0.,  0.],
        [ 1.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  1.]])
 ```
 
+- Always transforms all columns
 
 ???
 - Fit-transform paradigm ensures train and test-set categories correspond.
@@ -1153,7 +1155,7 @@ class: some-space
 - In scikit-learn:
   - None
 - In scikit-learn "soon":
-  - Decision trees, random forests
+  - Decision trees, random forests, gradient boosting
 
 
 ???
