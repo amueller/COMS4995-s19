@@ -97,8 +97,6 @@ Let’s start with the different scales.
 
 Many model want data that is on the same scale.
 
-Linear models: the different scales mean different penalty.
-L2 is the same for all!
 
 We can also see non-gaussian distributions here btw!
 ---
@@ -131,12 +129,17 @@ different scales. And usually the scales don't have any
 meaning - it could be a matter of changing meters to
 kilometers.
 
+
+Linear models: the different scales mean different penalty.
+L2 is the same for all!
+
+
 ---
 class: center
 
 # Ways to Scale Data
 <br />
-![:scale 80%](images/scalers_comparison_scatter.png)
+![:scale 80%](images/scaler_comparison_scatter.png)
 ???
 Here's an illustration of four of the most common ways. One
 of the most common ones that we already saw before is the
@@ -279,10 +282,11 @@ test set also has minimum at 0 and maximum at 1, but the
 data is totally distorted from what it was before. So don’t
 do that.
 ---
+class: center, middle
 
 # Sckit-Learn API Summary
 
-![:scale 90%](images/api_table.png)
+![:scale 90%](images/api-table.png)
 
 Efficient shortcuts:
 
