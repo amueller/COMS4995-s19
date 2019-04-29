@@ -31,6 +31,7 @@ FIXME t-sne plot
 FIXME CASH what does it stand for again
 FIXME word2vec for document representations via averages
 ---
+class: middle
 # Model inspection
 ???
 # FIXME post-hoc vs interpretable model
@@ -67,13 +68,6 @@ def permutation_importance(est, X, y, n_bootstrap=100):
           feature_score = estimator.score(X_new, y)
           scores[f_idx, b_idx] = baseline_score - feature_score
 ```
-
---
-
-- Applied on validation set given trained estimator.
-- Also kinda slow.
-- Implementation: ELI5,<br> https://github.com/scikit-learn/scikit-learn/pull/13146
-- For RF: https://github.com/parrt/random-forest-importances (uses oob)
 ---
 # Partial Dependence Plots
 
@@ -115,7 +109,7 @@ similar.
 
 ---
 # Feature selection
-# # Why Select Features?
+## Why Select Features?
 
 - Avoid overfitting (?)
 - Faster prediction and training
@@ -148,16 +142,12 @@ fewer features, it will be much easier to explain and most
 people will be happy with it.
 
 ---
+class: center, middle
 # AutoML
 ---
 # Formulating model-selection as Hyperparameter Optimization
 - One big search, many conditional Hyper-Parameters
 - Categorical, integer, continuous, conditional
-- Different distributions
----
-# CASH problem
-- Find the best configuration
-- Global optimization on complex (high-dim?) space
 
 `$$\Lambda^* = \arg\max_\Lambda f(\Lambda)$$`
 Parameters $\Lambda$, model-evaluation $f$.
