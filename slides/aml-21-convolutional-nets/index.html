@@ -50,6 +50,15 @@ FIXME data augmentation before dropout!!
 FIXME dropout: make clear different for every sample in batch
 FIXME How do I think about batchsize? optimization trade-off, limited ram, ...
 FIXME Keras fit doesn't reset!
+FIXME show how receptive field size increases with depth
+FIXME why is there a fully connected layer at the end?
+FIXME this lecture should really be only convolutions! put keras in previous, get rid of graph stuff?
+FIXME better explanation for change of size in valid convolution, put formula on slide
+FIXME explain number of parameters in convolutional layers
+FIXME call to summary shows too many params? weird?
+FIXME residual connections: plot the graph for the network I'm running
+FIXME explain weight sharing by writing convolution as matrix multiplication
+FIXME what do we call "parameters"
 ---
 class:center,middle
 #Introduction to Keras
@@ -465,7 +474,7 @@ adding noise to the input.
 
 - Rate often as high as .5, i.e. 50% of units set to zero!
 
-- Predictions: use all weights, down-weight by rate
+- Predictions: use all weights, down-weight by 1 - dropout rate
 ]
 
 ???
