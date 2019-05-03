@@ -139,7 +139,7 @@ starting with the logistic loss.
 .left-column[
 $$\log\left(\frac{p(y=1|x)}{p(y=0|x)}\right) = w^T\textbf{x} + b$$
 
-$$p(y|\textbf{x}) = \frac{1}{1+e^{-w^T\textbf{x} -b }}$$
+$$p(y=1|\textbf{x}) = \frac{1}{1+e^{-w^T\textbf{x} -b }}$$
 
 `$$\min_{w \in ℝ^{p}, b \in \mathbb{R}} -\sum_{i=1}^n \log(\exp(-y_i(w^T \textbf{x}_i + b)) + 1)$$`
 
@@ -288,7 +288,7 @@ than one. That means if you have a smaller w, you basically
 have a smaller margin given that you're on the correct side.
 If you're on the wrong side, you'll have always have a loss.
 If you're in the correct side, if you're w^x is small, then
-you also have a loss. 
+you also have a loss.
 ---
 class: center
 
@@ -504,7 +504,7 @@ The one with the highest score for the positive class, the
 single class, wins, and that class is predicted.
 
 It's a little bit unclear why this works as well as it does.
-Maybe there's some papers about that now, but I'm not 
+Maybe there's some papers about that now, but I'm not
 
 So in this case we have one coefficient vector w and one
 bias b for each class.
@@ -730,7 +730,7 @@ will give you an array that has number of samples times
 number of classes and these entries will sum to one. And the
 prediction is just the arg max of these. You can call
 predict which will give you arg max while predict_proba will
-give you the probabilities as given by the model. 
+give you the probabilities as given by the model.
 
 ---
 
@@ -760,7 +760,7 @@ it doesn't, it wasn't learned from the data. So coef_ are
 the coefficient that is learned by the model. They’re for
 logistic regression and linear Support Vector Machine,
 they're the same shape, three classes times four features
-but they have different semantics 
+but they have different semantics
 
 ---
 
@@ -787,7 +787,7 @@ has learned. This is maybe for a very simple problem this is
 little much to look at but it's still way less to look at
 for any other model. If you used a random forest or
 something like that, there would be no way to visualize
-what's happening. 
+what's happening.
 
 ---
 
@@ -801,7 +801,7 @@ class: center, middle
 ???
 Now I want to talk about more general things, how to make
 your homework run faster, also called Computational
-Considerations. 
+Considerations.
 ---
 
 class: some-space
@@ -852,7 +852,7 @@ might help you. All of these basically give you the same
 solution but only at different speeds. I want to talk about
 some tips for getting cross-validation. There are some
 built-in tools for doing quicker cross-validation for linear
-models. 
+models.
 ---
 class: center, middle
 
@@ -880,7 +880,7 @@ a little bit how, for example, kernels SVM with polynomial
 kernels relate to using polynomials explicitly in your
 feature engineering. Before we talk about kernels, I want to
 talk a little bit more about linear support vector machines,
-which we already discussed last week. 
+which we already discussed last week.
 
 ---
 class: spacious
@@ -901,7 +901,7 @@ w^x. Basically, as long as you have a distance on the right
 side of the hyper plane, that’s bigger than one, your data
 point does not contribute to the loss. So you want all of
 the points outside of this margin of one around the
-separating hyper plane. 
+separating hyper plane.
 
 
 ---
@@ -950,7 +950,7 @@ smaller than c. This is another way to say what I said last
 time that basically c limits the influence of each data
 point. So, if you have a smaller c the alpha i belong to
 each training data point can only be as big as this c, and
-so each of the data points has only limited influence. 
+so each of the data points has only limited influence.
 
 
 ---
@@ -1024,7 +1024,7 @@ There's the intersection kernel, which computes the minimum.
 And if you have any kernel, you can create a new kernel by
 adding two kernels together or multiplying them or
 multiplying them by constant. The only requirement we have
-is that they're positive, indefinite and symmetric. 
+is that they're positive, indefinite and symmetric.
 
 
 What does this look like in practice? So, for example, let's
@@ -1034,7 +1034,7 @@ understand. So the idea of the polynomial kernel is it does
 the same thing as computing polynomials. But if you compute
 polynomials of a very high degree, your feature vector
 becomes very long. Whereas here, I always just need to
-compute this inner product and raise them to this power. 
+compute this inner product and raise them to this power.
 
 ---
 # Polynomial Kernel vs Features
@@ -1071,7 +1071,7 @@ entirely equivalent to the polynomial features but it's
 about the same. You can see this quite easily for a single
 feature. If I do this for many features, adding extra
 features would make a very long feature vector, but the
-thing on the right-hand side always stays the same. 
+thing on the right-hand side always stays the same.
 
 
 ---
@@ -1122,7 +1122,7 @@ kernels, for example, the RVF kernel doing this expansion
 would actually be resolved in infinite dimensional vector,
 so you couldn't actually do this with a feature vector. Now
 I'm looking at this model here on the right-hand side where
-I'm using the polynomial features. 
+I'm using the polynomial features.
 
 ---
 class: smaller
@@ -1160,14 +1160,14 @@ there's four, they were selected as support vectors by the
 optimization. These are the ones that have these black
 circles around them. And so the solution can be expressed as
 a linear combination of these four support vectors where the
-coefficients are dual coefficients. 
+coefficients are dual coefficients.
 
 If I want to express this in terms of dual coefficients, I
 can say its dual coefficient -0.03 times the inner product
 of the first data point and my test data point in feature
 space. I do the same thing for the train each point 26 and
 42 and 63 with their respective weights. Now I can look at
-how does this look like for kernel. 
+how does this look like for kernel.
 
 ---
 # With Kernel
@@ -1221,7 +1221,7 @@ number of samples times the number of samples is very small.
 But if I have a lot of features, then doing the explicit
 expansion is faster since the number of samples is large. In
 the case where we can do explicit feature expansion if we
-have a lot of samples, maybe that's faster. 
+have a lot of samples, maybe that's faster.
 
 ---
 class:spacious
@@ -1297,7 +1297,7 @@ means a much narrower kernel and that means each data point
 will have much more local influence, which means it's more
 like the nearest neighbor algorithm and has more complexity.
 Usually, you should tune both of these parameters to get a
-good tradeoff between fitting and generalization. 
+good tradeoff between fitting and generalization.
 
 ---
 
@@ -1325,7 +1325,7 @@ a very complicated decision boundary. So here, for example,
 these clearly overfit the training data and so this is
 probably too large gamma. There's sort of a tradeoff between
 the two. Usually, they're multiple combinations of C and
-gamma that will give you similarly good results. 
+gamma that will give you similarly good results.
 
 ---
 
@@ -1402,7 +1402,7 @@ param_grid = {'svc__C': np.logspace(-3, 2, 6),
               'svc__gamma': np.logspace(-3, 2, 6) / X_train.shape[0]}
 param_grid
 ```
-{'svc_C': array([   0.001,    0.01 ,    0.1  ,    1.   ,   10.   ,  100.   ]),   
+{'svc_C': array([   0.001,    0.01 ,    0.1  ,    1.   ,   10.   ,  100.   ]),
  'svc_gamma': array([ 0.000001,  0.000007,  0.000074,  0.000742,  0.007424,  0.074239])}
 ```python
 grid = GridSearchCV(scaled_svc, param_grid=param_grid, cv=10)
@@ -1447,7 +1447,7 @@ you can see that I wouldn't need to search this very small
 Cs, they don't work at all, but maybe something better might
 be over here. A C of 100 is already like a very big C so if
 I want to use even less regularization, learning the model
-will be even slower. 
+will be even slower.
 
 ---
 
