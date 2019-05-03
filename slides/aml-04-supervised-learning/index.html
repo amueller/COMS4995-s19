@@ -199,7 +199,7 @@ Who here has not seen this before?
 ---
 class: center
 
-# More neighbors
+# Influence of Number of Neighbors
 
 ![:scale 50%](images/knn_boundary_k1.png)
 
@@ -221,7 +221,7 @@ which can not be learned directly from the data.
 ---
 class: center
 
-# More neighbors
+# Influence of Number of Neighbors
 
 ![:scale 50%](images/knn_boundary_k3.png)
 
@@ -681,7 +681,7 @@ for i in neighbors:
     val_scores.append(knn.score(X_val, y_val))
 print("best validation score: {:.3f}".format(np.max(val_scores)))
 best_n_neighbors = neighbors[np.argmax(val_scores)]
-print("best n_neighbors: {}".format(best_n_neighbors))
+print("best n_neighbors:", best_n_neighbors)
 
 knn = KNeighborsClassifier(n_neighbors=best_n_neighbors)
 knn.fit(X_trainval, y_trainval)
@@ -767,7 +767,7 @@ for i in neighbors:
     
 print("best cross-validation score: {:.3f}".format(np.max(cross_val_scores)))
 best_n_neighbors = neighbors[np.argmax(cross_val_scores)]
-print("best n_neighbors: {}".format(best_n_neighbors))
+print("best n_neighbors:", best_n_neighbors)
 
 knn = KNeighborsClassifier(n_neighbors=best_n_neighbors)
 knn.fit(X_train, y_train)
@@ -1080,17 +1080,17 @@ skfold = StratifiedKFold(n_splits=5, shuffle=True)
 ss = ShuffleSplit(n_splits=20, train_size=.4, test_size=.3)
 rs = RepeatedStratifiedKFold(n_splits=5, n_repeats=10)
 
-print("KFold:\n{}".format(
-      cross_val_score(KNeighborsClassifier(), X, y, cv=kfold)))
+print("KFold:")
+print(cross_val_score(KNeighborsClassifier(), X, y, cv=kfold))
 
-print("StratifiedKFold:\n{}".format(
-      cross_val_score(KNeighborsClassifier(), X, y, cv=skfold)))
+print("StratifiedKFold:")
+print(cross_val_score(KNeighborsClassifier(), X, y, cv=skfold))
 
-print("ShuffleSplit:\n{}".format(
-      cross_val_score(KNeighborsClassifier(), X, y, cv=ss)))
+print("ShuffleSplit:")
+print(cross_val_score(KNeighborsClassifier(), X, y, cv=ss))
 
-print("RepeatedStratifiedKFold:\n{}".format(
-      cross_val_score(KNeighborsClassifier(), X, y, cv=rs)))
+print("RepeatedStratifiedKFold:")
+print(cross_val_score(KNeighborsClassifier(), X, y, cv=rs))
 ```
 
 ```
