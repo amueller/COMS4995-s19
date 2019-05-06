@@ -631,7 +631,7 @@ figure out what were the topics.
 - For each document $d$ draw $\theta_d \sim \text{Dirichlet}(\alpha), d = 1 ... D$
 - For each word $i$ in document $d$:
 	* Draw a topic index $z_{di} \sim \text{Multinomial}(\theta_d)$
-	* Draw the observed word $w_{ij} \sim \text{Multinomial}(\beta_z)$
+	* Draw the observed word $w_{ij} \sim \text{Multinomial}(\phi_z)$
 
 
 - (taken from Yang Ruan, Changsi An (http://salsahpc.indiana.edu/b649proj/proj3.html)
