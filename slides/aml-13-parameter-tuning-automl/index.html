@@ -158,8 +158,8 @@ bottom: use less trees in forest
 - Given $n$ configuration and budget $B$
 - pick $\eta=2$ or $\eta=3$ (wording follows 2)
 - Each iteration, keep best halve of configurations
-- after $k=\log_\eta(n)$ left with single configuration.
-- initially allocate $\frac{B}{kn}$ to each configuration, double each iteration.
+- after $k=\log_\eta(n) + 1$ left with single configuration.
+- initially allocate $\frac{B}{kn}$ to each configuration, double each iteration (exact budget is slightly more complicated, see algorithm).
 --
 ![:scale 70%](images/halving_algorithm.png)
 
